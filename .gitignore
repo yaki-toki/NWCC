@@ -1,29 +1,40 @@
 # Local machine configuration (copy configs/paths.example.yaml)
-configs/paths.yaml
+/configs/paths.yaml
+.env
+.env.*
 
-# Large artifacts live outside the repository
-outputs/
-runs/
-checkpoints/
-features/
+# Large artifacts live outside the repository (root-anchored: package folders such as
+# src/wvad/features/ must stay tracked)
+/outputs/
+/runs/
+/checkpoints/
+/features/
 *.pt
 *.pth
 *.ckpt
+*.npy
 *.npz
+*.pkl
+*.h5
+*.mp4
+*.avi
+*.zip
 *.tgz
 *.tar.gz
+!tests/fixtures/**
 
-# Experiment raw logs (summaries and small CSV/JSON are tracked)
+# Experiment raw logs (plans, summaries and small CSV/JSON results are tracked)
 experiments/**/logs/
 experiments/**/scratch/
+*.log
 
 # Python
 __pycache__/
 *.py[cod]
 *.egg-info/
 .eggs/
-build/
-dist/
+/build/
+/dist/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
@@ -35,13 +46,12 @@ venv/
 paper/**/*.aux
 paper/**/*.bbl
 paper/**/*.blg
-paper/**/*.log
 paper/**/*.out
 paper/**/*.synctex.gz
 paper/**/*.fdb_latexmk
 paper/**/*.fls
 
-# Editors / OS / tooling
+# Editors / OS / local agent state
 .vscode/
 .idea/
 .DS_Store

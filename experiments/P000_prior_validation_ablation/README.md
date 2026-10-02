@@ -16,13 +16,16 @@
   - 개선은 의사 레이블에서만 나왔다. UCF에서 +1.2/+2.4 AP로 유의했고, XD에서는 보정 후 유의하지 않았다.
   - 조밀 순위 손실과 커리큘럼은 효과가 없었다.
   - 보조 헤드는 탐지를 개선하지 않았다.
-- 상세 내용은 `REPORT.md`, 사전등록 규칙은 `PLAN.md`(고정본 해시 `PLAN_frozen.sha256`)에 있다.
+- 상세 내용은 `REPORT.md`, 사전등록 규칙은 `PLAN_frozen.md`(학습 전 고정본)와 `PLAN.md`(결과 확인 뒤 운영 사실 3건을 변경 기록에 덧붙인 판)에 있다.
 
 ## 파일
 | 파일 | 내용 |
 |---|---|
 | `REPORT.md` | 결과 보고서(독립 검증 반영본) |
-| `PLAN.md`, `PLAN_frozen.sha256` | 사전등록 문서와 고정본 해시. 변경 기록은 운영 사실 3건이며, 판정 규칙은 바뀌지 않았다. |
+| `PLAN_frozen.md` | 학습 전에 고정한 사전등록 원문. sha256 `29fd8801…`로, 이전 프로젝트에 기록된 고정 해시와 같다. 덧붙인 변경 기록 부분을 원래 "(없음)"으로 되돌려 복원했다. |
+| `PLAN.md` | 변경 기록(운영 사실 3건)이 붙은 현재 판. 판정 규칙은 바뀌지 않았다. |
+| `SHA256SUMS` | 위 두 파일의 해시. 이 폴더에서 `sha256sum -c SHA256SUMS`로 확인한다. |
+| `results/val_selection.csv` | 실행별 검증 선택 기록 360행: 시작점 검증 영상 AUC, 최고 검증 영상 AUC, 선택 epoch. 이전 프로젝트의 `state.json`에서 뽑았고, 로드맵 단계 B의 재현 관문 기준값으로 쓴다. |
 | `results/dcrc_{ucf,xdv}_runs.csv` | seed별 원자료. 실행 × 체크포인트 규칙(best/final) × 점수 신호마다 한 행이다. 열: `dataset,pair,config,feat,seed,role,signal,head,frame_auc,frame_ap,val_video_auc` |
 | `results/per_run/{ucf,xdv}/*.json` | 실행별 평가 기록(360개) |
 | `results/phase4_ucf_runs.csv`, `results/phase6_xdv_runs.csv` | 재현성 점검용 이전 실행 재채점 |
