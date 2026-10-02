@@ -1,6 +1,6 @@
 # frozen-vlm-wvad
 
-Weakly supervised video anomaly detection (WVAD) on frozen vision-language encoders.
+Weakly supervised video anomaly detection (WVAD) on frozen vision-language encoders. The method is named **SEAR-D**; its components, and the expansion of the acronym, are fixed only after the confirmation experiment. SEAR-D is a redesign of the earlier SEAR method; results of the earlier method are not results of SEAR-D.
 
 **Status: redesign in progress.** This repository restarts the method from first principles after a pre-registered, validation-only ablation of the previous method returned **NO-GO**. In that ablation:
 - the dense ranking term had no measurable effect;
@@ -19,11 +19,10 @@ See [`experiments/P000_prior_validation_ablation`](experiments/P000_prior_valida
 ```
 configs/        paths.example.yaml (copy to paths.yaml, git-ignored), experiment configs
 data/           validation splits (small, tracked); features live outside the repository
-docs/           ROADMAP.md, DIAGNOSIS.md, decisions/ (design records)
 experiments/    one folder per experiment: PLAN.md, config, results/, REPORT.md
 paper/          LaTeX source (written after the confirmation experiment)
 src/wvad/       library code and module entry points (python -m wvad....)
-tests/          local only, git-ignored: unit tests and equivalence checks
+docs/, tests/   local only, git-ignored: planning notes, unit tests, equivalence checks
 ```
 
 ## Setup
@@ -69,7 +68,7 @@ ruff check .
 Features are pre-extracted per video (32 segments × encoder dimension) for UCF-Crime and XD-Violence with X-CLIP (base, large) and SigLIP-so400m encoders. They are not distributed with this repository; `configs/paths.yaml` maps logical names to local directories. See [`data/README.md`](data/README.md).
 
 ## Roadmap
-[`docs/ROADMAP.md`](docs/ROADMAP.md) (stages A–F with gates). Planning documents are written in Korean; code, comments, this README and the paper are in English.
+Development proceeds in stages: A repository, B baseline port (E001), C diagnostics, D training redesign, E architecture redesign, F pre-registered confirmation experiment and paper. Each stage has a gate that must pass before the next starts.
 
 ## License
 MIT (see [LICENSE](LICENSE)). Third-party annotations keep their own licenses.

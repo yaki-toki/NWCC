@@ -1,8 +1,9 @@
-# Development and verification code stays local (decision 0002): unit tests, equivalence
-# checks against the previous project. Run commands are documented in README.md instead of
-# wrapper scripts.
+# Kept local, not published: unit tests and equivalence checks against the previous
+# project, and internal planning/report documents. Run commands are documented in
+# README.md instead of wrapper scripts.
 /tests/
 /scripts/
+/docs/
 
 # Local machine configuration (copy configs/paths.example.yaml)
 /configs/paths.yaml
