@@ -58,6 +58,11 @@ scp <server>:frozen-vlm-wvad/experiments/E001_baseline_port/results/b1_data_equi
     experiments/E001_baseline_port/results/
 ```
 
+**B2 evaluator.** Locally, with the previous project available (no dataset is read):
+```bash
+WVAD_LEGACY_REPO=<previous project root> pytest tests/test_eval_metrics.py tests/equivalence/test_b2_legacy_eval.py
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
