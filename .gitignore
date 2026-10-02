@@ -1,3 +1,9 @@
+# Development and verification code stays local (decision 0002): unit tests, equivalence
+# checks against the previous project. Run commands are documented in README.md instead of
+# wrapper scripts.
+/tests/
+/scripts/
+
 # Local machine configuration (copy configs/paths.example.yaml)
 /configs/paths.yaml
 .env
