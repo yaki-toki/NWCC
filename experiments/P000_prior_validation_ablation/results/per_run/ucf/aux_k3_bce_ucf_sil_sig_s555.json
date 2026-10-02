@@ -1,0 +1,110 @@
+{
+ "dataset": "ucf",
+ "pair": "sig",
+ "config": "aux_k3_bce",
+ "feat": "ucf_sil_sig",
+ "seed": 555,
+ "run_id": "aux_k3_bce_ucf_sil_sig_s555",
+ "prereg": "submission/tcsvt2026/records/PREREG_DCRC_ABLATION_20261002.md",
+ "val_split_sha": "18944283784fd8d022b4f03c1b2b82ab7cb173391461cbed170b5fd0c46dc3a2",
+ "n_test_videos": 290,
+ "n_val_videos": 241,
+ "ckpts": {
+  "best": "outputs/dcrc_ucf/aux_k3_bce_ucf_sil_sig_s555/ckpt_best_val.pt",
+  "final": "outputs/dcrc_ucf/aux_k3_bce_ucf_sil_sig_s555/ckpt_last.pt"
+ },
+ "roles": {
+  "best": {
+   "n_heads": 3,
+   "signals": {
+    "p": {
+     "frame_auc": 87.32028203895324,
+     "frame_ap": 29.422137170039402,
+     "val_video_auc": 97.99586776859503
+    },
+    "rho_h0": {
+     "frame_auc": 86.74235137855013,
+     "frame_ap": 26.93503325832516,
+     "val_video_auc": 98.01652892561982,
+     "head": 0
+    },
+    "rho_h1": {
+     "frame_auc": 86.5997393820775,
+     "frame_ap": 26.698567145927516,
+     "val_video_auc": 97.91322314049586,
+     "head": 1
+    },
+    "rho_h2": {
+     "frame_auc": 86.75688299824115,
+     "frame_ap": 27.00183169572582,
+     "val_video_auc": 98.03719008264463,
+     "head": 2
+    },
+    "rho_last": {
+     "frame_auc": 86.75688299824115,
+     "frame_ap": 27.00183169572582,
+     "val_video_auc": 98.03719008264463,
+     "head": 2
+    },
+    "rho_mean": {
+     "frame_auc": 86.71366460127543,
+     "frame_ap": 26.892521826524924,
+     "val_video_auc": 97.99586776859505,
+     "head": "mean"
+    },
+    "rho_valsel": {
+     "frame_auc": 86.75688299824115,
+     "frame_ap": 27.00183169572582,
+     "val_video_auc": 98.03719008264463,
+     "head": 2
+    }
+   }
+  },
+  "final": {
+   "n_heads": 3,
+   "signals": {
+    "p": {
+     "frame_auc": 87.12207438540612,
+     "frame_ap": 30.620775677680424,
+     "val_video_auc": 97.8374655647383
+    },
+    "rho_h0": {
+     "frame_auc": 86.54136807988849,
+     "frame_ap": 26.732333131261903,
+     "val_video_auc": 97.93388429752066,
+     "head": 0
+    },
+    "rho_h1": {
+     "frame_auc": 86.43486980003419,
+     "frame_ap": 26.70292710210338,
+     "val_video_auc": 97.98209366391185,
+     "head": 1
+    },
+    "rho_h2": {
+     "frame_auc": 86.62736607051777,
+     "frame_ap": 27.091070104671676,
+     "val_video_auc": 97.99586776859503,
+     "head": 2
+    },
+    "rho_last": {
+     "frame_auc": 86.62736607051777,
+     "frame_ap": 27.091070104671676,
+     "val_video_auc": 97.99586776859503,
+     "head": 2
+    },
+    "rho_mean": {
+     "frame_auc": 86.54412920363339,
+     "frame_ap": 26.81524504831424,
+     "val_video_auc": 97.94765840220386,
+     "head": "mean"
+    },
+    "rho_valsel": {
+     "frame_auc": 86.62736607051777,
+     "frame_ap": 27.091070104671676,
+     "val_video_auc": 97.99586776859503,
+     "head": 2
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,188 @@
+{
+ "meta": {
+  "torch": "2.5.1+cu124",
+  "python": "3.10.20",
+  "gpu": "NVIDIA H100 80GB HBM3",
+  "cpu": "x86_64",
+  "note": "shared GPU; timings indicative",
+  "prereg": "PREREG_DCRC_ABLATION_20261002 section 7"
+ },
+ "rows": [
+  {
+   "params_trained": 525058,
+   "params_inference_det": 492033,
+   "params_inference": 492033,
+   "params_aux_heads": 0,
+   "pair": "xcl",
+   "variant": "det_only",
+   "feature_dim": 1792,
+   "n_heads": 0,
+   "cpu_1thread": {
+    "det": {
+     "median_ms": 0.6061610765755177,
+     "p90_ms": 0.6174780428409576
+    }
+   },
+   "gpu_fp32": {
+    "det": {
+     "median_ms": 0.5928657483309507,
+     "p90_ms": 2.688561100512743
+    }
+   },
+   "gpu_peak_mb": 1.0478515625,
+   "gpu_model_mb": 1.8769569396972656
+  },
+  {
+   "params_trained": 558212,
+   "params_inference_det": 492033,
+   "params_inference": 525187,
+   "params_aux_heads": 33154,
+   "pair": "xcl",
+   "variant": "k1",
+   "feature_dim": 1792,
+   "n_heads": 1,
+   "cpu_1thread": {
+    "det": {
+     "median_ms": 0.6066099740564823,
+     "p90_ms": 0.6166119128465652
+    },
+    "det+aux": {
+     "median_ms": 1.0917773470282555,
+     "p90_ms": 1.0998919606208801
+    }
+   },
+   "gpu_fp32": {
+    "det": {
+     "median_ms": 0.604536384344101,
+     "p90_ms": 2.6318677701056004
+    },
+    "det+aux": {
+     "median_ms": 0.8138385601341724,
+     "p90_ms": 2.761565148830414
+    }
+   },
+   "gpu_peak_mb": 1.0478515625,
+   "gpu_model_mb": 2.003429412841797
+  },
+  {
+   "params_trained": 624520,
+   "params_inference_det": 492033,
+   "params_inference": 591495,
+   "params_aux_heads": 99462,
+   "pair": "xcl",
+   "variant": "k3",
+   "feature_dim": 1792,
+   "n_heads": 3,
+   "cpu_1thread": {
+    "det": {
+     "median_ms": 0.6044015754014254,
+     "p90_ms": 0.6133229471743107
+    },
+    "det+aux": {
+     "median_ms": 1.22868362814188,
+     "p90_ms": 1.2395749799907207
+    }
+   },
+   "gpu_fp32": {
+    "det": {
+     "median_ms": 0.635921023786068,
+     "p90_ms": 2.672199159860611
+    },
+    "det+aux": {
+     "median_ms": 0.781114911660552,
+     "p90_ms": 2.812138292938471
+    }
+   },
+   "gpu_peak_mb": 1.04833984375,
+   "gpu_model_mb": 2.2563743591308594
+  },
+  {
+   "params_trained": 561666,
+   "params_inference_det": 528641,
+   "params_inference": 528641,
+   "params_aux_heads": 0,
+   "pair": "sig",
+   "variant": "det_only",
+   "feature_dim": 1920,
+   "n_heads": 0,
+   "cpu_1thread": {
+    "det": {
+     "median_ms": 0.6818070542067289,
+     "p90_ms": 0.6887810304760933
+    }
+   },
+   "gpu_fp32": {
+    "det": {
+     "median_ms": 0.6608434487134218,
+     "p90_ms": 2.6725148782134056
+    }
+   },
+   "gpu_peak_mb": 1.265625,
+   "gpu_model_mb": 2.0166053771972656
+  },
+  {
+   "params_trained": 594820,
+   "params_inference_det": 528641,
+   "params_inference": 561795,
+   "params_aux_heads": 33154,
+   "pair": "sig",
+   "variant": "k1",
+   "feature_dim": 1920,
+   "n_heads": 1,
+   "cpu_1thread": {
+    "det": {
+     "median_ms": 0.6806859746575356,
+     "p90_ms": 0.6874613463878632
+    },
+    "det+aux": {
+     "median_ms": 1.234991941601038,
+     "p90_ms": 1.2434357777237892
+    }
+   },
+   "gpu_fp32": {
+    "det": {
+     "median_ms": 0.6864124443382025,
+     "p90_ms": 2.6426841504871845
+    },
+    "det+aux": {
+     "median_ms": 0.7064179517328739,
+     "p90_ms": 2.750860992819071
+    }
+   },
+   "gpu_peak_mb": 1.265625,
+   "gpu_model_mb": 2.143077850341797
+  },
+  {
+   "params_trained": 661128,
+   "params_inference_det": 528641,
+   "params_inference": 628103,
+   "params_aux_heads": 99462,
+   "pair": "sig",
+   "variant": "k3",
+   "feature_dim": 1920,
+   "n_heads": 3,
+   "cpu_1thread": {
+    "det": {
+     "median_ms": 0.6794515065848827,
+     "p90_ms": 0.6868639029562473
+    },
+    "det+aux": {
+     "median_ms": 1.3808498624712229,
+     "p90_ms": 1.4026048593223095
+    }
+   },
+   "gpu_fp32": {
+    "det": {
+     "median_ms": 0.5300557240843773,
+     "p90_ms": 2.6602628640830517
+    },
+    "det+aux": {
+     "median_ms": 0.8513822685927153,
+     "p90_ms": 2.7453433722257614
+    }
+   },
+   "gpu_peak_mb": 1.265625,
+   "gpu_model_mb": 2.3960227966308594
+  }
+ ]
+}

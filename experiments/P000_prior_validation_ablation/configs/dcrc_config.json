@@ -1,0 +1,266 @@
+{
+ "prereg": "submission/tcsvt2026/records/PREREG_DCRC_ABLATION_20261002.md",
+ "protocol": "val_split_v1",
+ "seeds": [
+  42,
+  123,
+  777,
+  1000,
+  2025,
+  7,
+  13,
+  99,
+  555,
+  31337
+ ],
+ "budget": {
+  "warmup_epochs": 20,
+  "cpl_iters": 3,
+  "cpl_epochs": 10,
+  "baseline_steps": 3000
+ },
+ "stage1_lr": "1e-4 (phase1_matrix.build_warmup_cmd)",
+ "stage2_common_flags": [
+  "--pseudo_neg_k",
+  "4",
+  "--lambda_neg_pseudo",
+  "0.3",
+  "--lambda_tc",
+  "0.05",
+  "--tc_margin",
+  "0.5",
+  "--lr",
+  "3e-5",
+  "--lambda_mil",
+  "0.1",
+  "--lambda_pseudo",
+  "1.0",
+  "--lambda_sparse",
+  "0.01",
+  "--lambda_smooth",
+  "0.001",
+  "--margin",
+  "0.1",
+  "--curriculum"
+ ],
+ "configs": {
+  "abl_base": {
+   "kind": "sear",
+   "ant": false,
+   "ctag": false,
+   "extra": {
+    "cpl": [
+     "--lambda_tc",
+     "0",
+     "--lambda_pseudo",
+     "0",
+     "--lambda_neg_pseudo",
+     "0"
+    ]
+   }
+  },
+  "abl_tc": {
+   "kind": "sear",
+   "ant": false,
+   "ctag": false,
+   "extra": {
+    "cpl": [
+     "--lambda_pseudo",
+     "0",
+     "--lambda_neg_pseudo",
+     "0"
+    ]
+   }
+  },
+  "abl_cpl": {
+   "kind": "sear",
+   "ant": false,
+   "ctag": false,
+   "extra": {
+    "cpl": [
+     "--lambda_tc",
+     "0"
+    ]
+   }
+  },
+  "abl_full": {
+   "kind": "sear",
+   "ant": false,
+   "ctag": false
+  },
+  "abl_full_nocurr": {
+   "kind": "sear",
+   "ant": false,
+   "ctag": false,
+   "drop_cpl": [
+    "--curriculum"
+   ]
+  },
+  "aux_k1_bce": {
+   "kind": "sear",
+   "ant": true,
+   "ctag": false,
+   "tag": "k1b",
+   "extra": {
+    "warm": [
+     "--lead_times",
+     "2.0",
+     "--ant_bce"
+    ],
+    "cpl": [
+     "--lead_times",
+     "2.0",
+     "--ant_bce"
+    ]
+   }
+  },
+  "aux_k1_evid": {
+   "kind": "sear",
+   "ant": true,
+   "ctag": false,
+   "tag": "k1e",
+   "extra": {
+    "warm": [
+     "--lead_times",
+     "2.0"
+    ],
+    "cpl": [
+     "--lead_times",
+     "2.0"
+    ]
+   }
+  },
+  "aux_k3_bce": {
+   "kind": "sear",
+   "ant": true,
+   "ctag": false,
+   "tag": "bce",
+   "extra": {
+    "warm": [
+     "--ant_bce"
+    ],
+    "cpl": [
+     "--ant_bce"
+    ]
+   }
+  },
+  "aux_k3_evid": {
+   "kind": "sear",
+   "ant": true,
+   "ctag": false
+  }
+ },
+ "datasets": {
+  "ucf": {
+   "out_dir": "outputs\\dcrc_ucf",
+   "split": "scripts\\rebuttal_phase2\\ucf_val_split_15.json",
+   "feats": {
+    "xcl": {
+     "abl": "ucf_s0d1",
+     "sil": "ucf_sil",
+     "silk1": "ucf_silk1"
+    },
+    "sig": {
+     "abl": "ucf_s0d1_sig",
+     "sil": "ucf_sil_sig",
+     "silk1": "ucf_silk1_sig"
+    }
+   }
+  },
+  "xdv": {
+   "out_dir": "outputs\\dcrc_xdv",
+   "split": "scripts\\rebuttal_phase2\\xdv_val_split_15.json",
+   "feats": {
+    "xcl": {
+     "abl": "xdv_xcb_xcl",
+     "sil": "xdv_sil",
+     "silk1": "xdv_silk1"
+    },
+    "sig": {
+     "abl": "xdv_xcb_siglip",
+     "sil": "xdv_sil_sig",
+     "silk1": "xdv_silk1_sig"
+    }
+   }
+  }
+ },
+ "feats": {
+  "ucf_s0d1": {
+   "feat1": "ucf_ant_s0d1_xcb",
+   "feat2": "ucf_ant_s0d1_xcl",
+   "dim": 1792,
+   "input_ln": false
+  },
+  "ucf_sil": {
+   "feat1": "ucf_ant_sil_xcb",
+   "feat2": "ucf_ant_sil_xcl",
+   "dim": 1792,
+   "input_ln": false
+  },
+  "ucf_silk1": {
+   "feat1": "ucf_ant_silk1_xcb",
+   "feat2": "ucf_ant_silk1_xcl",
+   "dim": 1792,
+   "input_ln": false
+  },
+  "ucf_s0d1_sig": {
+   "feat1": "ucf_ant_s0d1_xcb",
+   "feat2": "ucf_ant_s0d1_siglip",
+   "dim": 1920,
+   "input_ln": true
+  },
+  "ucf_sil_sig": {
+   "feat1": "ucf_ant_sil_xcb",
+   "feat2": "ucf_ant_sil_siglip",
+   "dim": 1920,
+   "input_ln": true
+  },
+  "ucf_silk1_sig": {
+   "feat1": "ucf_ant_silk1_xcb",
+   "feat2": "ucf_ant_silk1_siglip",
+   "dim": 1920,
+   "input_ln": true
+  },
+  "xdv_xcb_xcl": {
+   "feat1": "features_xdviolence_xcb",
+   "feat2": "features_xdviolence_xcl",
+   "dim": 1792,
+   "input_ln": false
+  },
+  "xdv_sil": {
+   "feat1": "xdv_sil_xcb",
+   "feat2": "xdv_sil_xcl",
+   "dim": 1792,
+   "input_ln": false
+  },
+  "xdv_silk1": {
+   "feat1": "xdv_silk1_xcb",
+   "feat2": "xdv_silk1_xcl",
+   "dim": 1792,
+   "input_ln": false
+  },
+  "xdv_xcb_siglip": {
+   "feat1": "features_xdviolence_xcb",
+   "feat2": "features_xdviolence_siglip_so400m",
+   "dim": 1920,
+   "input_ln": true
+  },
+  "xdv_sil_sig": {
+   "feat1": "xdv_sil_xcb",
+   "feat2": "xdv_sil_siglip",
+   "dim": 1920,
+   "input_ln": true
+  },
+  "xdv_silk1_sig": {
+   "feat1": "xdv_silk1_xcb",
+   "feat2": "xdv_silk1_siglip",
+   "dim": 1920,
+   "input_ln": true
+  }
+ },
+ "checkpoint_rules": {
+  "best (primary)": "ckpt_best_val.pt",
+  "final (secondary)": "ckpt_last.pt",
+  "stage2_init": "stage-1 ckpt_best_val.pt"
+ }
+}

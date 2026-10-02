@@ -1,0 +1,38 @@
+{
+ "dataset": "xdv",
+ "pair": "sig",
+ "config": "abl_full_nocurr",
+ "feat": "xdv_xcb_siglip",
+ "seed": 42,
+ "run_id": "abl_full_nocurr_xdv_xcb_siglip_s42",
+ "prereg": "submission/tcsvt2026/records/PREREG_DCRC_ABLATION_20261002.md",
+ "val_split_sha": "1a11521ac77d1ca4aaa852b8659a7bcff57a3c599632f0a78011ae98f784365b",
+ "n_test_videos": 800,
+ "n_val_videos": 592,
+ "ckpts": {
+  "best": "outputs/dcrc_xdv/abl_full_nocurr_xdv_xcb_siglip_s42/ckpt_best_val.pt",
+  "final": "outputs/dcrc_xdv/abl_full_nocurr_xdv_xcb_siglip_s42/ckpt_last.pt"
+ },
+ "roles": {
+  "best": {
+   "n_heads": null,
+   "signals": {
+    "p": {
+     "frame_auc": 91.69757557856467,
+     "frame_ap": 74.82399948171593,
+     "val_video_auc": 99.49368535344877
+    }
+   }
+  },
+  "final": {
+   "n_heads": null,
+   "signals": {
+    "p": {
+     "frame_auc": 91.01792421692062,
+     "frame_ap": 72.20267313429328,
+     "val_video_auc": 99.14509400537173
+    }
+   }
+  }
+ }
+}

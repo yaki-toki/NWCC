@@ -1,0 +1,19 @@
+{
+ "dataset": "xdv",
+ "state_dir": "outputs/dcrc_xdv",
+ "configs": [
+  "abl_base",
+  "abl_tc",
+  "abl_cpl",
+  "abl_full",
+  "abl_full_nocurr",
+  "aux_k1_bce",
+  "aux_k1_evid",
+  "aux_k3_bce",
+  "aux_k3_evid"
+ ],
+ "n_rows": 1160,
+ "not_done": [],
+ "split_sha": "1a11521ac77d1ca4aaa852b8659a7bcff57a3c599632f0a78011ae98f784365b",
+ "prereg": "submission/tcsvt2026/records/PREREG_DCRC_ABLATION_20261002.md"
+}

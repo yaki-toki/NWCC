@@ -1,0 +1,19 @@
+# Copy to configs/paths.yaml (git-ignored) and edit for this machine.
+# Relative entries are resolved against feature_root; absolute entries are used as is.
+# The environment variable WVAD_PATHS can point to another file.
+
+feature_root: /home/user/sear_phase1
+
+features:
+  # UCF-Crime: 32 segments per video, one 8-frame clip per segment
+  ucf_xcb: features_xclip_base
+  ucf_xcl: features_xclip_large
+  ucf_siglip: features_siglip_so400m
+  # XD-Violence: same segmentation
+  xdv_xcb: features_xdviolence_xcb
+  xdv_xcl: features_xdviolence_xcl
+  xdv_siglip: features_xdviolence_siglip_so400m
+
+annotations:
+  # UCA (Yuan et al., CVPR 2024) sentence timestamps for UCF-Crime; diagnostics only
+  uca: annotations/uca

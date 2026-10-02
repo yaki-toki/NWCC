@@ -1,0 +1,86 @@
+{
+ "dataset": "xdv",
+ "pair": "sig",
+ "config": "aux_k1_evid",
+ "feat": "xdv_silk1_sig",
+ "seed": 123,
+ "run_id": "aux_k1_evid_xdv_silk1_sig_s123",
+ "prereg": "submission/tcsvt2026/records/PREREG_DCRC_ABLATION_20261002.md",
+ "val_split_sha": "1a11521ac77d1ca4aaa852b8659a7bcff57a3c599632f0a78011ae98f784365b",
+ "n_test_videos": 800,
+ "n_val_videos": 592,
+ "ckpts": {
+  "best": "outputs/dcrc_xdv/aux_k1_evid_xdv_silk1_sig_s123/ckpt_best_val.pt",
+  "final": "outputs/dcrc_xdv/aux_k1_evid_xdv_silk1_sig_s123/ckpt_last.pt"
+ },
+ "roles": {
+  "best": {
+   "n_heads": 1,
+   "signals": {
+    "p": {
+     "frame_auc": 92.12761092454963,
+     "frame_ap": 74.809981575396,
+     "val_video_auc": 99.71884107663294
+    },
+    "rho_h0": {
+     "frame_auc": 90.33139473472107,
+     "frame_ap": 62.68178873008707,
+     "val_video_auc": 97.01582947597007,
+     "head": 0
+    },
+    "rho_last": {
+     "frame_auc": 90.33139473472107,
+     "frame_ap": 62.68178873008707,
+     "val_video_auc": 97.01582947597007,
+     "head": 0
+    },
+    "rho_mean": {
+     "frame_auc": 90.33139473472107,
+     "frame_ap": 62.68178873008707,
+     "val_video_auc": 97.01582947597007,
+     "head": "mean"
+    },
+    "rho_valsel": {
+     "frame_auc": 90.33139473472107,
+     "frame_ap": 62.68178873008707,
+     "val_video_auc": 97.01582947597007,
+     "head": 0
+    }
+   }
+  },
+  "final": {
+   "n_heads": 1,
+   "signals": {
+    "p": {
+     "frame_auc": 91.54100339719672,
+     "frame_ap": 72.26877382024401,
+     "val_video_auc": 99.6342648151323
+    },
+    "rho_h0": {
+     "frame_auc": 90.02064394776805,
+     "frame_ap": 61.70150067578395,
+     "val_video_auc": 96.85353448768501,
+     "head": 0
+    },
+    "rho_last": {
+     "frame_auc": 90.02064394776805,
+     "frame_ap": 61.70150067578395,
+     "val_video_auc": 96.85353448768501,
+     "head": 0
+    },
+    "rho_mean": {
+     "frame_auc": 90.02064394776805,
+     "frame_ap": 61.70150067578395,
+     "val_video_auc": 96.85353448768501,
+     "head": "mean"
+    },
+    "rho_valsel": {
+     "frame_auc": 90.02064394776805,
+     "frame_ap": 61.70150067578395,
+     "val_video_auc": 96.85353448768501,
+     "head": 0
+    }
+   }
+  }
+ }
+}

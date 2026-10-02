@@ -1,0 +1,38 @@
+{
+ "dataset": "ucf",
+ "pair": "xcl",
+ "config": "abl_full_nocurr",
+ "feat": "ucf_s0d1",
+ "seed": 1000,
+ "run_id": "abl_full_nocurr_ucf_s0d1_s1000",
+ "prereg": "submission/tcsvt2026/records/PREREG_DCRC_ABLATION_20261002.md",
+ "val_split_sha": "18944283784fd8d022b4f03c1b2b82ab7cb173391461cbed170b5fd0c46dc3a2",
+ "n_test_videos": 290,
+ "n_val_videos": 241,
+ "ckpts": {
+  "best": "outputs/dcrc_ucf/abl_full_nocurr_ucf_s0d1_s1000/ckpt_best_val.pt",
+  "final": "outputs/dcrc_ucf/abl_full_nocurr_ucf_s0d1_s1000/ckpt_last.pt"
+ },
+ "roles": {
+  "best": {
+   "n_heads": null,
+   "signals": {
+    "p": {
+     "frame_auc": 85.35160391276537,
+     "frame_ap": 27.392840806602305,
+     "val_video_auc": 95.56473829201101
+    }
+   }
+  },
+  "final": {
+   "n_heads": null,
+   "signals": {
+    "p": {
+     "frame_auc": 84.62862812640397,
+     "frame_ap": 29.187597318398517,
+     "val_video_auc": 94.11157024793388
+    }
+   }
+  }
+ }
+}

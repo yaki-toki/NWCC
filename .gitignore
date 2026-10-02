@@ -1,0 +1,50 @@
+# Local machine configuration (copy configs/paths.example.yaml)
+configs/paths.yaml
+
+# Large artifacts live outside the repository
+outputs/
+runs/
+checkpoints/
+features/
+*.pt
+*.pth
+*.ckpt
+*.npz
+*.tgz
+*.tar.gz
+
+# Experiment raw logs (summaries and small CSV/JSON are tracked)
+experiments/**/logs/
+experiments/**/scratch/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# LaTeX build products
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.log
+paper/**/*.out
+paper/**/*.synctex.gz
+paper/**/*.fdb_latexmk
+paper/**/*.fls
+
+# Editors / OS / tooling
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.omc/
+.claude/

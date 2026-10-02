@@ -1,0 +1,38 @@
+{
+ "dataset": "xdv",
+ "pair": "xcl",
+ "config": "abl_tc",
+ "feat": "xdv_xcb_xcl",
+ "seed": 2025,
+ "run_id": "abl_tc_xdv_xcb_xcl_s2025",
+ "prereg": "submission/tcsvt2026/records/PREREG_DCRC_ABLATION_20261002.md",
+ "val_split_sha": "1a11521ac77d1ca4aaa852b8659a7bcff57a3c599632f0a78011ae98f784365b",
+ "n_test_videos": 800,
+ "n_val_videos": 592,
+ "ckpts": {
+  "best": "outputs/dcrc_xdv/abl_tc_xdv_xcb_xcl_s2025/ckpt_best_val.pt",
+  "final": "outputs/dcrc_xdv/abl_tc_xdv_xcb_xcl_s2025/ckpt_last.pt"
+ },
+ "roles": {
+  "best": {
+   "n_heads": null,
+   "signals": {
+    "p": {
+     "frame_auc": 90.86767651821577,
+     "frame_ap": 72.90893164041155,
+     "val_video_auc": 98.96222641293788
+    }
+   }
+  },
+  "final": {
+   "n_heads": null,
+   "signals": {
+    "p": {
+     "frame_auc": 90.86767651821577,
+     "frame_ap": 72.90893164041155,
+     "val_video_auc": 98.96222641293788
+    }
+   }
+  }
+ }
+}
