@@ -63,6 +63,33 @@ scp <server>:frozen-vlm-wvad/experiments/E001_baseline_port/results/b1_data_equi
 WVAD_LEGACY_REPO=<previous project root> pytest tests/test_eval_metrics.py tests/equivalence/test_b2_legacy_eval.py
 ```
 
+**B3 model and losses.** Locally (CPU, synthetic inputs), then on the server with earlier checkpoints (validation videos only):
+```bash
+WVAD_LEGACY_REPO=<previous project root> pytest tests/equivalence/test_b3_legacy_model.py tests/equivalence/test_b4_legacy_loop.py
+python tests/equivalence/check_b3_checkpoints.py --legacy_repo <previous project root> \
+    --p000_runs <previous project root>/outputs        # writes results/b3_checkpoint_equivalence.json
+```
+
+**B4 trainer, reproduction gate.** On the server; runs are written outside the repository. Each (dataset, pair, seed) runs stage 1, then the baseline cell (`base`: no dense ranking, no pseudo-labels) and the earlier method's cell (`full`: defaults) of stage 2:
+```bash
+RUNS=~/wvad_runs/e001 && mkdir -p $RUNS
+for spec in "ucf xcb_xcl" "xdv xcb_siglip"; do
+  set -- $spec
+  for seed in 42 123; do
+    d=$RUNS/${1}_${2}_s${seed}
+    setsid nohup bash -c "
+      python -m wvad.train stage1 --dataset $1 --pair $2 --seed $seed --out_dir $d/stage1 &&
+      { python -m wvad.train stage2 --dataset $1 --pair $2 --seed $seed --init $d/stage1/ckpt_best_val.pt \
+          --out_dir $d/base --lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 &
+        python -m wvad.train stage2 --dataset $1 --pair $2 --seed $seed --init $d/stage1/ckpt_best_val.pt \
+          --out_dir $d/full &
+        wait; }" > $d.log 2>&1 < /dev/null &
+  done
+done
+# after all chains finish:
+python tests/equivalence/check_b4_reproduction.py --runs $RUNS   # writes results/b4_reproduction.csv
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
