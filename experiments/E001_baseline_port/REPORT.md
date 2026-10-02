@@ -10,9 +10,10 @@
 | B4 학습기 + 재현 관문 | 미실시 | — |
 
 ## B1 — 데이터 계층
-- **실행**: 서버, 커밋 `6a0b816`
+- **실행**: 서버, 커밋 `37ed252`
   - 실행 당시 배포한 커밋 이름은 `0b180dc`였다.
-  - 이후 커밋 정리와 이력 재작성(결정 0002)으로 이름만 바뀌었고, 파일 트리는 같다(tree `46d6177d…`).
+  - 이후 이력 정리로 `tests/`·`docs/`가 빠지면서 커밋 이름이 바뀌었다.
+  - 실행에 관여하는 내용은 같다. `src/`, `data/`, `configs/`, `pyproject.toml`의 git 트리 해시가 두 커밋에서 일치한다.
   - 명령: `README.md` "Stage B — B1"
   - 검증 코드: `tests/equivalence/check_b1_data.py`(로컬 전용)
   - 비교 대상: 이전 프로젝트 학습기의 `MILFeatureDataset`과 `sear.dataset.val_split`
