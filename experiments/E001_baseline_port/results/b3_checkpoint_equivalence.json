@@ -1,0 +1,86 @@
+{
+ "check": "E001/B3 earlier checkpoints in the new model (validation videos only)",
+ "all_ok": true,
+ "rows": [
+  {
+   "dataset": "ucf",
+   "pair": "xcb_xcl",
+   "config": "abl_base",
+   "role": "best_val",
+   "identical_scores": true,
+   "max_abs_diff": 0.0,
+   "val_video_auc": 0.9566804407713498,
+   "p000_best_val_video_auc": 0.9566804407713498
+  },
+  {
+   "dataset": "ucf",
+   "pair": "xcb_xcl",
+   "config": "abl_base",
+   "role": "last",
+   "identical_scores": true,
+   "max_abs_diff": 0.0,
+   "val_video_auc": 0.956198347107438,
+   "p000_best_val_video_auc": null
+  },
+  {
+   "dataset": "ucf",
+   "pair": "xcb_xcl",
+   "config": "abl_full",
+   "role": "best_val",
+   "identical_scores": true,
+   "max_abs_diff": 0.0,
+   "val_video_auc": 0.956198347107438,
+   "p000_best_val_video_auc": 0.956198347107438
+  },
+  {
+   "dataset": "ucf",
+   "pair": "xcb_xcl",
+   "config": "abl_full",
+   "role": "last",
+   "identical_scores": true,
+   "max_abs_diff": 0.0,
+   "val_video_auc": 0.9416666666666667,
+   "p000_best_val_video_auc": null
+  },
+  {
+   "dataset": "xdv",
+   "pair": "xcb_siglip",
+   "config": "abl_base",
+   "role": "best_val",
+   "identical_scores": true,
+   "max_abs_diff": 0.0,
+   "val_video_auc": 0.9961140636607806,
+   "p000_best_val_video_auc": 0.9961140636607806
+  },
+  {
+   "dataset": "xdv",
+   "pair": "xcb_siglip",
+   "config": "abl_base",
+   "role": "last",
+   "identical_scores": true,
+   "max_abs_diff": 0.0,
+   "val_video_auc": 0.9955368878221613,
+   "p000_best_val_video_auc": null
+  },
+  {
+   "dataset": "xdv",
+   "pair": "xcb_siglip",
+   "config": "abl_full",
+   "role": "best_val",
+   "identical_scores": true,
+   "max_abs_diff": 0.0,
+   "val_video_auc": 0.9948454197382708,
+   "p000_best_val_video_auc": 0.9948454197382708
+  },
+  {
+   "dataset": "xdv",
+   "pair": "xcb_siglip",
+   "config": "abl_full",
+   "role": "last",
+   "identical_scores": true,
+   "max_abs_diff": 0.0,
+   "val_video_auc": 0.9907594719698268,
+   "p000_best_val_video_auc": null
+  }
+ ]
+}

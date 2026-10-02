@@ -42,7 +42,8 @@ Commands are run from the repository root. Each stage adds its commands here.
 git archive --format=tar HEAD | ssh <server> 'mkdir -p ~/frozen-vlm-wvad && tar -x -C ~/frozen-vlm-wvad'
 tar -cf - tests | ssh <server> 'tar -x -C ~/frozen-vlm-wvad'
 
-# on the server, in ~/frozen-vlm-wvad (once: create configs/paths.yaml)
+# on the server, in ~/frozen-vlm-wvad (once: create configs/paths.yaml), with the
+# Python environment active (non-interactive shells: put its bin/ first on PATH)
 export PYTHONPATH=src OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 KMP_DUPLICATE_LIB_OK=TRUE
 # long runs: setsid nohup <command> > <log outside the repo> 2>&1 < /dev/null &
 ```
@@ -69,6 +70,7 @@ WVAD_LEGACY_REPO=<previous project root> pytest tests/equivalence/test_b3_legacy
 python tests/equivalence/check_b3_checkpoints.py --legacy_repo <previous project root> \
     --p000_runs <previous project root>/outputs        # writes results/b3_checkpoint_equivalence.json
 ```
+Copy result files back with `scp` as in B1, here and in B4.
 
 **B4 trainer, reproduction gate.** On the server; runs are written outside the repository. Each (dataset, pair, seed) runs stage 1, then the baseline cell (`base`: no dense ranking, no pseudo-labels) and the earlier method's cell (`full`: defaults) of stage 2:
 ```bash
@@ -86,8 +88,10 @@ for spec in "ucf xcb_xcl" "xdv xcb_siglip"; do
         wait; }" > $d.log 2>&1 < /dev/null &
   done
 done
-# after all chains finish:
-python tests/equivalence/check_b4_reproduction.py --runs $RUNS   # writes results/b4_reproduction.csv
+# after all chains finish (each chain ends with two selection.json files):
+ls $RUNS/*/{base,full}/selection.json | wc -l                   # 8
+python tests/equivalence/check_b4_reproduction.py --runs $RUNS \
+    --p000_runs <previous project root>/outputs   # writes results/b4_reproduction.csv, b4_checkpoint_identity.json
 ```
 
 ## Local checks (not tracked)
