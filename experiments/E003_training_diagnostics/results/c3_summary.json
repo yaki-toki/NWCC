@@ -1,0 +1,40 @@
+{
+ "check": "E003/C3 saturation and half precision (P11)",
+ "code": {
+  "commit": "1ed840f4469062162ea799e6cf6470043e6631b9",
+  "source": "git",
+  "dirty": false
+ },
+ "reference_cell": {
+  "dataset": "ucf",
+  "pair": "xcb_siglip",
+  "cell": "base"
+ },
+ "reference_seed_means": {
+  "M1A": {
+   "dR": 0.439166057861609,
+   "dA": 0.4364479814220559
+  },
+  "M1B": {
+   "dR": -1.8020140537478564,
+   "dA": -1.8074333712177644
+  },
+  "M2A": {
+   "dR": 0.49188067811637026,
+   "dA": 0.4918932624747825
+  },
+  "M2B": {
+   "dR": -1.5999868679919327,
+   "dA": -1.6010802669910618
+  },
+  "sat_hi": 0.1841286307053942
+ },
+ "thresholds": {
+  "not_reproduced": 0.2,
+  "effect": 0.5,
+  "ratio_confirm": 0.5,
+  "ratio_reject": 0.2,
+  "saturation": 0.1
+ },
+ "verdict": "hold"
+}
