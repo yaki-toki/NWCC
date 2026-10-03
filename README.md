@@ -180,7 +180,10 @@ python -m wvad.diagnostics.c5 --runs <local runs root>/e003
 ```
 
 ### Stage C — E004 temporal-context linear probe ([plan](experiments/E004_temporal_context_probe/PLAN.md))
-Local CPU only (UCF training split; UCA proxy labels for diagnosis). Commands are added when the probe is implemented.
+Local CPU only (UCF training split; UCA proxy labels for diagnosis). About 360-460 logistic-regression fits, 4 in parallel x 8 BLAS threads (3-6 h); every fit is saved under the output folder, so an interrupted run resumes with the same command (refused if the commit or config changed). Commit before running.
+```bash
+python -m wvad.diagnostics.c6 --out <local runs root>/e004     # results/c6_probe.csv, c6_cv.csv, c6_summary.json
+```
 
 ## Local checks (not tracked)
 ```bash
