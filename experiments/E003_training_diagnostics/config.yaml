@@ -1,0 +1,45 @@
+# E003 training-based diagnostics (PLAN.md). Paths are logical (configs/paths.yaml).
+experiment: E003_training_diagnostics
+test_data: none
+seeds: [0, 1, 2]                      # diagnostics; analysis code refuses other seeds
+identity_check: {seed: 42, runs: [ucf/xcb_xcl, xdv/xcb_siglip], against: E001,
+                 out: "~/wvad_runs/e003_chook"}
+settings:
+  datasets: [ucf, xdv]
+  pairs: [xcb_xcl, xcb_siglip]
+  cells:
+    base: {lambda_dense: 0.0, lambda_pseudo: 0.0, lambda_neg_pseudo: 0.0}
+    full: {}                          # stage-2 defaults of the previous method
+  stage1: {epochs: 20, lr: 1.0e-4}
+  stage2: {iterations: 3, epochs_per_iter: 10, lr: 3.0e-5, curriculum: true}
+  record: true
+  out: "~/wvad_runs/e003"
+proxy:
+  file: data/annotations/ucf_train_uca_proxy.json
+  variants: [M1A, M1B, M2A, M2B]
+  positive_segment_min_fraction: 0.5
+  frame_labels: Proxy.frame_labels    # half-open [a, b)
+c0b:
+  encoders: [xcl, siglip]
+  ridge_alpha_grid: [0.1, 1, 10, 100, 1000]
+  cv_folds: 5                         # grouped by video, training part
+  pass_fraction: 0.80
+  positive_control_max_pass: 0.10     # shifted pairing, full pass rule incl. sibling exception
+  sibling: {xdv: source_prefix_before_hash, ucf: cache_pair_cosine_p99.9, max_rank: 3}
+c1_final: {rule: E002 PLAN C1, delta_from: E002 c1_summary.json,
+           ap128_from: E002 c1_resolution.csv (part=val, category=all, S=128)}
+c3:
+  reference_cell: {dataset: ucf, pair: xcb_siglip, cell: base}
+  modes: {F: fp32, R: fp32_rounded_to_fp16, A: autocast_batch1}
+  thresholds: {not_reproduced: 0.2, effect: 0.5, ratio_confirm: 0.5, ratio_reject: 0.2,
+               saturation: 0.10}
+c4:
+  k: 3
+  rounds: [1, 2, 3, 4]                # 4 = final model, descriptive
+  bootstrap: {n: 10000, rng: "numpy.random.default_rng(0)", levels: [seed, video]}
+  thresholds: {confirm_d: -3.0, reject_ci_lower: -1.0}
+c5:
+  splits: {n: 1000, rng: "numpy.random.default_rng(0) re-seeded per run",
+           strata: [anomalous_with_proxy, anomalous_without_proxy, normal]}
+  power_baseline: mean_over_30_epochs     # expected AP of a uniform random epoch
+  thresholds: {confirm_loss: 1.0, reject_loss: 0.3, power_min: 1.0, reliability_min: 0.5}

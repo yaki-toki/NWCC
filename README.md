@@ -120,6 +120,9 @@ python -m wvad.diagnostics.c1      # c1_resolution.csv, c1_summary.json
 python -m wvad.diagnostics.c2      # c2_coverage.csv, c2_xd_geometry.csv, c2_summary.json
 ```
 
+### Stage C — E003 training-based diagnostics ([plan](experiments/E003_training_diagnostics/PLAN.md))
+Dev-seed training with recorded validation and pseudo-label scores (server GPU), then analysis of the recorded scores. Commands are added as each step (C0b cross-encoder alignment, C-hook, runs, C1 final, C3–C5) is implemented.
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
