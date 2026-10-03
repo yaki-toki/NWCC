@@ -126,6 +126,45 @@ Dev-seed training with recorded validation and pseudo-label scores (server GPU),
 **C0b** (local CPU, training caches only; must pass before anything else):
 ```bash
 python -m wvad.diagnostics.c0b     # results/c0b_cross_encoder.json
+# fallback when a cell fails (plan change log): per-video fingerprint by local re-extraction
+python tests/checks/e003_xd_fingerprint.py --encoder xcl --legacy_repo <previous project root>
+python tests/checks/e003_xd_fingerprint.py --encoder siglip --legacy_repo <previous project root>
+```
+
+**C-hook** (server). `--record` must leave training unchanged: the seed-42 E001 chains are re-run with it into a separate folder and compared with E001, then the recorded scores are checked for consistency:
+```bash
+CH=~/wvad_runs/e003_chook && mkdir -p $CH
+for spec in "ucf xcb_xcl" "xdv xcb_siglip"; do
+  set -- $spec; d=$CH/${1}_${2}_s42
+  setsid nohup bash -c "
+    python -m wvad.train stage1 --dataset $1 --pair $2 --seed 42 --out_dir $d/stage1 --record &&
+    { python -m wvad.train stage2 --dataset $1 --pair $2 --seed 42 --init $d/stage1/ckpt_best_val.pt \
+        --out_dir $d/base --lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record &
+      python -m wvad.train stage2 --dataset $1 --pair $2 --seed 42 --init $d/stage1/ckpt_best_val.pt \
+        --out_dir $d/full --record &
+      wait; }" > $d.log 2>&1 < /dev/null &
+done
+ls $CH/*/{base,full}/record_pseudo_final.npz | wc -l          # 4 when done
+python tests/equivalence/check_chook.py --e001_runs ~/wvad_runs/e001 --chook_runs $CH   # chook_identity.json
+```
+
+**Dev-seed runs** (server, after C-hook passes): the same chain for seeds 0, 1, 2 × both datasets × both pairs, with `--record`, into `RUNS=~/wvad_runs/e003`:
+```bash
+RUNS=~/wvad_runs/e003 && mkdir -p $RUNS
+for spec in "ucf xcb_xcl" "ucf xcb_siglip" "xdv xcb_xcl" "xdv xcb_siglip"; do
+  set -- $spec
+  for seed in 0 1 2; do
+    d=$RUNS/${1}_${2}_s${seed}
+    setsid nohup bash -c "
+      python -m wvad.train stage1 --dataset $1 --pair $2 --seed $seed --out_dir $d/stage1 --record &&
+      { python -m wvad.train stage2 --dataset $1 --pair $2 --seed $seed --init $d/stage1/ckpt_best_val.pt \
+          --out_dir $d/base --lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record &
+        python -m wvad.train stage2 --dataset $1 --pair $2 --seed $seed --init $d/stage1/ckpt_best_val.pt \
+          --out_dir $d/full --record &
+        wait; }" > $d.log 2>&1 < /dev/null &
+  done
+done
+ls $RUNS/*/{base,full}/record_pseudo_final.npz | wc -l        # 24 when done
 ```
 
 ## Local checks (not tracked)
