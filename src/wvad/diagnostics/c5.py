@@ -107,6 +107,7 @@ def analyze_run(scores: np.ndarray, labels: np.ndarray, vs, rows: np.ndarray) ->
     ap_all = ap_curve(np.ones(len(rows), dtype=bool))
     out = {k: float(np.nanmean(v)) for k, v in acc.items()}
     out["tie_rate"] = out.pop("tie")
+    out["reliability_nan_splits"] = int(np.isnan(acc["reliability"]).sum())
     out |= {"spearman_full": spearman(auc_all, ap_all), "ap_range": float(np.ptp(ap_all)),
             "auc_by_epoch": auc_all.tolist(), "ap_by_epoch": ap_all.tolist()}
     return out
@@ -191,6 +192,11 @@ def main(argv: list[str] | None = None) -> None:
                                     "normal"]},
               "thresholds": {"confirm_loss": CONFIRM_LOSS, "reject_loss": REJECT_LOSS,
                              "power_min": POWER_MIN, "reliability_min": RELIABILITY_MIN},
+              "category_weighting": "anomalous videos weighted by the inverse number of "
+                                    "videos with a proxy per category (mean 1), normal 1; "
+                                    "descriptive",
+              "nan_policy": "NaN Spearman values (constant AP curves) are left out of means; "
+                            "counts in c5_selection.csv (reliability_nan_splits)",
               "cells": summary_cells, "verdicts": verdicts,
               "criterion_saturation": criterion_saturation(args.runs)}
     write_csv(E003_RESULTS / "c5_selection.csv", sel_rows)

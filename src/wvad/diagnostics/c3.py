@@ -45,12 +45,15 @@ def rescore(runs: Path) -> None:
     device = torch.device("cuda")
     for dataset in DATASETS:
         for pair in PAIRS:
-            _, val_fs, _, dim = _train_val(dataset, pair)
+            _, val_fs, split, dim = _train_val(dataset, pair)
             for seed in DEV_SEEDS:
                 for cell in CELLS:
                     d = run_dir(runs, dataset, pair, seed, cell)
                     ckpt = torch.load(d / "ckpt_best_val.pt", map_location="cpu",
                                       weights_only=True)
+                    if ckpt["val_split_sha"] != split.sha256 or tuple(split.val_indices) != \
+                            tuple(int(i) for i in val_record(d).val_indices):
+                        raise ValueError(f"{d}: checkpoint split or validation order differs")
                     model = SegmentHead(dim, use_input_ln=INPUT_LAYER_NORM[pair])
                     model.load_state_dict(ckpt["model_state_dict"])
                     model.to(device).eval()
@@ -62,7 +65,7 @@ def rescore(runs: Path) -> None:
                             out.append(seg[0].float().cpu().numpy())
                     np.savez_compressed(d / "record_val_autocast.npz", epoch=ckpt["epoch"],
                                         scores=np.stack(out),
-                                        val_indices=np.asarray(val_record(d).val_indices))
+                                        val_indices=np.asarray(split.val_indices))
                     print(f"rescored {d}", flush=True)
 
 

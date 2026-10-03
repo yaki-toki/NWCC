@@ -217,10 +217,17 @@ def _save_stage2_record(cfg: Stage2Config, model, train_fs, split, device, use_a
                         top_k=np.array([s[0] for s in schedule]),
                         confidence=np.array([s[1] for s in schedule]),
                         train_indices=np.asarray(split.train_indices))
-    final: list[torch.Tensor] = []
-    top_k, conf = schedule[-1]
-    generate_pseudo_labels(model, train_fs.features, train_fs.labels, device, top_k, conf,
-                           use_amp, cfg.top_k_neg, cfg.pseudo_neg_k, record=final)
-    np.savez_compressed(os.path.join(cfg.out_dir, "record_pseudo_final.npz"),
-                        round=np.array(cfg.iterations + 1), scores=torch.stack(final).numpy(),
-                        train_indices=np.asarray(split.train_indices))
+    final_path = os.path.join(cfg.out_dir, "record_pseudo_final.npz")
+    if os.path.exists(final_path):
+        os.remove(final_path)                       # never leave a stale file from a retry
+    try:
+        final: list[torch.Tensor] = []
+        top_k, conf = schedule[-1]
+        generate_pseudo_labels(model, train_fs.features, train_fs.labels, device, top_k, conf,
+                               use_amp, cfg.top_k_neg, cfg.pseudo_neg_k, record=final)
+        np.savez_compressed(final_path, round=np.array(cfg.iterations + 1),
+                            scores=torch.stack(final).numpy(),
+                            train_indices=np.asarray(split.train_indices))
+    except Exception as exc:                        # the finished run must stay usable
+        print(f"[stage2] round-4 scoring failed (run outputs are complete): {exc!r}",
+              flush=True)

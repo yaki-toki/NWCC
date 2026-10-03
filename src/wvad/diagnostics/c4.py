@@ -91,8 +91,13 @@ def main(argv: list[str] | None = None) -> None:
             vs = proxy_video_set(manifest, proxy, variant, order, include_normal=False)
             positive = vs.positive_segments()
             p_at = {}
-            r1_identical = True
             for s in DEV_SEEDS:
+                rb, rf = records[(s, "base")], records[(s, "full")]
+                if not (np.array_equal(rb.train_indices, rf.train_indices)
+                        and np.array_equal(rb.scores[0], rf.scores[0])):
+                    raise ValueError(f"{pair} s{s}: round-1 scores of base and full differ; "
+                                     f"D = full(3) - base(3) would not equal the planned "
+                                     f"difference of differences")
                 for c in CELLS:
                     rec = records[(s, c)]
                     sc = rec.scores[:, rows_of(rec.train_indices, vs.indices)]
@@ -103,7 +108,6 @@ def main(argv: list[str] | None = None) -> None:
                         rows.append({"pair": pair, "variant": variant, "cell": c, "seed": s,
                                      "round": r + 1, "n_videos": len(vs.indices),
                                      "p_at_3": float(100 * p_at[(s, c, r + 1)].mean()), **q})
-                r1_identical &= bool(np.array_equal(p_at[(s, "base", 1)], p_at[(s, "full", 1)]))
             diff3 = np.stack([p_at[(s, "full", 3)] - p_at[(s, "base", 3)] for s in DEV_SEEDS])
             diff4 = np.stack([p_at[(s, "full", 4)] - p_at[(s, "base", 4)] for s in DEV_SEEDS])
             lo, hi = hierarchical_ci(diff3)
@@ -117,13 +121,17 @@ def main(argv: list[str] | None = None) -> None:
                           "D_round4": float(100 * diff4.mean()),
                           "category_weighted_D": float(
                               100 * (diff3.mean(0) * category_weights(vs.categories)).sum()),
-                          "base_rate": float(positive.mean()),
-                          "round1_identical": r1_identical})
+                          "base_rate": float(100 * positive.mean()),
+                          "videos_without_positive_segment": int((~positive.any(1)).sum()),
+                          "round1_identical": True})
             print(json.dumps(cells[-1]), flush=True)
     result = {"check": "E003/C4 pseudo-label ranking (P3, UCF)", "code": code_version(),
               "k": K, "bootstrap": {"n": N_BOOT, "rng": "default_rng(0)",
                                     "levels": ["seed", "video (paired across seeds)"]},
               "thresholds": {"confirm_d": CONFIRM_D, "reject_ci_lower": REJECT_CI_LOWER},
+              "category_weighting": "inverse number of videos with a proxy per category "
+                                    "(weights sum to 1); descriptive",
+              "units": "percentage points",
               "cells": cells, "verdict": verdict(cells)}
     write_csv(E003_RESULTS / "c4_pseudo_ranking.csv", rows)
     write_json(E003_RESULTS / "c4_summary.json", result)

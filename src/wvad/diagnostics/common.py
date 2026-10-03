@@ -39,6 +39,7 @@ def write_json(path: Path, obj: Mapping) -> None:
 def write_csv(path: Path, rows: Sequence[Mapping]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0]), lineterminator="\n")
+        fields = list(dict.fromkeys(k for r in rows for k in r))
+        w = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(rows)

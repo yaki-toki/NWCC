@@ -167,6 +167,17 @@ done
 ls $RUNS/*/{base,full}/record_pseudo_final.npz | wc -l        # 24 when done
 ```
 
+**Analysis.** C3 needs one more server pass (autocast re-scoring of the selected checkpoints); then copy the runs back and analyse locally (CPU; C5 takes about 35 minutes):
+```bash
+python -m wvad.diagnostics.c3 rescore --runs ~/wvad_runs/e003              # server GPU
+ssh <server> 'tar -cf - -C ~/wvad_runs e003' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.runs --runs <local runs root>/e003      # runs_status.csv
+python -m wvad.diagnostics.c1_final --runs <local runs root>/e003  # c1_final.json
+python -m wvad.diagnostics.c3 analyze --runs <local runs root>/e003
+python -m wvad.diagnostics.c4 --runs <local runs root>/e003
+python -m wvad.diagnostics.c5 --runs <local runs root>/e003
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
