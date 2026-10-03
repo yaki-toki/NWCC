@@ -94,6 +94,9 @@ python tests/equivalence/check_b4_reproduction.py --runs $RUNS \
     --p000_runs <previous project root>/outputs   # writes results/b4_reproduction.csv, b4_checkpoint_identity.json
 ```
 
+### Stage C — E002 data and geometry diagnostics ([plan](experiments/E002_diagnostics/PLAN.md))
+No training. Commands are added as each step (C0 alignment, C1 resolution ceiling, C2 clip coverage) is implemented.
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/

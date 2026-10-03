@@ -1,0 +1,50 @@
+# E002 data and geometry diagnostics (PLAN.md). Paths are logical; machine paths live in
+# configs/paths.yaml. Hashes pin the inputs taken from the previous project.
+experiment: E002_diagnostics
+segments_per_video: 32
+test_data: none                      # no test features, annotations, videos or lists
+
+sources:                             # previous project, read-only
+  ucf_train_manifest: {file: scripts/rebuttal_phase2/ucf_train_manifest.json,
+                       sha256: 541446cfed8318fdf773e89b8d82ef71539d9c5a0905b7f3679052e5743d3877}
+  xdv_train_manifest: {file: scripts/rebuttal_phase2/xdv_train_manifest.json,
+                       sha256: 036e283a9a6642347923c3ad42f3304225fbdb141410e903724294914de97d62}
+  ucf_anomaly_train_list: {file: Anomaly-Detection-Dataset/Anomaly_Train.txt,
+                           sha256: ea91e03de7581bfa6b139e663ebb7511ab1651c33427f85741d3f497a2027744}
+  uca_lexicon: {file: scripts/rebuttal_phase2/uca_audit.py, variable: LEX,
+                sha256: 5089a5b186a0d3fe439084d1c90e75449099a57a8301eda1be1e438e06abde27}
+  uca_json:                          # paths.yaml annotations.uca; UCA split names are ignored
+    UCFCrime_Train.json: 0df6a6e5e1e1b17b87e229edb865c9dea3e23505fd29256a894660687ff4eba2
+    UCFCrime_Val.json: f93720c911d0bfb3e8da168c7da43538227f0edcf90258a407856913fcacf559
+    UCFCrime_Test.json: 8912bc02c1871e177ffc7f45ed54395c0e34e1a8007a474b91309ce8a816f981
+
+proxy:
+  matching: {M1: substring, M2: word_start}      # M2 = regex \b + stem, case-insensitive
+  shapes: {A: union, B: hull}
+  frame_rule: "start <= f / fps < end"
+  confirm_reject_requires: all_four_variants     # exception: C2 uses M1A and M2A
+
+c0:
+  fingerprint:
+    model: microsoft/xclip-base-patch16
+    revision: d6184e3fd8780d04c85d0f1eabe5f94bf44d98f6
+    device: cpu
+    clip_policy: centre
+    sample: {anomalous: 20, normal: 10, rng: "numpy.random.default_rng(20261003)"}
+    standardize: per_dimension_over_cache
+    near_duplicate: {max_rank: 3, cache_pair_percentile: 99.9}
+  duration_check: {max_abs_seconds: 1.0, min_fraction: 0.95}
+
+c1:
+  min_frames: 256
+  resolutions: [32, 64, 128, 256]
+  remainder: last_segment
+  gap: {large: 5.0, small: 2.0}                  # AP points, validation part
+  share: {confirm: 0.25, reject: 0.10}           # evaluated in E003 with dev-seed base models
+
+c2:
+  min_frames: 256
+  clip: {frames: 8, stride: 2, placement_span: 16}
+  policies: [random, centre]
+  confirm_miss_rate: 0.10
+  length_bins_in_segments: [0.5, 1.0, 2.0]
