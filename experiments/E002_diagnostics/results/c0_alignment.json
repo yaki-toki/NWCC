@@ -1,0 +1,78 @@
+{
+ "check": "E002/C0 alignment gates (PLAN.md)",
+ "code": {
+  "commit": "743796429f5c4dc8d35022ab204c91808e123c4b",
+  "dirty": false
+ },
+ "inputs": {
+  "ucf_manifest": "1bb352b2388f2becb9fc8696c1c725bb96ac4b0d15fb35b43b569c3d08ed62ef",
+  "xdv_manifest": "d053feee14d7f2a296a5912f4f9ade551146ca3ebdc7e107b38f3845760dc8d5",
+  "proxy": "5cd90212748f2d47a93bcfeb441e008427d77d8695feaa27ed27bc3b2fb07def",
+  "ucf_train_list": "ea91e03de7581bfa6b139e663ebb7511ab1651c33427f85741d3f497a2027744",
+  "uca": {
+   "UCFCrime_Train.json": "0df6a6e5e1e1b17b87e229edb865c9dea3e23505fd29256a894660687ff4eba2",
+   "UCFCrime_Val.json": "f93720c911d0bfb3e8da168c7da43538227f0edcf90258a407856913fcacf559",
+   "UCFCrime_Test.json": "8912bc02c1871e177ffc7f45ed54395c0e34e1a8007a474b91309ce8a816f981"
+  }
+ },
+ "gates": {
+  "G1": {
+   "pass": true,
+   "n_manifest": 1610,
+   "n_cache": 1610,
+   "mismatched_positions": 0,
+   "anomaly_order": {
+    "pass": true,
+    "n_manifest_anomalous": 810,
+    "n_list": 810,
+    "first_difference": null
+   }
+  },
+  "G2": {
+   "pass": true,
+   "n_manifest": 3950,
+   "n_cache": 3950,
+   "mismatched_positions": 0
+  },
+  "G3": {
+   "pass": true,
+   "n_videos_with_uca": 1568,
+   "fraction_within_1s": 0.9981,
+   "abs_diff_seconds_median": 0.04,
+   "abs_diff_seconds_max": 11.95
+  },
+  "G4": {
+   "pass": true,
+   "rank1": 30,
+   "n": 30,
+   "near_duplicate_exceptions": 0
+  },
+  "G5": {
+   "pass": true,
+   "local_sha256": "975b50ed08121edbeccf38ab287b56b753db011e15515720063a2ad2fa908b4a",
+   "server_sha256": "975b50ed08121edbeccf38ab287b56b753db011e15515720063a2ad2fa908b4a"
+  }
+ },
+ "all_pass": true,
+ "proxy_counts": {
+  "anomalous_with_uca": 804,
+  "normal_with_uca": 764,
+  "uca_entries_ignored": 286
+ },
+ "categories": {
+  "Abuse": 48,
+  "Arrest": 45,
+  "Arson": 41,
+  "Assault": 47,
+  "Burglary": 87,
+  "Explosion": 29,
+  "Fighting": 45,
+  "RoadAccidents": 127,
+  "Robbery": 145,
+  "Shooting": 27,
+  "Shoplifting": 29,
+  "Stealing": 95,
+  "Vandalism": 45,
+  "Normal": 800
+ }
+}

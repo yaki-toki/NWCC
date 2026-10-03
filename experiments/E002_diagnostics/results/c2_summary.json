@@ -1,0 +1,17 @@
+{
+ "check": "E002/C2 clip coverage (PLAN.md)",
+ "code": {
+  "commit": "743796429f5c4dc8d35022ab204c91808e123c4b",
+  "dirty": false
+ },
+ "min_frames": 256,
+ "verdict_miss_rates": {
+  "M1A/random": 0.0887,
+  "M1A/centre": 0.0696,
+  "M2A/random": 0.0913,
+  "M2A/centre": 0.0732
+ },
+ "verdict": "hold",
+ "confirming_policies": [],
+ "threshold": 0.1
+}

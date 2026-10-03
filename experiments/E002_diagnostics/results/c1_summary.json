@@ -1,0 +1,30 @@
+{
+ "check": "E002/C1 resolution ceiling (PLAN.md)",
+ "code": {
+  "commit": "743796429f5c4dc8d35022ab204c91808e123c4b",
+  "dirty": false
+ },
+ "min_frames": 256,
+ "resolutions": [
+  32,
+  64,
+  128,
+  256
+ ],
+ "delta_ap_128_minus_32": {
+  "M1A/all": 1.1537,
+  "M1A/val": 0.8846,
+  "M1B/all": 0.052,
+  "M1B/val": 0.0379,
+  "M2A/all": 1.2648,
+  "M2A/val": 0.888,
+  "M2B/all": 0.0608,
+  "M2B/val": 0.0454
+ },
+ "gap_label_val": "small",
+ "thresholds": {
+  "large": 5.0,
+  "small": 2.0
+ },
+ "note": "P9-resolution status is finished in E003 with the dev-seed base model AP"
+}
