@@ -40,6 +40,7 @@ Commands are run from the repository root. Each stage adds its commands here.
 # deploy the committed code (non-destructive: configs/paths.yaml and outputs on the
 # server are kept), then the local-only tests/ folder
 git archive --format=tar HEAD | ssh <server> 'mkdir -p ~/frozen-vlm-wvad && tar -x -C ~/frozen-vlm-wvad'
+git rev-parse HEAD | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_COMMIT'   # commit stamp for results made there
 tar -cf - tests | ssh <server> 'tar -x -C ~/frozen-vlm-wvad'
 
 # on the server, in ~/frozen-vlm-wvad (once: create configs/paths.yaml), with the

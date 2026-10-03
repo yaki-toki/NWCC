@@ -65,3 +65,4 @@ paper/**/*.fls
 Thumbs.db
 .omc/
 .claude/
+/DEPLOYED_COMMIT

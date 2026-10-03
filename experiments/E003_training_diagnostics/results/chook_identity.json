@@ -1,0 +1,126 @@
+{
+ "check": "E003 C-hook: --record identity vs E001 and recorded-score consistency",
+ "code": {
+  "commit": null,
+  "dirty": false
+ },
+ "device": "cuda",
+ "torch": "2.5.1+cu124",
+ "identity": [
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "stage1",
+   "checkpoint": "best_val",
+   "identical": true
+  },
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "stage1",
+   "checkpoint": "last",
+   "identical": true
+  },
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "base",
+   "checkpoint": "best_val",
+   "identical": true
+  },
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "base",
+   "checkpoint": "last",
+   "identical": true
+  },
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "full",
+   "checkpoint": "best_val",
+   "identical": true
+  },
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "full",
+   "checkpoint": "last",
+   "identical": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "stage1",
+   "checkpoint": "best_val",
+   "identical": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "stage1",
+   "checkpoint": "last",
+   "identical": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "base",
+   "checkpoint": "best_val",
+   "identical": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "base",
+   "checkpoint": "last",
+   "identical": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "full",
+   "checkpoint": "best_val",
+   "identical": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "full",
+   "checkpoint": "last",
+   "identical": true
+  }
+ ],
+ "consistency": [
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "stage1",
+   "auc_from_scores": true,
+   "rescore_best": true
+  },
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "base",
+   "auc_from_scores": true,
+   "rescore_best": true,
+   "pseudo_from_scores": true
+  },
+  {
+   "run": "ucf_xcb_xcl_s42",
+   "stage": "full",
+   "auc_from_scores": true,
+   "rescore_best": true,
+   "pseudo_from_scores": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "stage1",
+   "auc_from_scores": true,
+   "rescore_best": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "base",
+   "auc_from_scores": true,
+   "rescore_best": true,
+   "pseudo_from_scores": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s42",
+   "stage": "full",
+   "auc_from_scores": true,
+   "rescore_best": true,
+   "pseudo_from_scores": true
+  }
+ ],
+ "all_ok": true
+}

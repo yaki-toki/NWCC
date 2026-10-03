@@ -22,13 +22,27 @@ def check_dev_seed(seed: int) -> None:
 
 
 def code_version() -> dict:
-    """Commit of the analysis code and whether tracked files had uncommitted changes."""
+    """Commit of the analysis code and whether tracked files had uncommitted changes.
+
+    A deployed copy without git (server, ``git archive``) reports the commit written to
+    ``DEPLOYED_COMMIT`` at deployment (README, server conventions); "dirty" is then unknown.
+    """
     def git(*args: str) -> str:
-        return subprocess.run(["git", "-c", f"safe.directory={REPO_ROOT.as_posix()}", *args],
-                              cwd=REPO_ROOT, capture_output=True, text=True,
-                              check=False).stdout.strip()
-    return {"commit": git("rev-parse", "HEAD") or None,
-            "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
+        try:
+            return subprocess.run(["git", "-c", f"safe.directory={REPO_ROOT.as_posix()}",
+                                   *args], cwd=REPO_ROOT, capture_output=True, text=True,
+                                  check=False).stdout.strip()
+        except OSError:
+            return ""
+    commit = git("rev-parse", "HEAD")
+    if commit:
+        return {"commit": commit, "source": "git",
+                "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
+    deployed = REPO_ROOT / "DEPLOYED_COMMIT"
+    if deployed.is_file():
+        return {"commit": deployed.read_text(encoding="utf-8").strip(), "source": "deployed",
+                "dirty": None}
+    return {"commit": None, "source": None, "dirty": None}
 
 
 def write_json(path: Path, obj: Mapping) -> None:
