@@ -11,6 +11,14 @@ from pathlib import Path
 from wvad.paths import REPO_ROOT
 
 E002_RESULTS = REPO_ROOT / "experiments" / "E002_diagnostics" / "results"
+E003_RESULTS = REPO_ROOT / "experiments" / "E003_training_diagnostics" / "results"
+DEV_SEEDS = (0, 1, 2)
+
+
+def check_dev_seed(seed: int) -> None:
+    """Diagnostics use development seeds only (confirmation seeds stay unused)."""
+    if int(seed) not in DEV_SEEDS:
+        raise ValueError(f"seed {seed} is not a development seed {DEV_SEEDS}")
 
 
 def code_version() -> dict:
