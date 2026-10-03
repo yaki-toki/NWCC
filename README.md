@@ -95,7 +95,30 @@ python tests/equivalence/check_b4_reproduction.py --runs $RUNS \
 ```
 
 ### Stage C — E002 data and geometry diagnostics ([plan](experiments/E002_diagnostics/PLAN.md))
-No training. Commands are added as each step (C0 alignment, C1 resolution ceiling, C2 clip coverage) is implemented.
+No training; runs locally on CPU (raw UCF-Crime videos are needed only for the manifest and the fingerprint check). Results go to `experiments/E002_diagnostics/results/`.
+
+**C0 inputs.** Training manifests and UCA proxy intervals (already committed under `data/`; rebuild only if the sources change):
+```bash
+pip install -e ".[prep]"                                   # OpenCV, for video headers
+python -m wvad.prep.manifests ucf --previous <previous project>/scripts/rebuttal_phase2/ucf_train_manifest.json \
+    --dataset_root <UCF-Crime root> --out data/manifests/ucf_train.json
+python -m wvad.prep.manifests xdv --previous <previous project>/scripts/rebuttal_phase2/xdv_train_manifest.json \
+    --out data/manifests/xdv_train.json
+python -m wvad.diagnostics.uca --out data/annotations/ucf_train_uca_proxy.json   # reads paths.yaml annotations.uca
+```
+
+**C0 gates.** The fingerprint check (G4, G5; local only) re-encodes 30 training videos on CPU, then the summary adds G1–G3:
+```bash
+ssh <server> sha256sum <server feature_root>/features_xclip_base/mil/train/data.pt    # for G5
+python tests/checks/c0_fingerprint.py --legacy_repo <previous project root> --server_sha256 <hash>
+python -m wvad.diagnostics.c0 --ucf_train_list <UCF-Crime root>/Anomaly_Train.txt   # c0_alignment.json
+```
+
+**C1, C2** (only after all C0 gates pass):
+```bash
+python -m wvad.diagnostics.c1      # c1_resolution.csv, c1_summary.json
+python -m wvad.diagnostics.c2      # c2_coverage.csv, c2_xd_geometry.csv, c2_summary.json
+```
 
 ## Local checks (not tracked)
 ```bash
