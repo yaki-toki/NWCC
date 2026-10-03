@@ -128,8 +128,13 @@ def train_one_epoch(model, loader: DataLoader, optimizer: torch.optim.Optimizer,
             "loss_pseudo": float(means[2])}
 
 
-def validation_video_auc(model, loader: DataLoader, device: torch.device) -> float:
-    """Video AUC on validation videos: max over segments of p, fp32 (autocast off)."""
+def validation_video_auc(model, loader: DataLoader, device: torch.device,
+                         record: list | None = None) -> float:
+    """Video AUC on validation videos: max over segments of p, fp32 (autocast off).
+
+    With ``record`` given, the (n_videos, S) segment scores of this same pass are appended
+    to it; nothing else changes (no extra pass over the loader, no extra random draws).
+    """
     model.eval()
     scores, labels = [], []
     with torch.no_grad():
@@ -139,4 +144,6 @@ def validation_video_auc(model, loader: DataLoader, device: torch.device) -> flo
                 _, _, seg_scores = model(feats)
             scores.extend(seg_scores.float().cpu().numpy())
             labels.extend(batch[1].tolist())
+    if record is not None:
+        record.append(np.stack(scores).astype(np.float32))
     return max_video_auc(scores, labels)

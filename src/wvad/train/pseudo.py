@@ -30,11 +30,46 @@ class PseudoLabelStats:
     normal_negative_segments: int
 
 
+def labels_from_scores(scores: torch.Tensor, label: int, top_k: int, confidence_min: float,
+                       top_k_neg: int = 0, pseudo_neg_k: int = 0
+                       ) -> tuple[torch.Tensor | None, int, int, int]:
+    """Pseudo-labels of one video from its (CPU, float) segment scores.
+
+    Returns (labels or None, positives assigned, mined negatives, normal-video negatives).
+    """
+    if label == 1:
+        pseudo = torch.full((len(scores),), float("nan"))
+        values, idx = scores.topk(min(top_k, len(scores)))
+        assigned = 0
+        for v, i in zip(values, idx, strict=True):
+            if v.item() >= confidence_min:
+                pseudo[i] = 1.0
+                assigned += 1
+        mined = 0
+        if pseudo_neg_k > 0 and assigned > 0:
+            _, bottom = scores.topk(min(pseudo_neg_k, len(scores)), largest=False)
+            for i in bottom:
+                if torch.isnan(pseudo[i]):
+                    pseudo[i] = 0.0
+                    mined += 1
+        return pseudo, assigned, mined, 0
+    if top_k_neg > 0:
+        k = min(top_k_neg, len(scores))
+        _, idx = scores.topk(k)
+        pseudo = torch.full((len(scores),), float("nan"))
+        for i in idx:
+            pseudo[i] = 0.0
+        return pseudo, 0, 0, k
+    return None, 0, 0, 0
+
+
 def generate_pseudo_labels(model: torch.nn.Module, features: Sequence[torch.Tensor],
                            labels: Sequence[int], device: torch.device, top_k: int,
                            confidence_min: float, use_amp: bool, top_k_neg: int = 0,
-                           pseudo_neg_k: int = 0
+                           pseudo_neg_k: int = 0, record: list | None = None
                            ) -> tuple[list[torch.Tensor | None], PseudoLabelStats]:
+    """With ``record`` given, each video's segment scores (the values the labels are made
+    from) are appended to it; the labels and the computation are unchanged."""
     model.eval()
     out: list[torch.Tensor | None] = []
     pos_videos = pos_segs = mined = neg_videos = neg_segs = 0
@@ -44,33 +79,14 @@ def generate_pseudo_labels(model: torch.nn.Module, features: Sequence[torch.Tens
             with autocast(device_type=device.type, enabled=use_amp):
                 _, _, seg_scores = model(x)
             scores = seg_scores[0].float().cpu()
-            if label == 1:
-                pseudo = torch.full((len(scores),), float("nan"))
-                values, idx = scores.topk(min(top_k, len(scores)))
-                assigned = 0
-                for v, i in zip(values, idx, strict=True):
-                    if v.item() >= confidence_min:
-                        pseudo[i] = 1.0
-                        assigned += 1
-                if assigned > 0:
-                    pos_videos += 1
-                    pos_segs += assigned
-                if pseudo_neg_k > 0 and assigned > 0:
-                    _, bottom = scores.topk(min(pseudo_neg_k, len(scores)), largest=False)
-                    for i in bottom:
-                        if torch.isnan(pseudo[i]):
-                            pseudo[i] = 0.0
-                            mined += 1
-                out.append(pseudo)
-            elif top_k_neg > 0:
-                k = min(top_k_neg, len(scores))
-                _, idx = scores.topk(k)
-                pseudo = torch.full((len(scores),), float("nan"))
-                for i in idx:
-                    pseudo[i] = 0.0
-                neg_videos += 1
-                neg_segs += k
-                out.append(pseudo)
-            else:
-                out.append(None)
+            if record is not None:
+                record.append(scores.clone())
+            pseudo, assigned, n_mined, n_neg = labels_from_scores(
+                scores, label, top_k, confidence_min, top_k_neg, pseudo_neg_k)
+            pos_videos += assigned > 0
+            pos_segs += assigned
+            mined += n_mined
+            neg_videos += n_neg > 0
+            neg_segs += n_neg
+            out.append(pseudo)
     return out, PseudoLabelStats(pos_videos, pos_segs, mined, neg_videos, neg_segs)

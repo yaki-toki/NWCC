@@ -14,6 +14,7 @@ import math
 import os
 from dataclasses import asdict, dataclass, field
 
+import numpy as np
 import torch
 from torch.amp import GradScaler
 
@@ -45,6 +46,7 @@ class Stage1Config:
     weight_decay: float = 1e-4
     batch_size: int = 32
     weights: LossWeights = field(default_factory=LossWeights)
+    record: bool = False            # save per-epoch validation scores (does not change training)
 
 
 def stage2_default_weights() -> LossWeights:
@@ -69,6 +71,7 @@ class Stage2Config:
     pseudo_neg_k: int = 4
     top_k_neg: int = 0
     weights: LossWeights = field(default_factory=stage2_default_weights)
+    record: bool = False            # save validation and pseudo-label scores (training unchanged)
 
 
 def _device() -> tuple[torch.device, bool]:
@@ -95,6 +98,12 @@ def _write_json(path: str, payload) -> None:
         json.dump(payload, fh, indent=1)
 
 
+def _pseudo_array(pseudo: list[torch.Tensor | None], n_segments: int) -> np.ndarray:
+    """(n_videos, S) pseudo-labels; NaN where a segment (or a whole video) has none."""
+    return np.stack([np.full(n_segments, np.nan, dtype=np.float32) if p is None
+                     else p.numpy().astype(np.float32) for p in pseudo])
+
+
 def run_stage1(cfg: Stage1Config) -> dict:
     os.makedirs(cfg.out_dir, exist_ok=True)
     device, use_amp = _device()
@@ -106,10 +115,11 @@ def run_stage1(cfg: Stage1Config) -> dict:
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     scaler = GradScaler() if use_amp else None
     best, best_epoch, history = -math.inf, None, []
+    val_record = [] if cfg.record else None
     for epoch in range(1, cfg.epochs + 1):
         losses = train_one_epoch(model, train_loader, optimizer, scaler, cfg.weights, device,
                                  use_amp)
-        auc = validation_video_auc(model, val_loader, device)
+        auc = validation_video_auc(model, val_loader, device, record=val_record)
         history.append({"epoch": epoch, **losses, "val_video_auc": auc})
         _save(os.path.join(cfg.out_dir, "ckpt_last.pt"), model, cfg, epoch, auc, split.sha256)
         if auc > best:
@@ -121,6 +131,10 @@ def run_stage1(cfg: Stage1Config) -> dict:
                  "val_split_sha": split.sha256}
     _write_json(os.path.join(cfg.out_dir, "history.json"), history)
     _write_json(os.path.join(cfg.out_dir, "selection.json"), selection)
+    if cfg.record:
+        np.savez_compressed(os.path.join(cfg.out_dir, "record_val_scores.npz"),
+                            epochs=np.arange(1, cfg.epochs + 1), scores=np.stack(val_record),
+                            val_indices=np.asarray(split.val_indices))
     return selection
 
 
@@ -147,20 +161,27 @@ def run_stage2(cfg: Stage2Config) -> dict:
     val_loader = make_loader(VideoBags(val_fs), cfg.batch_size, False, device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     scaler = GradScaler() if use_amp else None
-    base = validation_video_auc(model, val_loader, device)
+    val_record = [] if cfg.record else None
+    base = validation_video_auc(model, val_loader, device, record=val_record)
     best, best_epoch, history = -math.inf, None, []
+    pseudo_scores, pseudo_labels, schedule = [], [], []
     for iteration in range(1, cfg.iterations + 1):
         top_k, conf = _pseudo_schedule(cfg, iteration)
+        scores_record = [] if cfg.record else None
         pseudo, stats = generate_pseudo_labels(model, train_fs.features, train_fs.labels,
                                                device, top_k, conf, use_amp, cfg.top_k_neg,
-                                               cfg.pseudo_neg_k)
+                                               cfg.pseudo_neg_k, record=scores_record)
+        if cfg.record:
+            pseudo_scores.append(torch.stack(scores_record).numpy())
+            pseudo_labels.append(_pseudo_array(pseudo, pseudo_scores[-1].shape[1]))
+            schedule.append((top_k, conf))
         bags.set_pseudo_labels(pseudo)
         train_loader = make_loader(bags, cfg.batch_size, True, device)
         for ep in range(cfg.epochs_per_iter):
             epoch = (iteration - 1) * cfg.epochs_per_iter + ep + 1
             losses = train_one_epoch(model, train_loader, optimizer, scaler, cfg.weights,
                                      device, use_amp)
-            auc = validation_video_auc(model, val_loader, device)
+            auc = validation_video_auc(model, val_loader, device, record=val_record)
             history.append({"iteration": iteration, "epoch": epoch, "top_k": top_k,
                             "confidence_min": conf, **asdict(stats), **losses,
                             "val_video_auc": auc})
@@ -176,4 +197,30 @@ def run_stage2(cfg: Stage2Config) -> dict:
                  "best_epoch": best_epoch, "val_split_sha": split.sha256}
     _write_json(os.path.join(cfg.out_dir, "history.json"), history)
     _write_json(os.path.join(cfg.out_dir, "selection.json"), selection)
+    if cfg.record:
+        _save_stage2_record(cfg, model, train_fs, split, device, use_amp, val_record,
+                            pseudo_scores, pseudo_labels, schedule)
     return selection
+
+
+def _save_stage2_record(cfg: Stage2Config, model, train_fs, split, device, use_amp,
+                        val_record, pseudo_scores, pseudo_labels, schedule) -> None:
+    """Write the recorded scores, then score the final model (round 4) after everything else
+    is saved, so neither the training run nor its outputs depend on this step."""
+    n_epochs = cfg.iterations * cfg.epochs_per_iter
+    np.savez_compressed(os.path.join(cfg.out_dir, "record_val_scores.npz"),
+                        epochs=np.arange(0, n_epochs + 1), scores=np.stack(val_record),
+                        val_indices=np.asarray(split.val_indices))
+    np.savez_compressed(os.path.join(cfg.out_dir, "record_pseudo.npz"),
+                        rounds=np.arange(1, cfg.iterations + 1), scores=np.stack(pseudo_scores),
+                        labels=np.stack(pseudo_labels),
+                        top_k=np.array([s[0] for s in schedule]),
+                        confidence=np.array([s[1] for s in schedule]),
+                        train_indices=np.asarray(split.train_indices))
+    final: list[torch.Tensor] = []
+    top_k, conf = schedule[-1]
+    generate_pseudo_labels(model, train_fs.features, train_fs.labels, device, top_k, conf,
+                           use_amp, cfg.top_k_neg, cfg.pseudo_neg_k, record=final)
+    np.savez_compressed(os.path.join(cfg.out_dir, "record_pseudo_final.npz"),
+                        round=np.array(cfg.iterations + 1), scores=torch.stack(final).numpy(),
+                        train_indices=np.asarray(split.train_indices))

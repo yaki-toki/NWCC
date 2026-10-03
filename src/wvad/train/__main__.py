@@ -26,6 +26,8 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--out_dir", required=True)
     p.add_argument("--lr", type=float)
     p.add_argument("--batch_size", type=int)
+    p.add_argument("--record", action="store_true",
+                   help="save validation (and stage-2 pseudo-label) scores; training unchanged")
 
 
 def parse(argv=None) -> argparse.Namespace:
@@ -54,7 +56,7 @@ def _given(args: argparse.Namespace, *names: str) -> dict:
 def main(argv=None) -> None:
     args = parse(argv)
     base = {"dataset": args.dataset, "pair": args.pair, "seed": args.seed,
-            "out_dir": args.out_dir, **_given(args, "lr", "batch_size")}
+            "out_dir": args.out_dir, "record": args.record, **_given(args, "lr", "batch_size")}
     if args.stage == "stage1":
         result = run_stage1(Stage1Config(**base, **_given(args, "epochs")))
     else:
