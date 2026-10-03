@@ -179,6 +179,9 @@ python -m wvad.diagnostics.c4 --runs <local runs root>/e003
 python -m wvad.diagnostics.c5 --runs <local runs root>/e003
 ```
 
+### Stage C — E004 temporal-context linear probe ([plan](experiments/E004_temporal_context_probe/PLAN.md))
+Local CPU only (UCF training split; UCA proxy labels for diagnosis). Commands are added when the probe is implemented.
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/

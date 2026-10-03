@@ -1,0 +1,44 @@
+# E004 temporal-context linear probe (PLAN.md). Paths are logical (configs/paths.yaml).
+experiment: E004_temporal_context_probe
+test_data: none
+dataset: ucf                           # XD has no temporal training labels
+pairs: [xcb_xcl, xcb_siglip]
+fit_part: train                        # training part of the validation split
+eval_part: val
+proxy:
+  file: data/annotations/ucf_train_uca_proxy.json
+  variants: [M1A, M1B, M2A, M2B]
+  positive_min_fraction: 0.5           # strict sensitivity: 1.0
+  negatives: [normal_video_segments, zero_overlap_segments_in_proxy_videos]
+  excluded: [partial_overlap_segments, anomalous_videos_without_proxy]
+inputs:
+  i: [x_t]
+  ii: [x_t, x_t-1]
+  iii: [x_t, mean(x_t-4..x_t-1)]       # main comparison
+  iv: [x_t, x_t-1, x_t+1]              # non-causal reference
+  v: [x_t, mean(4 random same-video segments with |j-t| > 4)]   # control
+  padding: repeat_edge
+  random_segments_rng: "numpy.random.default_rng(20261003)"
+  standardize: per_block_training_part
+probe:
+  model: "sklearn.linear_model.LogisticRegression"
+  params: {penalty: l2, solver: lbfgs, max_iter: 2000, tol: 1.0e-4, class_weight: null}
+  C_grid: [0.01, 0.1, 1.0]
+  C_selection: {per: [pair, input, shape], labels: {A: M1A, B: M1B}, folds: 5,
+                fold_rule: "contiguous within label and category: anomalous rank r in its category -> floor(5 r / n_cat); normal rank r -> floor(5 r / n_normal)",
+                fold_check: "every fold has positives and normal-video negatives", criterion: segment_ap,
+                grid_edge: "extend one decade once (0.001 or 10)"}
+metrics:
+  verdict: segment_ap                  # one weight per segment
+  descriptive: within_anomalous_ap
+bootstrap: {n: 10000, rng: "numpy.random.default_rng(0)", unit: video,
+            strata: [normal, anomalous], paired: true, interval: percentile_95}
+verdict:
+  p6: {confirm: "all 8 cells: dAP_ctx >= 1.0 and CI lower > 0 (checked first)",
+       reject: "all 8 cells: CI upper of dAP_ctx < 1.0"}
+  attribution: {only_if: "p6 confirm, else not applicable",
+                local: "all 8 cells: CI lower of dAP_ctl > 0",
+                scene: "all 8 cells: CI upper of dAP_ctl < 0.5", mixed: otherwise}
+compute: {parallel_fits: 4, blas_threads: 8, device: cpu,
+          resume: "per-fit files with commit and config hash; refuse on mismatch",
+          out: "F:/Vision/wvad_runs/e004"}
