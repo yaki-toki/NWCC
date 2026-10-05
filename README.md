@@ -306,6 +306,38 @@ python -m wvad.diagnostics.e013 --e003 <local runs root>/e003 --e012 <local runs
     --runs <local runs root>/e013
 ```
 
+### Stage D — E014 D3: self-training at two strengths ([plan](experiments/E014_self_training/PLAN.md))
+Stage 2 with pseudo-label self-training (3 rounds x 10 epochs, curriculum) from the E003 stage-1 `ckpt_last.pt`, the same start as the E013 `l20` baseline: `st3` (pseudo weights 1.0 / 0.3) and `stw` (0.1 / 0.03). The baseline is the existing E013 `l20` runs (reused; the analysis cross-checks them against `e013_runs.csv`). The training code is unchanged: before deploying, the diff below must be empty. Deploy the committed code, check GPU and host memory, record the server environment, and launch one dataset per batch (12 processes; both arms of a chain in the same batch; PLAN.md change log).
+```bash
+git diff 8b46731b -- src/wvad/train src/wvad/losses src/wvad/models src/wvad/data src/wvad/eval \
+    src/wvad/paths.py                                            # local, before deploying: empty
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv && free -g      # on the server
+RUNS=~/wvad_runs/e014 E3=~/wvad_runs/e003 && mkdir -p $RUNS
+python -c "import json, torch; print(json.dumps({'torch': torch.__version__, 'cuda': torch.version.cuda, \
+    'cudnn': torch.backends.cudnn.version(), 'device': torch.cuda.get_device_name(0)}))" > $RUNS/env.json
+ds=ucf                                   # first batch; when it is done, run the loop again with ds=xdv
+for pair in xcb_xcl xcb_siglip; do
+  for seed in 0 1 2; do
+    c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+    T="--dataset $ds --pair $pair --seed $seed --init $E3/$c/stage1/ckpt_last.pt --lambda_dense 0 --record"
+    setsid nohup python -m wvad.train stage2 $T --lambda_pseudo 1.0 --lambda_neg_pseudo 0.3 \
+        --out_dir $d/st3 > $d.st3.log 2>&1 < /dev/null &
+    setsid nohup python -m wvad.train stage2 $T --lambda_pseudo 0.1 --lambda_neg_pseudo 0.03 \
+        --out_dir $d/stw > $d.stw.log 2>&1 < /dev/null &
+  done
+done
+ls $RUNS/*/st?/selection.json | wc -l                            # 12 per batch, 24 when done
+pgrep -fc "[w]vad.train"                                        # 0 before the next batch / copying
+```
+Before launching, `ls ~/wvad_runs/e003/*/stage1/ckpt_last.pt | wc -l` must print 12 and `~/wvad_runs/e013/*/l20/record_pseudo.npz` must exist for all 12 chains; `env.json` must hold the torch and CUDA versions (an empty file means the command failed). A numerical failure is not re-run (that arm is failed); an infrastructure failure is re-run once. A run that stops before writing `ckpt_last.pt`: read its log; non-finite losses or scores make it a numerical failure (PLAN.md change log), anything else an infrastructure failure.
+
+**Analysis** (local CPU): gates (a)-(c) first (`results/e014_gate.json`, with the server environment, whether each init path and MIL weight is right, and which round-1 arrays differ); stops if a gate fails or `env.json` is missing or empty. `results/e014_summary.json` is written in three steps: verdict and choice, then the descriptives, then the UCF UCA proxy AP (descriptive only; `--no_proxy` skips it).
+```bash
+ssh <server> 'tar -cf - -C ~/wvad_runs e014' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e014 --e003 <local runs root>/e003 --e013 <local runs root>/e013 \
+    --runs <local runs root>/e014
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/

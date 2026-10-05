@@ -49,7 +49,8 @@ class Arm:
     root: Path
     stage1: str                             # sub-folder of each chain for stage 1
     stage2: str                             # sub-folder for stage 2
-    weights: Mapping[str, float]            # expected loss weights, both stages (absent = 0)
+    weights: Mapping[str, float]            # expected loss weights, stage 2 and, unless
+                                            # ``weights1`` is given, stage 1 (absent = 0)
     reuse_e010: bool = False                # E003 runs: cross-check against e010_runs.csv
     stage1_root: Path | None = None         # where this arm's stage-1 runs live (default root)
     stage1_epochs: int = STAGE1_EPOCHS
@@ -57,9 +58,14 @@ class Arm:
     expect1: Mapping[str, object] = field(default_factory=dict)   # expected stage-1 config
     expect2: Mapping[str, object] = field(default_factory=dict)   # expected stage-2 config
     init_ckpt: str = "ckpt_best_val.pt"     # stage-1 checkpoint stage 2 starts from (E013)
+    weights1: Mapping[str, float] | None = None   # stage-1 loss weights (None = ``weights``)
 
     def stage1_dir(self, chain: str) -> Path:
         return Path(self.stage1_root or self.root) / chain / self.stage1
+
+    @property
+    def stage1_weights(self) -> Mapping[str, float]:
+        return self.weights if self.weights1 is None else self.weights1
 
 
 @dataclass
@@ -144,7 +150,7 @@ def load_run(arm: Arm, dataset: str, pair: str, seed: int, val_idx: np.ndarray,
     chain = arm.root / f"{dataset}_{pair}_s{seed}"
     d1, d2 = arm.stage1_dir(chain.name), chain / arm.stage2
     cfg1 = _config(d1)
-    check_config(cfg1, dataset, pair, seed, arm.weights, d1,
+    check_config(cfg1, dataset, pair, seed, arm.stage1_weights, d1,
                  {"epochs": arm.stage1_epochs, **arm.expect1})
     run = RunData(history1=_history(d1))
     s1 = _record(d1, np.arange(1, arm.stage1_epochs + 1), val_idx)
@@ -164,8 +170,9 @@ def load_run(arm: Arm, dataset: str, pair: str, seed: int, val_idx: np.ndarray,
     if not (np.isfinite(s2).all() and _finite_history(run.history2)):
         run.failed = "non-finite loss or score in stage 2"
         return run
-    lam = float(arm.weights.get("normal_seg", 0.0))
-    for stage, hist in ((arm.stage1, run.history1), (arm.stage2, run.history2)):
+    for stage, hist, w in ((arm.stage1, run.history1, arm.stage1_weights),
+                           (arm.stage2, run.history2, arm.weights)):
+        lam = float(w.get("normal_seg", 0.0))
         for h in hist:
             if lam > 0 and not h.get("loss_normal_seg", 0.0) > 0:
                 raise ValueError(f"{chain}/{stage} epoch {h.get('epoch')}: normal-segment loss "
@@ -232,9 +239,14 @@ def _worst_mc(fits: DatasetFits, sd: float) -> float:
 
 
 def fit_dataset(data: DatasetData, cal: Mapping, dataset: str,
-                baseline: Arm | None = None) -> DatasetFits:
-    """Cross-fit on the E010 splits; a reused E003 baseline is cross-checked against E010 at
-    the E010 R before any escalation; then the MC rule with the fixed E010 SD_d."""
+                baseline: Arm | None = None,
+                reference: Mapping[tuple, Mapping[str, float]] | None = None) -> DatasetFits:
+    """Cross-fit on the E010 splits; a reused baseline is cross-checked at the E010 R before any
+    escalation (E003 runs against E010; other reused runs against ``reference``, a map
+    (pair, seed) -> {metric: value} from the experiment that produced them); then the MC rule
+    with the fixed E010 SD_d."""
+    if reference is not None and (baseline is None or baseline.reuse_e010):
+        raise ValueError("a reference table needs a baseline arm that is not an E010 reuse")
     fits = _fit(data, cal["R"])
     if fits.splits_sha256 != cal["splits_sha256"]:
         raise ValueError(f"splits sha {fits.splits_sha256} != E010 {cal['splits_sha256']}")
@@ -242,6 +254,9 @@ def fit_dataset(data: DatasetData, cal: Mapping, dataset: str,
     if baseline is not None and baseline.reuse_e010:
         check_reused_baseline(dataset, baseline, fits)
         checks["reused_baseline_vs_e010"] = f"passed at R={fits.R}"
+    elif reference is not None:
+        check_reference(dataset, baseline, fits, reference)
+        checks = {"reused_baseline_vs_reference": f"passed at R={fits.R} ({', '.join(METRICS)})"}
     elif baseline is not None:
         checks["reused_baseline_vs_e010"] = "skipped (fresh baseline runs)"
     sd = cal["sd"]["v_auc"]
@@ -271,6 +286,22 @@ def check_reused_baseline(dataset: str, arm: Arm, fits: DatasetFits) -> None:
             if abs(got - want[(dataset, p, s)]) > 1e-12:
                 raise ValueError(f"{dataset}/{p}/s{s}: cross-fitted V-AUC {got} != E010 "
                                  f"{want[(dataset, p, s)]}")
+
+
+def check_reference(dataset: str, arm: Arm, fits: DatasetFits,
+                    reference: Mapping[tuple, Mapping[str, float]], tol: float = 1e-12) -> None:
+    """Re-computed cross-fitted values of reused runs (all metrics, at the E010 R) must equal
+    the reference table; a missing or failed run, or NaN on either side, is a mismatch."""
+    for p in PAIRS:
+        for s in DEV_SEEDS:
+            key = (arm.name, p, s)
+            if key not in fits.stage2:
+                raise ValueError(f"{dataset}/{p}/s{s}: reused baseline run failed or missing")
+            for m in METRICS:
+                got, want = fits.stage2[key].mean(m), float(reference[(p, s)][m])
+                if not abs(got - want) <= tol:
+                    raise ValueError(f"{dataset}/{p}/s{s}: cross-fitted {m} {got} != "
+                                     f"reference {want}")
 
 
 # --- comparison -----------------------------------------------------------------------------
