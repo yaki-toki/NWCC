@@ -186,7 +186,10 @@ python -m wvad.diagnostics.c6 --out <local runs root>/e004     # results/c6_prob
 ```
 
 ### Stage D — E010 development-metric calibration ([plan](experiments/E010_dev_metric_calibration/PLAN.md))
-No training: cross-fitted validation video AUC on the recorded E003 runs fixes the stage-D noise level and adoption rule. Command added when implemented.
+No training: cross-fitted validation video AUC on the recorded E003 runs fixes the stage-D noise level and adoption rule. Runs on CPU from a local copy of `~/wvad_runs/e003` (only `record_val_scores.npz`, `selection.json` and `ckpt_last.pt` of each `base`/`full` run are read); writes `results/e010_runs.csv` and `results/e010_summary.json`.
+```bash
+python -m wvad.diagnostics.e010 --runs <local copy of ~/wvad_runs/e003>
+```
 
 ## Local checks (not tracked)
 ```bash
