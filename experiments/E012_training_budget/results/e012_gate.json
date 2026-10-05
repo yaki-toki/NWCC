@@ -1,0 +1,112 @@
+{
+ "code": {
+  "commit": "8b7e43d3c61d57b8b008b3b5603fbdebebaa66fe",
+  "source": "git",
+  "dirty": false
+ },
+ "chains": [
+  {
+   "chain": "ucf_xcb_xcl_s0",
+   "a": true,
+   "s40_best_epoch": 34,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "ucf_xcb_xcl_s1",
+   "a": true,
+   "s40_best_epoch": 30,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "ucf_xcb_xcl_s2",
+   "a": true,
+   "s40_best_epoch": 32,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s0",
+   "a": true,
+   "s40_best_epoch": 8,
+   "b": true,
+   "d": true,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s1",
+   "a": true,
+   "s40_best_epoch": 18,
+   "b": true,
+   "d": true,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s2",
+   "a": true,
+   "s40_best_epoch": 10,
+   "b": true,
+   "d": true,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s0",
+   "a": true,
+   "s40_best_epoch": 40,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s1",
+   "a": true,
+   "s40_best_epoch": 31,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s2",
+   "a": true,
+   "s40_best_epoch": 32,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s0",
+   "a": true,
+   "s40_best_epoch": 27,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s1",
+   "a": true,
+   "s40_best_epoch": 4,
+   "b": true,
+   "d": true,
+   "c": true,
+   "e": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s2",
+   "a": true,
+   "s40_best_epoch": 6,
+   "b": true,
+   "d": true,
+   "c": true,
+   "e": true
+  }
+ ],
+ "status": {
+  "a": true,
+  "b": true,
+  "c": true,
+  "d": true,
+  "e": true
+ },
+ "errors": [],
+ "shared_stage1_chains": 5
+}
