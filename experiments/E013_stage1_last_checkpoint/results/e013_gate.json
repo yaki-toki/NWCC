@@ -1,0 +1,140 @@
+{
+ "code": {
+  "commit": "aa031d824cfc324cd83bbc13be16dcc2d7e8efe3",
+  "source": "git",
+  "dirty": false
+ },
+ "chains": [
+  {
+   "chain": "ucf_xcb_xcl_s0",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 20,
+   "b": true,
+   "e012_s40_best_epoch": 34
+  },
+  {
+   "chain": "ucf_xcb_xcl_s1",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 20,
+   "b": true,
+   "e012_s40_best_epoch": 30
+  },
+  {
+   "chain": "ucf_xcb_xcl_s2",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 18,
+   "e012_s40_best_epoch": 32
+  },
+  {
+   "chain": "ucf_xcb_siglip_s0",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 8,
+   "e012_s40_best_epoch": 8
+  },
+  {
+   "chain": "ucf_xcb_siglip_s1",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 18,
+   "e012_s40_best_epoch": 18
+  },
+  {
+   "chain": "ucf_xcb_siglip_s2",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 10,
+   "e012_s40_best_epoch": 10
+  },
+  {
+   "chain": "xdv_xcb_xcl_s0",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 20,
+   "b": true,
+   "e012_s40_best_epoch": 40,
+   "c": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s1",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 20,
+   "b": true,
+   "e012_s40_best_epoch": 31
+  },
+  {
+   "chain": "xdv_xcb_xcl_s2",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 15,
+   "e012_s40_best_epoch": 32
+  },
+  {
+   "chain": "xdv_xcb_siglip_s0",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 8,
+   "e012_s40_best_epoch": 27
+  },
+  {
+   "chain": "xdv_xcb_siglip_s1",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 4,
+   "e012_s40_best_epoch": 4
+  },
+  {
+   "chain": "xdv_xcb_siglip_s2",
+   "a_l20": true,
+   "a_l40": true,
+   "init_l20_ok": true,
+   "init_l40_ok": true,
+   "e003_best_epoch": 6,
+   "e012_s40_best_epoch": 6
+  }
+ ],
+ "status": {
+  "a_l20": true,
+  "a_l40": true,
+  "b": true,
+  "c": true,
+  "b_chains_as_planned": true,
+  "c_chains_as_planned": true
+ },
+ "errors": [],
+ "b_chains": [
+  "ucf_xcb_xcl_s0",
+  "ucf_xcb_xcl_s1",
+  "xdv_xcb_xcl_s0",
+  "xdv_xcb_xcl_s1"
+ ],
+ "c_chains": [
+  "xdv_xcb_xcl_s0"
+ ]
+}
