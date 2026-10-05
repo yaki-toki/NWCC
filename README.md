@@ -191,6 +191,54 @@ No training: cross-fitted validation video AUC on the recorded E003 runs fixes t
 python -m wvad.diagnostics.e010 --runs <local copy of ~/wvad_runs/e003>
 ```
 
+### Stage D — E011 D1: BCE on every normal-video segment ([plan](experiments/E011_dense_normal_negatives/PLAN.md))
+Candidates `d1a` (`--lambda_normal_seg 0.1`) and `d1b` (`1.0`) in both stages, against the E003 `base` runs (reused after the no-change gate). Deploy the committed code first (server conventions).
+
+**No-change gate** (server): the default weight must reproduce two E003 base chains bit for bit; writes `results/e011_identity.json`.
+```bash
+G=~/wvad_runs/e011_gate && mkdir -p $G
+for spec in "ucf xcb_xcl" "xdv xcb_siglip"; do
+  set -- $spec; d=$G/${1}_${2}_s0
+  setsid nohup bash -c "
+    python -m wvad.train stage1 --dataset $1 --pair $2 --seed 0 --out_dir $d/stage1 --record &&
+    python -m wvad.train stage2 --dataset $1 --pair $2 --seed 0 --init $d/stage1/ckpt_best_val.pt \
+        --out_dir $d/base --lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record" \
+    > $d.log 2>&1 < /dev/null &
+done
+ls $G/*/base/record_pseudo_final.npz | wc -l                     # 2 when done
+python tests/equivalence/check_e011_gate.py --e003_runs ~/wvad_runs/e003 --gate_runs $G
+```
+
+**Candidate runs** (server, only after the gate passes): 24 chains, all at once.
+```bash
+RUNS=~/wvad_runs/e011 && mkdir -p $RUNS
+for spec in "ucf xcb_xcl" "ucf xcb_siglip" "xdv xcb_xcl" "xdv xcb_siglip"; do
+  set -- $spec
+  for seed in 0 1 2; do
+    for arm in "d1a 0.1" "d1b 1.0"; do
+      set -- $spec $arm; d=$RUNS/${1}_${2}_s${seed}
+      mkdir -p $d
+      setsid nohup bash -c "
+        python -m wvad.train stage1 --dataset $1 --pair $2 --seed $seed --out_dir $d/${3}_stage1 \
+            --lambda_normal_seg $4 --record &&
+        python -m wvad.train stage2 --dataset $1 --pair $2 --seed $seed \
+            --init $d/${3}_stage1/ckpt_best_val.pt --out_dir $d/$3 --lambda_dense 0 \
+            --lambda_pseudo 0 --lambda_neg_pseudo 0 --lambda_normal_seg $4 --record" \
+        > $d.$3.log 2>&1 < /dev/null &
+    done
+  done
+done
+ls $RUNS/*/d1?/record_pseudo_final.npz | wc -l                   # 24 when done
+```
+
+**Analysis** (local CPU): copy the runs and the gate result back, then
+```bash
+ssh <server> 'tar -cf - -C ~/wvad_runs e011' | tar -xf - -C <local runs root>
+scp <server>:frozen-vlm-wvad/experiments/E011_dense_normal_negatives/results/e011_identity.json \
+    experiments/E011_dense_normal_negatives/results/
+python -m wvad.diagnostics.e011 --base_runs <local runs root>/e003 --runs <local runs root>/e011
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/

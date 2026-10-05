@@ -13,6 +13,8 @@ are deliberate design changes for later stages.
     sparsity_loss        |mean anomalous-video segment score - target|
     smoothness_loss      mean squared difference of adjacent segment scores
     pseudo_label_bce     BCE on segments carrying pseudo-labels of one value
+    normal_segment_bce   BCE (target 0) on every segment of every normal video: segments of
+                         a normal video are sure negatives under weak labels (stage D1, E011)
 """
 
 from __future__ import annotations
@@ -65,3 +67,8 @@ def pseudo_label_bce(segment_logits: torch.Tensor, pseudo: torch.Tensor,
     if mask.sum() > 0:
         return F.binary_cross_entropy_with_logits(segment_logits[mask], pseudo[mask].float())
     return torch.tensor(0.0, device=segment_logits.device)
+
+
+def normal_segment_bce(normal_logits: torch.Tensor) -> torch.Tensor:
+    """Mean BCE-with-logits against 0 over all segment logits (n_normal, S) of normal videos."""
+    return F.binary_cross_entropy_with_logits(normal_logits, torch.zeros_like(normal_logits))

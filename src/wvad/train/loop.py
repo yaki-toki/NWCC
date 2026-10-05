@@ -20,6 +20,7 @@ from wvad.eval.metrics import max_video_auc
 from wvad.losses import (
     dense_ranking_loss,
     max_ranking_loss,
+    normal_segment_bce,
     pseudo_label_bce,
     smoothness_loss,
     sparsity_loss,
@@ -37,6 +38,7 @@ class LossWeights:
     smooth: float = 0.001
     pseudo: float = 0.0            # pseudo-positive BCE (stage 2)
     neg_pseudo: float = 0.0        # pseudo-negative BCE (stage 2)
+    normal_seg: float = 0.0        # BCE on every normal-video segment (stage D1; 0 = off)
 
 
 class VideoBags(Dataset):
@@ -93,13 +95,17 @@ def _losses(model, batch, w: LossWeights, device: torch.device):
     l_smooth = smoothness_loss(seg_scores)
     l_mil = l_bce + l_rank + w.dense * l_dense + w.sparse * l_sparse + w.smooth * l_smooth
     total = w.mil * l_mil
+    l_normal = None                 # not computed at all when the weight is 0 (baseline)
+    if w.normal_seg > 0:
+        l_normal = normal_segment_bce(seg_logits[normal]) if normal.sum() > 0 else zero
+        total = total + w.normal_seg * l_normal
     l_pos = zero
     if len(batch) == 4:
         pseudo = batch[3].to(device)
         l_pos = pseudo_label_bce(seg_logits, pseudo, 1.0)
         l_neg = pseudo_label_bce(seg_logits, pseudo, 0.0)
         total = total + w.pseudo * l_pos + w.neg_pseudo * l_neg
-    return total, l_mil, l_pos
+    return total, l_mil, l_pos, l_normal
 
 
 def train_one_epoch(model, loader: DataLoader, optimizer: torch.optim.Optimizer,
@@ -108,9 +114,10 @@ def train_one_epoch(model, loader: DataLoader, optimizer: torch.optim.Optimizer,
     model.train()
     optimizer.zero_grad()
     sums = np.zeros(3)
+    normal_sum = 0.0
     for batch in loader:
         with autocast(device_type=device.type, enabled=use_amp):
-            total, l_mil, l_pos = _losses(model, batch, w, device)
+            total, l_mil, l_pos, l_normal = _losses(model, batch, w, device)
         if scaler is not None:
             scaler.scale(total).backward()
             scaler.unscale_(optimizer)
@@ -123,9 +130,14 @@ def train_one_epoch(model, loader: DataLoader, optimizer: torch.optim.Optimizer,
             optimizer.step()
         optimizer.zero_grad()
         sums += (total.item(), l_mil.item(), l_pos.item())
+        if l_normal is not None:
+            normal_sum += l_normal.item()
     means = sums / max(len(loader), 1)
-    return {"loss_total": float(means[0]), "loss_mil": float(means[1]),
-            "loss_pseudo": float(means[2])}
+    out = {"loss_total": float(means[0]), "loss_mil": float(means[1]),
+           "loss_pseudo": float(means[2])}
+    if w.normal_seg > 0:            # key absent for the baseline (its history is unchanged)
+        out["loss_normal_seg"] = normal_sum / max(len(loader), 1)
+    return out
 
 
 def validation_video_auc(model, loader: DataLoader, device: torch.device,

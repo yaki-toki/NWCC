@@ -10,6 +10,7 @@ import json
 from dataclasses import replace
 
 from wvad.data import DATASETS, ENCODER_PAIRS
+from wvad.train.loop import LossWeights
 from wvad.train.stages import (
     Stage1Config,
     Stage2Config,
@@ -28,6 +29,8 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--batch_size", type=int)
     p.add_argument("--record", action="store_true",
                    help="save validation (and stage-2 pseudo-label) scores; training unchanged")
+    p.add_argument("--lambda_normal_seg", type=float,
+                   help="BCE weight on every normal-video segment (stage D1; default 0 = off)")
 
 
 def parse(argv=None) -> argparse.Namespace:
@@ -57,13 +60,15 @@ def main(argv=None) -> None:
     args = parse(argv)
     base = {"dataset": args.dataset, "pair": args.pair, "seed": args.seed,
             "out_dir": args.out_dir, "record": args.record, **_given(args, "lr", "batch_size")}
+    normal = {} if args.lambda_normal_seg is None else {"normal_seg": args.lambda_normal_seg}
     if args.stage == "stage1":
-        result = run_stage1(Stage1Config(**base, **_given(args, "epochs")))
+        weights = replace(LossWeights(), **normal)
+        result = run_stage1(Stage1Config(**base, weights=weights, **_given(args, "epochs")))
     else:
         overrides = {k: v for k, v in (("dense", args.lambda_dense),
                                         ("pseudo", args.lambda_pseudo),
                                         ("neg_pseudo", args.lambda_neg_pseudo)) if v is not None}
-        weights = replace(stage2_default_weights(), **overrides)
+        weights = replace(stage2_default_weights(), **overrides, **normal)
         cfg = Stage2Config(**base, init=args.init, curriculum=not args.no_curriculum,
                            weights=weights, **_given(args, "iterations", "epochs_per_iter"))
         result = run_stage2(cfg)
