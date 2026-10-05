@@ -55,6 +55,7 @@ class Arm:
     stage2_epochs: int = STAGE2_EPOCHS      # iterations x epochs_per_iter
     expect1: Mapping[str, object] = field(default_factory=dict)   # expected stage-1 config
     expect2: Mapping[str, object] = field(default_factory=dict)   # expected stage-2 config
+    init_ckpt: str = "ckpt_best_val.pt"     # stage-1 checkpoint stage 2 starts from (E013)
 
     def stage1_dir(self, chain: str) -> Path:
         return Path(self.stage1_root or self.root) / chain / self.stage1
@@ -153,7 +154,7 @@ def load_run(arm: Arm, dataset: str, pair: str, seed: int, val_idx: np.ndarray,
     if int(cfg2["iterations"]) * int(cfg2["epochs_per_iter"]) != arm.stage2_epochs:
         raise ValueError(f"{d2}: stage-2 budget {cfg2['iterations']} x {cfg2['epochs_per_iter']}"
                          f" != {arm.stage2_epochs}")
-    if Path(cfg2["init"]).parts[-3:] != (chain.name, arm.stage1, "ckpt_best_val.pt"):
+    if Path(cfg2["init"]).parts[-3:] != (chain.name, arm.stage1, arm.init_ckpt):
         raise ValueError(f"{d2}: init {cfg2['init']} is not this chain's stage-1 checkpoint")
     run.history2 = _history(d2)
     s2 = _record(d2, np.arange(0, arm.stage2_epochs + 1), val_idx)
@@ -178,8 +179,10 @@ def load_run(arm: Arm, dataset: str, pair: str, seed: int, val_idx: np.ndarray,
     run.s1_selected = check_selection(d1, run.s1, labels, sel1)
     run.s2_selected = check_selection(d2, run.s2, labels, sel2)
     run.s1_epoch, run.s2_epoch = int(sel1["best_epoch"]), int(sel2["best_epoch"])
-    if not np.allclose(s2[0], s1[run.s1_epoch - 1], atol=INIT_TOL, rtol=0):
-        raise ValueError(f"{d2}: epoch-0 scores differ from the selected stage-1 epoch")
+    start = arm.stage1_epochs if arm.init_ckpt == "ckpt_last.pt" else run.s1_epoch
+    if not np.allclose(s2[0], s1[start - 1], atol=INIT_TOL, rtol=0):
+        raise ValueError(f"{d2}: epoch-0 scores differ from stage-1 epoch {start} "
+                         f"({arm.init_ckpt})")
     return run
 
 
