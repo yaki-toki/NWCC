@@ -134,11 +134,13 @@ def descriptives(all_arms: Sequence[Arm], data: Mapping[str, DatasetData],
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description="E011 stage D1 analysis")
-    ap.add_argument("--base_runs", required=True, type=Path)
+    ap.add_argument("--base_runs", type=Path, help="local copy of the E003 runs (reused)")
     ap.add_argument("--runs", required=True, type=Path)
     ap.add_argument("--fresh_baseline", type=Path,
                     help="re-run baseline root (gate failed for environment reasons only)")
     args = ap.parse_args(argv)
+    if (args.base_runs is None) == (args.fresh_baseline is None):
+        ap.error("give exactly one of --base_runs (reused E003) and --fresh_baseline")
     if args.fresh_baseline is None:
         baseline = {"source": "E003 base runs (reused)", "gate": gate_status()}
         all_arms = arms(args.base_runs, args.runs)
