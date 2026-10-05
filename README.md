@@ -185,6 +185,9 @@ Local CPU only (UCF training split; UCA proxy labels for diagnosis). About 360-4
 python -m wvad.diagnostics.c6 --out <local runs root>/e004     # results/c6_probe.csv, c6_cv.csv, c6_summary.json
 ```
 
+### Stage D — E010 development-metric calibration ([plan](experiments/E010_dev_metric_calibration/PLAN.md))
+No training: cross-fitted validation video AUC on the recorded E003 runs fixes the stage-D noise level and adoption rule. Command added when implemented.
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
