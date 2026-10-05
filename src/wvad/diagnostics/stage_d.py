@@ -39,6 +39,7 @@ STAGE1_EPOCHS, STAGE2_EPOCHS = 20, 30
 R_LARGE, MC_LIMIT = 1000, 0.25
 WEIGHT_KEYS = ("dense", "pseudo", "neg_pseudo", "normal_seg")
 INIT_TOL = 1e-5
+INIT_CKPTS = ("ckpt_best_val.pt", "ckpt_last.pt")
 SIGMA_FACTOR = math.sqrt(2 / 3)
 
 
@@ -138,6 +139,8 @@ def load_run(arm: Arm, dataset: str, pair: str, seed: int, val_idx: np.ndarray,
              labels: np.ndarray, split_sha: str) -> RunData:
     """Check one (stage 1, stage 2) chain and load its validation records."""
     check_dev_seed(seed)
+    if arm.init_ckpt not in INIT_CKPTS:
+        raise ValueError(f"{arm.name}: init_ckpt {arm.init_ckpt!r} not in {INIT_CKPTS}")
     chain = arm.root / f"{dataset}_{pair}_s{seed}"
     d1, d2 = arm.stage1_dir(chain.name), chain / arm.stage2
     cfg1 = _config(d1)

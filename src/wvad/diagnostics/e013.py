@@ -53,6 +53,8 @@ XCL, SIGLIP = "xcb_xcl", "xcb_siglip"
 LAST = "ckpt_last.pt"
 COMMON1 = {"weight_decay": 1e-4, "batch_size": 32, "lr": 1e-4}
 NAMES = ("l20", "l40", "lmix")
+PLANNED_B = {"ucf_xcb_xcl_s0", "ucf_xcb_xcl_s1", "xdv_xcb_xcl_s0", "xdv_xcb_xcl_s1"}
+PLANNED_C = {"xdv_xcb_xcl_s0"}
 
 
 def arms(e003: Path, e012: Path, runs: Path) -> dict[str, Arm]:
@@ -89,11 +91,20 @@ def same_stage2(a: Path, b: Path) -> bool:
             and _json(a / "selection.json") == _json(b / "selection.json"))
 
 
+def init_parts(d: Path) -> tuple[str, ...]:
+    """Last three parts of the stage-2 run's init path (diagnoses a gate (a) failure)."""
+    import torch
+    cfg = torch.load(d / LAST, map_location="cpu", weights_only=True)["config"]
+    return Path(cfg["init"]).parts[-3:]
+
+
 def gate_chain(e003: Path, e012: Path, runs: Path, chain: str) -> dict:
     e3, e12, e13 = e003 / chain, e012 / chain, runs / chain
     s1_3, s1_12 = e3 / "stage1", e12 / "s40_stage1"
     row = {"a_l20": same_record_at(e13 / "l20", 0, s1_3, 20),
-           "a_l40": same_record_at(e13 / "l40", 0, s1_12, 40)}
+           "a_l40": same_record_at(e13 / "l40", 0, s1_12, 40),
+           "init_l20_ok": init_parts(e13 / "l20") == (chain, "stage1", LAST),
+           "init_l40_ok": init_parts(e13 / "l40") == (chain, "s40_stage1", LAST)}
     row["e003_best_epoch"] = int(_json(s1_3 / "selection.json")["best_epoch"])
     if row["e003_best_epoch"] == 20:
         row["b"] = (same_state(s1_3 / "ckpt_best_val.pt", s1_3 / LAST)
@@ -119,16 +130,22 @@ def gates(e003: Path, e012: Path, runs: Path) -> tuple[dict, dict[tuple, bool]]:
                 same_start[(d, p, s)] = bool(row.get("b", False))
                 rows.append(row)
     status = {k: all(r[k] for r in rows if k in r) for k in ("a_l20", "a_l40", "b", "c")}
+    b_chains = [r["chain"] for r in rows if "b" in r]
+    c_chains = [r["chain"] for r in rows if "c" in r]
+    status["b_chains_as_planned"] = set(b_chains) == PLANNED_B        # change log
+    status["c_chains_as_planned"] = set(c_chains) == PLANNED_C
     return {"chains": rows, "status": status,
             "errors": [r["chain"] for r in rows if "error" in r],
-            "b_chains": [r["chain"] for r in rows if "b" in r],
-            "c_chains": [r["chain"] for r in rows if "c" in r]}, same_start
+            "b_chains": b_chains, "c_chains": c_chains}, same_start
 
 
 # --- Lmix -----------------------------------------------------------------------------------
 
 def add_lmix(data: Mapping[str, DatasetData], fits: Mapping[str, DatasetFits]) -> None:
-    """Register the per-pair arm under the name 'lmix' (same run objects, no copies)."""
+    """Register the per-pair arm under the name 'lmix' (same run objects, no copies).
+
+    Called after cross-fitting and the MC rule: nothing iterates over all runs afterwards, so
+    the aliases are never counted twice. Keep it that way."""
     for d in DATASETS:
         for p in PAIRS:
             src = LMIX_SOURCE[p]
@@ -141,8 +158,8 @@ def add_lmix(data: Mapping[str, DatasetData], fits: Mapping[str, DatasetFits]) -
 
 # --- verdicts -------------------------------------------------------------------------------
 
-def failed(data: Mapping[str, DatasetData], arm: str) -> bool:
-    return any(data[d].runs[(arm, p, s)].failed for d in DATASETS for p in PAIRS
+def failed(data: Mapping[str, DatasetData], arm: str, pairs=PAIRS) -> bool:
+    return any(data[d].runs[(arm, p, s)].failed for d in DATASETS for p in pairs
                for s in DEV_SEEDS)
 
 
@@ -171,7 +188,8 @@ def deltas(arm: str, data, fits, same_start: Mapping[tuple, bool]) -> dict:
         opt = base_optimism(data[d], fits[d], p)
         shared = [same_start_of(arm, d, p, s, same_start) for s in DEV_SEEDS]
         added = [0.0 if sh else o for sh, o in zip(shared, opt, strict=True)]
-        out[f"{d}/{p}"] = {"delta": delta, "delta_plus": delta + float(np.mean(added)),
+        plus = delta + float(np.mean(added))
+        out[f"{d}/{p}"] = {"delta": delta, "delta_plus": plus,
                            "same_start_seeds": [s for s in DEV_SEEDS
                                                 if same_start_of(arm, d, p, s, same_start)]}
     return out
@@ -190,16 +208,18 @@ def l40_vs_l20(fits: Mapping[str, DatasetFits], pair: str) -> dict[str, float]:
 
 def choose_arm(status: Mapping[str, str], xcl_diff: Mapping[str, float] | None,
                siglip_diff: Mapping[str, float] | None, thr: Mapping[str, float]) -> dict:
-    """Steps 1-3 of PLAN.md on Delta alone (L40 - L20 per dataset); diffs None when L20 or
-    L40 failed (then XCB+XCL stays at 20)."""
-    steps = {}
+    """Steps 1-3 of PLAN.md on Delta alone (L40 - L20 per dataset). A diff is None when a
+    run it needs failed; a needed but unavailable comparison makes the verdict hold
+    (change log)."""
     if xcl_diff is None:
-        steps["xcl_40"] = False
-        steps["note"] = "L20 or L40 failed: XCB+XCL budget comparison not made"
-    else:
-        steps["xcl_40"] = (any(xcl_diff[d] >= thr[d] for d in DATASETS)
-                           and not any(xcl_diff[d] <= -thr[d] for d in DATASETS))
+        return {"verdict": "hold", "chosen": None,
+                "reason": "XCB+XCL comparison unavailable (failed runs)"}
+    steps = {"xcl_40": (any(xcl_diff[d] >= thr[d] for d in DATASETS)
+                        and not any(xcl_diff[d] <= -thr[d] for d in DATASETS))}
     if steps["xcl_40"]:
+        if siglip_diff is None:
+            return {**steps, "verdict": "hold", "chosen": None,
+                    "reason": "XCB+SigLIP comparison unavailable (failed runs)"}
         steps["siglip_40_ok"] = not any(siglip_diff[d] <= -thr[d] for d in DATASETS)
         picked = "l40" if steps["siglip_40_ok"] else "lmix"
     else:
@@ -265,24 +285,45 @@ def selection_share(fits: DatasetFits, arm: str, pair: str, lo: int, hi: int) ->
     return float(np.mean((sel >= lo) & (sel <= hi)))
 
 
-def descriptives(data, fits, cal, compared: Mapping[str, dict]) -> dict:
+def start_value(data: DatasetData, arm: str, pair: str, seed: int) -> float:
+    """Full-validation V-AUC of the stage-1 epoch the arm's stage 2 starts from."""
+    e = start_epoch(arm, pair)
+    return float(rank_auc(data.runs[(arm, pair, seed)].s1[e - 1].max(axis=1)[None],
+                          data.labels)[0])
+
+
+def relabel_stage1(compared: dict, arm: str, data: Mapping[str, DatasetData]) -> None:
+    """Arms without stage-1 selection: report the start epoch, its V-AUC and optimism 0 in
+    the compare output's selection summary (change log); drop the stage-1 cross-fit."""
+    for k, st in compared.get("settings", {}).items():
+        d, p = k.split("/")
+        sel = st["selection"][arm]
+        sel |= {"s1_selected": float(np.mean([start_value(data[d], arm, p, s)
+                                              for s in DEV_SEEDS])),
+                "s1_optimism": 0.0, "s1_epochs": [start_epoch(arm, p)] * len(DEV_SEEDS)}
+        sel.pop("s1_crossfit", None)
+
+
+def descriptives(data, fits, cal, compared: Mapping[str, dict], ok: list[str]) -> dict:
+    """Descriptives for the baseline and the arms in ``ok`` (not failed)."""
     thr = {d: cal[d]["delta"]["v_auc"] for d in DATASETS}
-    arms_all = ("base", *NAMES)
+    arms_all = ("base", *ok)
     out = {}
     for d, p in SETTINGS:
         k = f"{d}/{p}"
-        vs_s1 = seed_mean(fits[d], "l40", p) - seed_mean(fits[d], "e012_s1", p)
         entry = {
             "stage2_curve": {a: stage2_curve(data[d], a, p) for a in arms_all},
             "stage1_level_over_delta": {a: stage1_level(data[d], fits[d], a, p, thr[d])
-                                        for a in NAMES},
+                                        for a in ok},
             "split_half_excluding_identical": {
-                a: split_half_excluding_identical(fits[d], a, "base", p) for a in NAMES},
-            "l40_vs_e012_s1": {
+                a: split_half_excluding_identical(fits[d], a, "base", p) for a in ok},
+        }
+        if "l40" in ok:
+            vs_s1 = seed_mean(fits[d], "l40", p) - seed_mean(fits[d], "e012_s1", p)
+            entry["l40_vs_e012_s1"] = {
                 "delta": vs_s1, "delta_over_threshold": vs_s1 / thr[d],
                 "identical_seeds": split_half_excluding_identical(
-                    fits[d], "l40", "e012_s1", p)["identical_seeds"]},
-        }
+                    fits[d], "l40", "e012_s1", p)["identical_seeds"]}
         if p == XCL:
             entry["share_last_10pct"] = {a: selection_share(fits[d], a, p, 28, 30)
                                          for a in arms_all}
@@ -291,8 +332,7 @@ def descriptives(data, fits, cal, compared: Mapping[str, dict]) -> dict:
                                          for a in arms_all}
         keys = ("delta_over_threshold", "candidate_seed_sd_over_sd_d",
                 "paired_delta_se_over_sigma", "per_seed_delta", "selection")
-        entry["compare"] = {a: {x: compared[a]["settings"][k][x] for x in keys}
-                            for a in NAMES if "settings" in compared[a]}
+        entry["compare"] = {a: {x: compared[a]["settings"][k][x] for x in keys} for a in ok}
         out[k] = entry
     return out
 
@@ -302,13 +342,12 @@ def csv_rows(cells: Mapping[str, Arm], data, fits) -> list[dict]:
     for row in rows:
         if row["failed"]:
             continue
-        run = data[row["dataset"]].runs[(row["arm"], row["pair"], row["seed"])]
-        labels = data[row["dataset"]].labels
-        if row["arm"] in ("l20", "l40"):           # no stage-1 selection in these arms
-            e = start_epoch(row["arm"], row["pair"])
-            row |= {"s1_epoch": e, "s1_optimism": 0.0,
-                    "s1_selected": float(rank_auc(run.s1[e - 1].max(axis=1)[None], labels)[0])}
-        row |= score_shape(run.s2_best, labels)
+        d, arm, p, s = row["dataset"], row["arm"], row["pair"], row["seed"]
+        run = data[d].runs[(arm, p, s)]
+        if arm in ("l20", "l40"):                  # no stage-1 selection (change log)
+            row |= {"s1_epoch": start_epoch(arm, p), "s1_optimism": 0.0,
+                    "s1_selected": start_value(data[d], arm, p, s), "s1_crossfit_v_auc": ""}
+        row |= score_shape(run.s2_best, data[d].labels)
     return rows
 
 
@@ -326,8 +365,8 @@ def main(argv: list[str] | None = None) -> None:
         raise SystemExit(f"runs missing or unreadable for {gate['errors']} (PLAN.md); "
                          "see results/e013_gate.json")
     if not all(gate["status"].values()):
-        raise SystemExit("gate failed: environment or start point; verdict suspended "
-                         "(PLAN.md); see results/e013_gate.json")
+        raise SystemExit("gate failed (environment, start point or gate chains); verdict "
+                         "suspended (PLAN.md); see results/e013_gate.json (init_*_ok)")
     cells = arms(args.e003, args.e012, args.runs)
     cal = calibration()
     data = {d: load_dataset(list(cells.values()), d) for d in DATASETS}
@@ -335,18 +374,31 @@ def main(argv: list[str] | None = None) -> None:
     add_lmix(data, fits)
     thr = {d: cal[d]["delta"]["v_auc"] for d in DATASETS}
     is_failed = {a: failed(data, a) for a in NAMES}
-    d_all = {a: deltas(a, data, fits, same_start) for a in NAMES if not is_failed[a]}
+    ok = [a for a in NAMES if not is_failed[a]]
+    d_all = {a: deltas(a, data, fits, same_start) for a in ok}
+    for v in d_all.values():
+        for k, x in v.items():
+            t_ = thr[k.split("/")[0]]
+            x |= {"delta_over_threshold": x["delta"] / t_,
+                  "delta_plus_over_threshold": x["delta_plus"] / t_}
     status = {a: "failed" if is_failed[a] else non_inferiority(d_all[a], thr) for a in NAMES}
-    ok_pair = not (is_failed["l20"] or is_failed["l40"])
-    diffs = {p: l40_vs_l20(fits, p) if ok_pair else None for p in (XCL, SIGLIP)}
+    diffs = {p: None if failed(data, "l20", (p,)) or failed(data, "l40", (p,))
+             else l40_vs_l20(fits, p) for p in (XCL, SIGLIP)}
     choice = choose_arm(status, diffs[XCL], diffs[SIGLIP], thr)
     cell = {**cells, "lmix": LMIX}
-    shared_maps = {a: {(d, p, s): same_start_of(a, d, p, s, same_start) for d in DATASETS
-                       for p in PAIRS for s in DEV_SEEDS} for a in NAMES}
-    compared = {a: compare(cell[a], cells["base"], data, fits, cal, shared_maps[a])
-                if not is_failed[a] else {"verdict": "failed"} for a in NAMES}
-    desc = descriptives(data, fits, cal, compared) if not any(is_failed.values()) else None
+    compared = {}
+    for a in ok:
+        shared = {(d, p, s): same_start_of(a, d, p, s, same_start) for d in DATASETS
+                  for p in PAIRS for s in DEV_SEEDS}
+        compared[a] = compare(cell[a], cells["base"], data, fits, cal, shared)
+        relabel_stage1(compared[a], a, data)
     write_csv(E013_RESULTS / "e013_runs.csv", csv_rows(cells, data, fits))
+    chosen = choice.get("chosen")
+    notes = ["descriptives['*']['compare'] holds stage_d.compare output; its common-rule "
+             "verdict fields are not used (E013 uses non-inferiority and the arm choice)"]
+    if chosen == "l20":
+        notes.append("sd_validity is partly circular for L20: 4 of its 6 XCB+XCL chains are "
+                     "the E003 runs that set SD_d")
     write_json(E013_RESULTS / "e013_summary.json", {
         "check": "E013 stage-1 last-checkpoint pipeline (PLAN.md)", "code": code_version(),
         "calibration": cal, "gate": gate["status"], "gate_b_chains": gate["b_chains"],
@@ -354,13 +406,10 @@ def main(argv: list[str] | None = None) -> None:
         "cross_fit": {d: {"R": f.R, "splits_sha256": f.splits_sha256, "mc": f.mc,
                           "checks": f.checks} for d, f in fits.items()},
         "deltas": d_all, "status": status, "l40_minus_l20": diffs, "choice": choice,
-        "sd_validity": sd_validity(fits, choice["chosen"], cal) if choice["chosen"] else None,
-        "note": "descriptives['*']['compare'] holds stage_d.compare output; its common-rule "
-                "verdict fields are not used (E013 uses non-inferiority and the arm choice)",
-        "descriptives": desc})
+        "sd_validity": sd_validity(fits, chosen, cal) if chosen else None,
+        "notes": notes, "descriptives": descriptives(data, fits, cal, compared, ok)})
     for a in NAMES:
-        shown = {k: (round(v["delta"] / thr[k.split("/")[0]], 2),
-                     round(v["delta_plus"] / thr[k.split("/")[0]], 2))
+        shown = {k: (round(v["delta_over_threshold"], 2), round(v["delta_plus_over_threshold"], 2))
                  for k, v in d_all.get(a, {}).items()}
         print(a, status[a], shown)
     print("choice:", choice)

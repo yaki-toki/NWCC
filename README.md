@@ -297,7 +297,9 @@ done
 ls $RUNS/*/l?0/selection.json | wc -l                            # 24 when done, and then
 pgrep -fc "[w]vad.train"                                        # 0 before copying
 ```
-**Analysis** (local CPU): gates (a)-(c) first (`results/e013_gate.json`); stops if a gate fails.
+Before launching, `ls ~/wvad_runs/e003/*/stage1/ckpt_last.pt ~/wvad_runs/e012/*/s40_stage1/ckpt_last.pt | wc -l` must print 24. Fewer than 24 at the end: check the logs. A numerical failure is not re-run, and Lmix is failed if it contains a failed run. An infrastructure failure is re-run once.
+
+**Analysis** (local CPU): gates (a)-(c) first (`results/e013_gate.json`, including whether each init path is right); stops if a gate fails.
 ```bash
 ssh <server> 'tar -cf - -C ~/wvad_runs e013' | tar -xf - -C <local runs root>
 python -m wvad.diagnostics.e013 --e003 <local runs root>/e003 --e012 <local runs root>/e012 \
