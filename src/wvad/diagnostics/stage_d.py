@@ -50,6 +50,14 @@ class Arm:
     stage2: str                             # sub-folder for stage 2
     weights: Mapping[str, float]            # expected loss weights, both stages (absent = 0)
     reuse_e010: bool = False                # E003 runs: cross-check against e010_runs.csv
+    stage1_root: Path | None = None         # where this arm's stage-1 runs live (default root)
+    stage1_epochs: int = STAGE1_EPOCHS
+    stage2_epochs: int = STAGE2_EPOCHS      # iterations x epochs_per_iter
+    expect1: Mapping[str, object] = field(default_factory=dict)   # expected stage-1 config
+    expect2: Mapping[str, object] = field(default_factory=dict)   # expected stage-2 config
+
+    def stage1_dir(self, chain: str) -> Path:
+        return Path(self.stage1_root or self.root) / chain / self.stage1
 
 
 @dataclass
@@ -90,7 +98,8 @@ def _config(d: Path) -> dict:
 
 
 def check_config(cfg: Mapping, dataset: str, pair: str, seed: int,
-                 weights: Mapping[str, float], where: Path) -> None:
+                 weights: Mapping[str, float], where: Path,
+                 expect: Mapping[str, object] | None = None) -> None:
     check_dev_seed(cfg["seed"])
     if (cfg["dataset"], cfg["pair"], int(cfg["seed"])) != (dataset, pair, int(seed)):
         raise ValueError(f"{where}: config {cfg['dataset']}/{cfg['pair']}/s{cfg['seed']} does "
@@ -100,6 +109,9 @@ def check_config(cfg: Mapping, dataset: str, pair: str, seed: int,
         if float(w.get(k, 0.0)) != float(weights.get(k, 0.0)):
             raise ValueError(f"{where}: loss weight {k}={w.get(k, 0.0)}, expected "
                              f"{weights.get(k, 0.0)}")
+    for k, v in (expect or {}).items():
+        if cfg.get(k) != v:
+            raise ValueError(f"{where}: config {k}={cfg.get(k)!r}, expected {v!r}")
 
 
 def _record(d: Path, epochs: np.ndarray, val_idx: np.ndarray) -> np.ndarray:
@@ -126,21 +138,25 @@ def load_run(arm: Arm, dataset: str, pair: str, seed: int, val_idx: np.ndarray,
     """Check one (stage 1, stage 2) chain and load its validation records."""
     check_dev_seed(seed)
     chain = arm.root / f"{dataset}_{pair}_s{seed}"
-    d1, d2 = chain / arm.stage1, chain / arm.stage2
+    d1, d2 = arm.stage1_dir(chain.name), chain / arm.stage2
     cfg1 = _config(d1)
-    check_config(cfg1, dataset, pair, seed, arm.weights, d1)
+    check_config(cfg1, dataset, pair, seed, arm.weights, d1,
+                 {"epochs": arm.stage1_epochs, **arm.expect1})
     run = RunData(history1=_history(d1))
-    s1 = _record(d1, np.arange(1, STAGE1_EPOCHS + 1), val_idx)
+    s1 = _record(d1, np.arange(1, arm.stage1_epochs + 1), val_idx)
     if not (np.isfinite(s1).all() and _finite_history(run.history1)):
         # stage 2 may not exist (no stage-1 checkpoint is ever selected)
         run.failed = "non-finite loss or score in stage 1"
         return run
     cfg2 = _config(d2)
-    check_config(cfg2, dataset, pair, seed, arm.weights, d2)
+    check_config(cfg2, dataset, pair, seed, arm.weights, d2, arm.expect2)
+    if int(cfg2["iterations"]) * int(cfg2["epochs_per_iter"]) != arm.stage2_epochs:
+        raise ValueError(f"{d2}: stage-2 budget {cfg2['iterations']} x {cfg2['epochs_per_iter']}"
+                         f" != {arm.stage2_epochs}")
     if Path(cfg2["init"]).parts[-3:] != (chain.name, arm.stage1, "ckpt_best_val.pt"):
         raise ValueError(f"{d2}: init {cfg2['init']} is not this chain's stage-1 checkpoint")
     run.history2 = _history(d2)
-    s2 = _record(d2, np.arange(0, STAGE2_EPOCHS + 1), val_idx)
+    s2 = _record(d2, np.arange(0, arm.stage2_epochs + 1), val_idx)
     if not (np.isfinite(s2).all() and _finite_history(run.history2)):
         run.failed = "non-finite loss or score in stage 2"
         return run
@@ -298,8 +314,14 @@ def selection_summary(arm: Arm, pair: str, f1: Mapping, f2: Mapping, runs: Mappi
 
 
 def compare(cand: Arm, base: Arm, data: Mapping[str, DatasetData],
-            fits: Mapping[str, DatasetFits], cal: Mapping) -> dict:
-    """Delta, Delta', verdict and descriptives (1-4) of one candidate against the baseline."""
+            fits: Mapping[str, DatasetFits], cal: Mapping,
+            shared_s1: Mapping[tuple, bool] | None = None) -> dict:
+    """Delta, Delta', verdict and descriptives (1-4) of one candidate against the baseline.
+
+    Delta' subtracts the seed mean of the per-chain stage-1 optimism difference; a chain whose
+    stage-1 checkpoint is the baseline's (``shared_s1[(dataset, pair, seed)]``; by default:
+    the same stage-1 run folder) contributes 0, since the same start carries the same
+    optimism into stage 2 (E012 PLAN.md)."""
     failed = any(data[d].runs[(cand.name, p, s)].failed
                  for d in DATASETS for p in PAIRS for s in DEV_SEEDS)
     if failed:
@@ -316,9 +338,18 @@ def compare(cand: Arm, base: Arm, data: Mapping[str, DatasetData],
             return [runs[(arm.name, p, s)].s1_selected - f1[(arm.name, p, s)].mean("v_auc")
                     for s in DEV_SEEDS]
 
+        def shared(s: int, d=d, p=p) -> bool:
+            if shared_s1 is not None:
+                return bool(shared_s1[(d, p, s)])
+            chain = f"{d}_{p}_s{s}"
+            return cand.stage1_dir(chain) == base.stage1_dir(chain)
+
         dm = {m: mean(cand, m) - mean(base, m) for m in METRICS}
         opt_c, opt_b = s1_opt(cand), s1_opt(base)
-        d_opt = float(np.mean(opt_c) - np.mean(opt_b))
+        shared_seeds = [s for s in DEV_SEEDS if shared(s)]
+        d_s = [0.0 if s in shared_seeds else c - b
+               for s, c, b in zip(DEV_SEEDS, opt_c, opt_b, strict=True)]
+        d_opt = float(np.mean(d_s))
         per_seed = [f2[(cand.name, p, s)].mean("v_auc") - f2[(base.name, p, s)].mean("v_auc")
                     for s in DEV_SEEDS]
         sigma = cal[d]["sd"]["v_auc"] * SIGMA_FACTOR
@@ -329,7 +360,8 @@ def compare(cand: Arm, base: Arm, data: Mapping[str, DatasetData],
             "delta_prime_v_auc": dm["v_auc"] - d_opt,
             "stage1_optimism": {"candidate": float(np.mean(opt_c)),
                                 "baseline": float(np.mean(opt_b)), "difference": d_opt,
-                                "difference_over_delta": d_opt / thr[d]},
+                                "difference_over_delta": d_opt / thr[d],
+                                "shared_stage1_seeds": shared_seeds},
             "aux_opposite_2delta": [m for m in METRICS if m != "v_auc"
                                     and np.sign(dm[m]) == -np.sign(dm["v_auc"]) != 0
                                     and abs(aux[m]) >= 2],

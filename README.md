@@ -247,6 +247,36 @@ python -m wvad.diagnostics.e011 --base_runs <local runs root>/e003 --runs <local
 ```
 The analysis refuses to reuse the E003 baseline unless `e011_identity.json` reports `all_ok`. If the gate failed for environment reasons only, re-run the 12 baseline chains with the candidates' commit (the E003 dev-seed commands without the `full` cell: folders `stage1` and `base` only) and pass them with `--fresh_baseline <root>` instead of `--base_runs`.
 
+### Stage D — E012 training budget of the base pipeline ([plan](experiments/E012_training_budget/PLAN.md))
+2 x 2 nested budgets against the E003 `base` runs (stage 1 20 / stage 2 30): `s1` (40, 30), `s2` (20, 60, started from the E003 stage-1 checkpoint) and `s12` (40, 60); `s1` and `s12` share one 40-epoch stage 1. The training code is unchanged (`--epochs`, `--epochs_per_iter`); deploy the committed code first (server conventions) and check GPU and host memory (up to 36 processes).
+```bash
+RUNS=~/wvad_runs/e012 E3=~/wvad_runs/e003 && mkdir -p $RUNS
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+for spec in "ucf xcb_xcl" "ucf xcb_siglip" "xdv xcb_xcl" "xdv xcb_siglip"; do
+  set -- $spec
+  for seed in 0 1 2; do
+    c=${1}_${2}_s${seed}; d=$RUNS/$c; mkdir -p $d
+    T="--dataset $1 --pair $2 --seed $seed"
+    setsid nohup bash -c "
+      python -m wvad.train stage2 $T --init $E3/$c/stage1/ckpt_best_val.pt --out_dir $d/s2 \
+          --epochs_per_iter 20 $Z > $d.s2.log 2>&1 &
+      python -m wvad.train stage1 $T --epochs 40 --out_dir $d/s40_stage1 --record > $d.s40.log 2>&1 &&
+      { python -m wvad.train stage2 $T --init $d/s40_stage1/ckpt_best_val.pt --out_dir $d/s1 \
+            $Z > $d.s1.log 2>&1 &
+        python -m wvad.train stage2 $T --init $d/s40_stage1/ckpt_best_val.pt --out_dir $d/s12 \
+            --epochs_per_iter 20 $Z > $d.s12.log 2>&1 & wait; }
+      wait" < /dev/null > /dev/null 2>&1 &
+  done
+done
+ls $RUNS/*/{s1,s2,s12}/selection.json | wc -l                    # 36 when done, and then
+pgrep -fc "[w]vad.train"                                        # 0 before copying
+```
+**Analysis** (local CPU): the determinism gates (a)-(e) are checked first and written to `results/e012_gate.json`; the analysis stops if a gate fails (PLAN.md fallbacks).
+```bash
+ssh <server> 'tar -cf - -C ~/wvad_runs e012' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e012 --base_runs <local runs root>/e003 --runs <local runs root>/e012
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
