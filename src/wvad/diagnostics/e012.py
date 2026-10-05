@@ -7,6 +7,10 @@ Determinism gates (a)-(e) are checked first (PLAN.md); the verdict uses the budg
 evidence), Delta' with per-chain stage-1 optimism set to 0 for chains that share the
 baseline's stage-1 checkpoint. Video labels only; no UCA proxy, no test data.
 
+If gate (a)/(b) fails (environment changed), the plan re-runs the baseline and S2 with the
+current commit; pass the new baseline root with ``--fresh_baseline`` (S2 re-run from its
+stage 1; the E010 cross-check is then skipped).
+
     python -m wvad.diagnostics.e012 --base_runs <e003 copy> --runs <e012 copy>
 """
 
@@ -56,10 +60,10 @@ def _expect2(epochs_per_iter: int) -> dict:
             "curriculum": True, "top_k_neg": 0, "pseudo_neg_k": 4}
 
 
-def arms(base_root: Path, runs_root: Path) -> dict[str, Arm]:
+def arms(base_root: Path, runs_root: Path, reuse_e003: bool = True) -> dict[str, Arm]:
     e1 = {**COMMON, "lr": 1e-4}
     return {
-        "base": Arm("base", base_root, "stage1", "base", ZERO, reuse_e010=True,
+        "base": Arm("base", base_root, "stage1", "base", ZERO, reuse_e010=reuse_e003,
                     expect1=e1, expect2=_expect2(10)),
         "s1": Arm("s1", runs_root, "s40_stage1", "s1", ZERO, stage1_epochs=40,
                   stage2_epochs=30, expect1=e1, expect2=_expect2(10)),
@@ -82,13 +86,20 @@ def same_record(a: Path, b: Path, epochs: Sequence[int]) -> bool:
     ia = [int(np.flatnonzero(za["epochs"] == e)[0]) for e in epochs]
     ib = [int(np.flatnonzero(zb["epochs"] == e)[0]) for e in epochs]
     sa, sb = za["scores"][ia], zb["scores"][ib]
-    return sa.dtype == sb.dtype and bool(np.array_equal(sa, sb))
+    # NaN = NaN: a numerically failed run is handled as a failure by the analysis, not here
+    return sa.dtype == sb.dtype and bool(np.array_equal(sa, sb, equal_nan=True))
 
 
 def same_history(a: Path, b: Path, epochs: Sequence[int], fields: Sequence[str]) -> bool:
     ha = {h["epoch"]: h for h in _json(a / "history.json")}
     hb = {h["epoch"]: h for h in _json(b / "history.json")}
-    return all(e in ha and e in hb and all(ha[e].get(f) == hb[e].get(f) for f in fields)
+
+    def same(x, y) -> bool:
+        return x == y or (isinstance(x, float) and isinstance(y, float)
+                          and np.isnan(x) and np.isnan(y))
+
+    return all(e in ha and e in hb and all(f in ha[e] and f in hb[e]
+                                           and same(ha[e][f], hb[e][f]) for f in fields)
                for e in epochs)
 
 
@@ -128,11 +139,15 @@ def gates(base_root: Path, runs_root: Path) -> tuple[dict, dict[tuple, bool]]:
         for p in PAIRS:
             for s in DEV_SEEDS:
                 chain = f"{d}_{p}_s{s}"
-                row = {"chain": chain, **gate_chain(base_root / chain, runs_root / chain)}
+                try:
+                    row = {"chain": chain, **gate_chain(base_root / chain, runs_root / chain)}
+                except (OSError, KeyError, TypeError, ValueError, IndexError) as exc:
+                    row = {"chain": chain, "error": repr(exc)}   # missing or broken run
                 shared[(d, p, s)] = bool(row.get("b", False))
                 rows.append(row)
     status = {k: all(r[k] for r in rows if k in r) for k in "abcde"}
-    return {"chains": rows, "status": status,
+    errors = [r["chain"] for r in rows if "error" in r]
+    return {"chains": rows, "status": status, "errors": errors,
             "shared_stage1_chains": int(sum(shared.values()))}, shared
 
 
@@ -211,12 +226,13 @@ def truncated_crossfit(data: DatasetData, cell: Arm, pair: str, R: int) -> dict:
 def convergence(fits: DatasetFits, cell: Arm, pair: str) -> dict:
     """Share of cross-fit selections (splits x directions x seeds) in the last 10% of the
     budget (CrossFit.epochs is a 0-based index into the candidate epochs)."""
-    def share(table: dict, budget: int) -> float:
-        sel = np.concatenate([table[(cell.name, pair, s)].epochs.ravel() + 1
-                              for s in DEV_SEEDS])
-        return float(np.mean(sel >= window_start(budget)))
-    s1, s2 = share(fits.stage1, cell.stage1_epochs), share(fits.stage2, cell.stage2_epochs)
-    return {"stage1_share": s1, "stage2_share": s2, "still_converging": s1 >= 0.5 or s2 >= 0.5}
+    def per_seed(table: dict, budget: int) -> list[float]:
+        return [float(np.mean(table[(cell.name, pair, s)].epochs.ravel() + 1
+                              >= window_start(budget))) for s in DEV_SEEDS]
+    p1, p2 = per_seed(fits.stage1, cell.stage1_epochs), per_seed(fits.stage2, cell.stage2_epochs)
+    s1, s2 = float(np.mean(p1)), float(np.mean(p2))
+    return {"stage1_share": s1, "stage2_share": s2, "stage1_per_seed": p1,
+            "stage2_per_seed": p2, "still_converging": s1 >= 0.5 or s2 >= 0.5}
 
 
 def split_half_excluding_identical(fits: DatasetFits, cand: str, base: str, pair: str) -> dict:
@@ -257,12 +273,20 @@ def descriptives(cells: Mapping[str, Arm], data: Mapping[str, DatasetData],
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description="E012 training-budget check")
-    ap.add_argument("--base_runs", required=True, type=Path)
+    ap.add_argument("--base_runs", type=Path, help="local copy of the E003 runs (reused)")
     ap.add_argument("--runs", required=True, type=Path)
+    ap.add_argument("--fresh_baseline", type=Path,
+                    help="re-run baseline root after a gate (a)/(b) failure (PLAN.md)")
     args = ap.parse_args(argv)
-    cells = arms(args.base_runs, args.runs)
-    gate, shared = gates(args.base_runs, args.runs)
+    if (args.base_runs is None) == (args.fresh_baseline is None):
+        ap.error("give exactly one of --base_runs (reused E003) and --fresh_baseline")
+    base_root = args.fresh_baseline or args.base_runs
+    cells = arms(base_root, args.runs, reuse_e003=args.fresh_baseline is None)
+    gate, shared = gates(base_root, args.runs)
     write_json(E012_RESULTS / "e012_gate.json", {"code": code_version(), **gate})
+    if gate["errors"]:
+        raise SystemExit(f"runs missing or unreadable for {gate['errors']} (infrastructure "
+                         "failure, PLAN.md); see results/e012_gate.json")
     if not (gate["status"]["a"] and gate["status"]["b"]):
         raise SystemExit("gate (a)/(b) failed: environment changed; re-run the baseline and S2 "
                          "(PLAN.md); see results/e012_gate.json")
@@ -295,6 +319,12 @@ def main(argv: list[str] | None = None) -> None:
         "shared_stage1_chains": gate["shared_stage1_chains"],
         "cross_fit": {d: {"R": f.R, "splits_sha256": f.splits_sha256, "mc": f.mc,
                           "checks": f.checks} for d, f in fits.items()},
+        "baseline": ("E003 base runs (reused)" if args.fresh_baseline is None
+                     else f"fresh baseline runs: {args.fresh_baseline}"),
+        "note": "vs_base holds stage_d.compare output; its verdict/outcome fields follow the "
+                "common rule and are not used here (E012 uses budget_rule); its "
+                "split_half_sign_agreement includes chains identical to the baseline "
+                "(see descriptives vs_base for the version without them)",
         "vs_base": vs_base, "budget_rule": rules, "s12_vs_smaller": s12_vs,
         "chosen": chosen,
         "sd_validity": sd_validity(fits, chosen, cal) if chosen else None,

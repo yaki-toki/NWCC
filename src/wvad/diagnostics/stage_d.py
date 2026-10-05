@@ -4,12 +4,12 @@ Each arm is one training design run as (stage 1, stage 2) chains for the two dat
 two feature pairs and the development seeds. Every run is checked first (configuration,
 stage-2 init, records, selection, finite losses); a run with non-finite losses or scores
 marks its arm as failed. The primary metric is the cross-fitted validation video AUC over
-stage-2 epochs 1-30 on the splits fixed by E010; Delta = candidate seed mean - baseline
-seed mean per setting, judged with the per-dataset threshold delta_d. Because stage 2
-starts from a stage-1 checkpoint selected on all validation videos, the stage-1 selection
-optimism (self-selected - cross-fitted V-AUC over stage-1 epochs) is measured as well and
-Delta' = Delta - (candidate - baseline stage-1 optimism) must also pass for adoption
-(E011 PLAN.md). Video labels only: no UCA proxy, no test data.
+the arm's stage-2 epochs (1-30 by default) on the splits fixed by E010; Delta = candidate
+seed mean - baseline seed mean per setting, judged with the per-dataset threshold delta_d.
+Because stage 2 starts from a stage-1 checkpoint selected on all validation videos, the
+stage-1 selection optimism (self-selected - cross-fitted V-AUC over stage-1 epochs) is
+measured as well and Delta' = Delta - (candidate - baseline stage-1 optimism) must also pass
+for adoption (E011 PLAN.md). Video labels only: no UCA proxy, no test data.
 """
 
 from __future__ import annotations
@@ -62,8 +62,8 @@ class Arm:
 
 @dataclass
 class RunData:
-    s1: np.ndarray | None = None            # (20, n, S) stage-1 epochs 1-20
-    s2: np.ndarray | None = None            # (30, n, S) stage-2 epochs 1-30
+    s1: np.ndarray | None = None            # (stage1_epochs, n, S), epochs 1..
+    s2: np.ndarray | None = None            # (stage2_epochs, n, S), epochs 1..
     s1_selected: float = math.nan
     s1_epoch: int = 0
     s2_selected: float = math.nan
@@ -347,9 +347,10 @@ def compare(cand: Arm, base: Arm, data: Mapping[str, DatasetData],
         dm = {m: mean(cand, m) - mean(base, m) for m in METRICS}
         opt_c, opt_b = s1_opt(cand), s1_opt(base)
         shared_seeds = [s for s in DEV_SEEDS if shared(s)]
-        d_s = [0.0 if s in shared_seeds else c - b
-               for s, c, b in zip(DEV_SEEDS, opt_c, opt_b, strict=True)]
-        d_opt = float(np.mean(d_s))
+        keep = np.array([s not in shared_seeds for s in DEV_SEEDS])
+        # mean(c) - mean(b) with shared chains zeroed: bit-identical to the E011 formula
+        # when no chain is shared
+        d_opt = float(np.mean(np.where(keep, opt_c, 0.0)) - np.mean(np.where(keep, opt_b, 0.0)))
         per_seed = [f2[(cand.name, p, s)].mean("v_auc") - f2[(base.name, p, s)].mean("v_auc")
                     for s in DEV_SEEDS]
         sigma = cal[d]["sd"]["v_auc"] * SIGMA_FACTOR

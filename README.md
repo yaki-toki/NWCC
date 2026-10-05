@@ -271,6 +271,7 @@ done
 ls $RUNS/*/{s1,s2,s12}/selection.json | wc -l                    # 36 when done, and then
 pgrep -fc "[w]vad.train"                                        # 0 before copying
 ```
+Before launching, `ls ~/wvad_runs/e003/*/stage1/ckpt_best_val.pt | wc -l` must print 12. Fewer than 36 at the end: check the chain logs. A numerical failure (non-finite losses or scores) is not re-run. An infrastructure failure is re-run once; re-running `s40_stage1` also means re-running `s1` and `s12`.
 **Analysis** (local CPU): the determinism gates (a)-(e) are checked first and written to `results/e012_gate.json`; the analysis stops if a gate fails (PLAN.md fallbacks).
 ```bash
 ssh <server> 'tar -cf - -C ~/wvad_runs e012' | tar -xf - -C <local runs root>
