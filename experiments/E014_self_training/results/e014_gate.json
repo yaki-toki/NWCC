@@ -1,0 +1,182 @@
+{
+ "code": {
+  "commit": "bb671a263d146af191423ffe17d31d933852a5df",
+  "source": "git",
+  "dirty": false
+ },
+ "chains": [
+  {
+   "chain": "ucf_xcb_xcl_s0",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "ucf_xcb_xcl_s1",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "ucf_xcb_xcl_s2",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s0",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s1",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s2",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s0",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s1",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s2",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s0",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s1",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s2",
+   "a_stw": true,
+   "init_stw_ok": true,
+   "mil_stw_ok": true,
+   "a_st3": true,
+   "init_st3_ok": true,
+   "mil_st3_ok": true,
+   "b_diff": [],
+   "c_diff": [],
+   "b": true,
+   "c": true
+  }
+ ],
+ "status": {
+  "a_stw": true,
+  "a_st3": true,
+  "init_stw_ok": true,
+  "init_st3_ok": true,
+  "mil_stw_ok": true,
+  "mil_st3_ok": true,
+  "b": true,
+  "c": true
+ },
+ "errors": [],
+ "server_env": {
+  "torch": "2.5.1+cu124",
+  "cuda": "12.4",
+  "cudnn": 90100,
+  "device": "NVIDIA H100 80GB HBM3"
+ }
+}
