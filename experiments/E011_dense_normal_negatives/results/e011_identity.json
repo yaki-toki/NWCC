@@ -1,0 +1,58 @@
+{
+ "check": "E011 no-change gate: default weight reproduces E003 base chains",
+ "code": {
+  "commit": "8b46731b70d6cfe3d2cba16f320219e4d2c42061",
+  "source": "deployed",
+  "dirty": null
+ },
+ "gate_script_sha256": "95557a6d16126491a4fb26afb4eafd41f05bfffb70159b81fa3250bdb39e0884",
+ "environment": {
+  "torch": "2.5.1+cu124",
+  "cuda": "12.4",
+  "gpu": "NVIDIA H100 80GB HBM3",
+  "driver": "580.126.20"
+ },
+ "comparisons": [
+  {
+   "run": "ucf_xcb_xcl_s0",
+   "stage": "stage1",
+   "ckpt_best_val": true,
+   "ckpt_last": true,
+   "record": true,
+   "selection": true,
+   "history_fields": true,
+   "history_same_keys": true
+  },
+  {
+   "run": "ucf_xcb_xcl_s0",
+   "stage": "base",
+   "ckpt_best_val": true,
+   "ckpt_last": true,
+   "record": true,
+   "selection": true,
+   "history_fields": true,
+   "history_same_keys": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s0",
+   "stage": "stage1",
+   "ckpt_best_val": true,
+   "ckpt_last": true,
+   "record": true,
+   "selection": true,
+   "history_fields": true,
+   "history_same_keys": true
+  },
+  {
+   "run": "xdv_xcb_siglip_s0",
+   "stage": "base",
+   "ckpt_best_val": true,
+   "ckpt_last": true,
+   "record": true,
+   "selection": true,
+   "history_fields": true,
+   "history_same_keys": true
+  }
+ ],
+ "all_ok": true
+}
