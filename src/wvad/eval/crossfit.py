@@ -24,8 +24,9 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 
 
 def video_auc(seg: np.ndarray, labels: np.ndarray) -> float:
-    """seg: (n, S) segment scores; labels: (n,) 0/1. Ties count one half."""
-    return float(roc_auc_score(labels, seg.max(axis=1)))
+    """seg: (n, S) segment scores; labels: (n,) 0/1. Ties count one half. Exact rank
+    formula, so equal AUCs of two models are bit-identical (a difference is exactly 0)."""
+    return float(rank_auc(seg.max(axis=1)[None], labels)[0])
 
 
 def video_ap(seg: np.ndarray, labels: np.ndarray) -> float:
@@ -84,7 +85,8 @@ class CrossFit:
 
     values: dict[str, np.ndarray]           # metric -> (R,)
     directions: dict[str, np.ndarray]       # metric -> (R, 2): evaluated on half A, half B
-    epochs: np.ndarray                      # (R, 2) selected epoch index (on B for A, on A for B)
+    epochs: np.ndarray                      # (R, 2) selected index into the candidate axis of
+                                            # ``scores`` (selected on B for A, on A for B)
     tie_rate: float
 
     def mean(self, metric: str) -> float:
