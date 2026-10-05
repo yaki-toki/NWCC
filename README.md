@@ -205,8 +205,11 @@ for spec in "ucf xcb_xcl" "xdv xcb_siglip"; do
         --out_dir $d/base --lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record" \
     > $d.log 2>&1 < /dev/null &
 done
-ls $G/*/base/record_pseudo_final.npz | wc -l                     # 2 when done
+ls $G/*/base/selection.json | wc -l                              # 2 when done
+# after both chains finish:
 python tests/equivalence/check_e011_gate.py --e003_runs ~/wvad_runs/e003 --gate_runs $G
+# if it fails, the plan's cause check re-runs the same two chains with the E003 deploy
+# commit c059790 (deployed to a separate folder) into another gate folder and compares again
 ```
 
 **Candidate runs** (server, only after the gate passes): 24 chains, all at once.
@@ -228,7 +231,9 @@ for spec in "ucf xcb_xcl" "ucf xcb_siglip" "xdv xcb_xcl" "xdv xcb_siglip"; do
     done
   done
 done
-ls $RUNS/*/d1?/record_pseudo_final.npz | wc -l                   # 24 when done
+ls $RUNS/*/d1?/selection.json | wc -l                            # 24 when done
+# fewer: check the chain logs (a stage 1 with val_video_auc=nan never starts stage 2;
+# that is a numerical failure, not an infrastructure one, and is not re-run)
 ```
 
 **Analysis** (local CPU): copy the runs and the gate result back, then
@@ -238,6 +243,7 @@ scp <server>:frozen-vlm-wvad/experiments/E011_dense_normal_negatives/results/e01
     experiments/E011_dense_normal_negatives/results/
 python -m wvad.diagnostics.e011 --base_runs <local runs root>/e003 --runs <local runs root>/e011
 ```
+The analysis refuses to reuse the E003 baseline unless `e011_identity.json` reports `all_ok`. If the gate failed for environment reasons only, re-run the 12 baseline chains (E003 commands, folders `stage1`/`base`) with the candidates' commit and pass them with `--fresh_baseline <root>`.
 
 ## Local checks (not tracked)
 ```bash

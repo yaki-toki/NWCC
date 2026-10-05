@@ -27,7 +27,7 @@ import torch
 
 from wvad.data import load_split, split_file
 from wvad.diagnostics.common import DEV_SEEDS, check_dev_seed
-from wvad.diagnostics.e010 import check_selection, pooled_sd, splits_sha256
+from wvad.diagnostics.e010 import check_selection, splits_sha256
 from wvad.diagnostics.runs import PAIRS
 from wvad.eval.crossfit import METRICS, CrossFit, crossfit, stratified_half_splits, video_auc
 from wvad.paths import REPO_ROOT
@@ -127,24 +127,32 @@ def load_run(arm: Arm, dataset: str, pair: str, seed: int, val_idx: np.ndarray,
     check_dev_seed(seed)
     chain = arm.root / f"{dataset}_{pair}_s{seed}"
     d1, d2 = chain / arm.stage1, chain / arm.stage2
-    cfg1, cfg2 = _config(d1), _config(d2)
+    cfg1 = _config(d1)
     check_config(cfg1, dataset, pair, seed, arm.weights, d1)
+    run = RunData(history1=_history(d1))
+    s1 = _record(d1, np.arange(1, STAGE1_EPOCHS + 1), val_idx)
+    if not (np.isfinite(s1).all() and _finite_history(run.history1)):
+        # stage 2 may not exist (no stage-1 checkpoint is ever selected)
+        run.failed = "non-finite loss or score in stage 1"
+        return run
+    cfg2 = _config(d2)
     check_config(cfg2, dataset, pair, seed, arm.weights, d2)
     if Path(cfg2["init"]).parts[-3:] != (chain.name, arm.stage1, "ckpt_best_val.pt"):
         raise ValueError(f"{d2}: init {cfg2['init']} is not this chain's stage-1 checkpoint")
-    run = RunData(history1=_history(d1), history2=_history(d2))
-    s1 = _record(d1, np.arange(1, STAGE1_EPOCHS + 1), val_idx)
+    run.history2 = _history(d2)
     s2 = _record(d2, np.arange(0, STAGE2_EPOCHS + 1), val_idx)
-    if not (np.isfinite(s1).all() and np.isfinite(s2).all()
-            and _finite_history(run.history1) and _finite_history(run.history2)):
-        run.failed = "non-finite loss or score"
+    if not (np.isfinite(s2).all() and _finite_history(run.history2)):
+        run.failed = "non-finite loss or score in stage 2"
         return run
     lam = float(arm.weights.get("normal_seg", 0.0))
-    for h in (*run.history1, *run.history2):
-        if lam > 0 and not h.get("loss_normal_seg", 0.0) > 0:
-            raise ValueError(f"{chain}: normal-segment loss missing or not positive")
-        if lam == 0 and "loss_normal_seg" in h:
-            raise ValueError(f"{chain}: normal-segment loss logged for a run without it")
+    for stage, hist in ((arm.stage1, run.history1), (arm.stage2, run.history2)):
+        for h in hist:
+            if lam > 0 and not h.get("loss_normal_seg", 0.0) > 0:
+                raise ValueError(f"{chain}/{stage} epoch {h.get('epoch')}: normal-segment loss "
+                                 f"missing or not positive")
+            if lam == 0 and "loss_normal_seg" in h:
+                raise ValueError(f"{chain}/{stage} epoch {h.get('epoch')}: normal-segment loss "
+                                 f"logged for a run without it")
     sel1 = json.loads((d1 / "selection.json").read_text(encoding="utf-8"))
     sel2 = json.loads((d2 / "selection.json").read_text(encoding="utf-8"))
     for sel, d in ((sel1, d1), (sel2, d2)):
@@ -183,6 +191,7 @@ class DatasetFits:
     stage2: dict = field(default_factory=dict)    # (arm, pair, seed) -> CrossFit
     stage1: dict = field(default_factory=dict)    # (arm, pair, seed) -> CrossFit (v_auc)
     mc: dict = field(default_factory=dict)
+    checks: dict = field(default_factory=dict)
 
 
 def _fit(data: DatasetData, R: int) -> DatasetFits:
@@ -196,12 +205,25 @@ def _fit(data: DatasetData, R: int) -> DatasetFits:
     return out
 
 
-def fit_dataset(data: DatasetData, cal: Mapping) -> DatasetFits:
-    """Cross-fit on the E010 splits; MC rule with the fixed E010 SD_d."""
+def _worst_mc(fits: DatasetFits, sd: float) -> float:
+    return max(cf.mc_se("v_auc") for cf in fits.stage2.values()) / sd
+
+
+def fit_dataset(data: DatasetData, cal: Mapping, dataset: str,
+                baseline: Arm | None = None) -> DatasetFits:
+    """Cross-fit on the E010 splits; a reused E003 baseline is cross-checked against E010 at
+    the E010 R before any escalation; then the MC rule with the fixed E010 SD_d."""
     fits = _fit(data, cal["R"])
     if fits.splits_sha256 != cal["splits_sha256"]:
         raise ValueError(f"splits sha {fits.splits_sha256} != E010 {cal['splits_sha256']}")
-    worst = max(cf.mc_se("v_auc") for cf in fits.stage2.values()) / cal["sd"]["v_auc"]
+    checks = {"reused_baseline_vs_e010": "not applicable (no reused baseline)"}
+    if baseline is not None and baseline.reuse_e010:
+        check_reused_baseline(dataset, baseline, fits)
+        checks["reused_baseline_vs_e010"] = f"passed at R={fits.R}"
+    elif baseline is not None:
+        checks["reused_baseline_vs_e010"] = "skipped (fresh baseline runs)"
+    sd = cal["sd"]["v_auc"]
+    worst = _worst_mc(fits, sd)
     mc = {"first_R": cal["R"], "first_mc_se_over_sd": worst, "escalated": False}
     if worst > MC_LIMIT and cal["R"] < R_LARGE:
         prefix = stratified_half_splits(data.labels, R_LARGE, seed=0)[:cal["R"]]
@@ -209,18 +231,17 @@ def fit_dataset(data: DatasetData, cal: Mapping) -> DatasetFits:
             raise ValueError("first splits of the larger set differ from E010's")
         fits = _fit(data, R_LARGE)
         mc |= {"escalated": True, "R": R_LARGE, "splits_sha256": fits.splits_sha256,
-               "mc_se_over_sd": max(cf.mc_se("v_auc") for cf in fits.stage2.values())
-               / cal["sd"]["v_auc"]}
+               "mc_se_over_sd": _worst_mc(fits, sd)}
+        if mc["mc_se_over_sd"] > MC_LIMIT:
+            mc["exceeds_at_max_R"] = True         # recorded only (plan)
     elif worst > MC_LIMIT:
         mc["exceeds_at_max_R"] = True             # recorded only (plan)
-    fits.mc = mc
+    fits.mc, fits.checks = mc, checks
     return fits
 
 
-def check_reused_baseline(dataset: str, arm: Arm, fits: DatasetFits, cal: Mapping) -> None:
-    """Re-computed cross-fitted V-AUC of reused E003 runs must equal E010's."""
-    if not arm.reuse_e010 or fits.R != cal["R"]:
-        return
+def check_reused_baseline(dataset: str, arm: Arm, fits: DatasetFits) -> None:
+    """Re-computed cross-fitted V-AUC of reused E003 runs (at the E010 R) must equal E010's."""
     want = e010_baseline_v_auc()
     for p in PAIRS:
         for s in DEV_SEEDS:
@@ -258,6 +279,22 @@ def final_verdict(outcome: str, outcome_prime: str, failed: bool) -> dict:
 def sign_agreement(cand: CrossFit, base: CrossFit) -> float:
     s = np.sign(cand.directions["v_auc"] - base.directions["v_auc"])
     return float(np.mean(s[:, 0] == s[:, 1]))
+
+
+def selection_summary(arm: Arm, pair: str, f1: Mapping, f2: Mapping, runs: Mapping) -> dict:
+    """Seed means of the stage-1 / stage-2 self-selected and cross-fitted V-AUC (descriptive 3)
+    and the selected epochs."""
+    keys = [(arm.name, pair, s) for s in DEV_SEEDS]
+    s1c = [f1[k].mean("v_auc") for k in keys]
+    s2c = [f2[k].mean("v_auc") for k in keys]
+    s1s = [runs[k].s1_selected for k in keys]
+    s2s = [runs[k].s2_selected for k in keys]
+    return {"s1_selected": float(np.mean(s1s)), "s1_crossfit": float(np.mean(s1c)),
+            "s1_optimism": float(np.mean(s1s) - np.mean(s1c)),
+            "s2_selected": float(np.mean(s2s)), "s2_crossfit": float(np.mean(s2c)),
+            "s2_optimism": float(np.mean(s2s) - np.mean(s2c)),
+            "s1_epochs": [runs[k].s1_epoch for k in keys],
+            "s2_epochs": [runs[k].s2_epoch for k in keys]}
 
 
 def compare(cand: Arm, base: Arm, data: Mapping[str, DatasetData],
@@ -303,6 +340,7 @@ def compare(cand: Arm, base: Arm, data: Mapping[str, DatasetData],
                 / cal[d]["sd"]["v_auc"],
             "paired_delta_se_over_sigma": float(np.std(per_seed, ddof=1) / math.sqrt(3)) / sigma,
             "per_seed_delta": per_seed,
+            "selection": {a.name: selection_summary(a, p, f1, f2, runs) for a in (cand, base)},
         }
     outcome, outcome_prime = classify(delta, thr), classify(delta_prime, thr)
     return {"candidate": cand.name, "outcome_delta": outcome, "outcome_delta_prime": outcome_prime,
@@ -342,8 +380,3 @@ def run_rows(arms: Sequence[Arm], data: Mapping[str, DatasetData],
                                 "s2_optimism": run.s2_selected - f2.mean("v_auc")}
                     rows.append(row)
     return rows
-
-
-def pooled_candidate_sd(fits: DatasetFits, arm: str) -> float:
-    """Descriptive: pooled 3-seed SD of an arm's cross-fitted V-AUC over the 2 pairs."""
-    return pooled_sd([[fits.stage2[(arm, p, s)].mean("v_auc") for s in DEV_SEEDS] for p in PAIRS])

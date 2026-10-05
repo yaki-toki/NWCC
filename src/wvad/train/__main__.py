@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from dataclasses import replace
 
 from wvad.data import DATASETS, ENCODER_PAIRS
@@ -20,6 +21,14 @@ from wvad.train.stages import (
 )
 
 
+def _weight(text: str) -> float:
+    """A finite, non-negative loss weight (a typo must not silently turn a term off)."""
+    value = float(text)
+    if not math.isfinite(value) or value < 0:
+        raise argparse.ArgumentTypeError(f"weight must be finite and >= 0, got {text}")
+    return value
+
+
 def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--dataset", required=True, choices=DATASETS)
     p.add_argument("--pair", required=True, choices=list(ENCODER_PAIRS))
@@ -29,7 +38,7 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--batch_size", type=int)
     p.add_argument("--record", action="store_true",
                    help="save validation (and stage-2 pseudo-label) scores; training unchanged")
-    p.add_argument("--lambda_normal_seg", type=float,
+    p.add_argument("--lambda_normal_seg", type=_weight,
                    help="BCE weight on every normal-video segment (stage D1; default 0 = off)")
 
 

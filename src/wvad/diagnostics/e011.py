@@ -5,13 +5,18 @@ The verdict follows the stage-D common rule with the stage-1 optimism condition
 or any choice: score shape at the selected stage-2 checkpoint, the weighted ratio of the
 normal-segment loss to the MIL term, and (UCF only, decision 0004) the UCA proxy frame AP.
 
-    python -m wvad.diagnostics.e011 --base_runs <local copy of ~/wvad_runs/e003> \
-        --runs <local copy of ~/wvad_runs/e011>
+The reused E003 baseline requires the no-change gate (``results/e011_identity.json``,
+``all_ok``). If the gate failed for environment reasons only, the plan re-runs the baseline
+with the candidates' commit: pass those runs with ``--fresh_baseline`` (same layout,
+``stage1`` / ``base``; the E010 cross-check is then skipped). Command (README, E011):
+
+    python -m wvad.diagnostics.e011 --base_runs <e003 copy> --runs <e011 copy>
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -28,7 +33,6 @@ from wvad.diagnostics.stage_d import (
     Arm,
     DatasetData,
     calibration,
-    check_reused_baseline,
     choose,
     compare,
     fit_dataset,
@@ -45,10 +49,22 @@ MIL_WEIGHT = 0.1
 DESCRIPTIVE_PREFIXES = ("normal_", "anomalous_", "loss_ratio_", "proxy_ap_")
 
 
-def arms(base_root: Path, runs_root: Path) -> list[Arm]:
-    base = Arm("base", base_root, "stage1", "base", {**ZERO, "normal_seg": 0.0}, reuse_e010=True)
+def arms(base_root: Path, runs_root: Path, reuse_e003: bool = True) -> list[Arm]:
+    base = Arm("base", base_root, "stage1", "base", {**ZERO, "normal_seg": 0.0},
+               reuse_e010=reuse_e003)
     return [base, *(Arm(n, runs_root, f"{n}_stage1", n, {**ZERO, "normal_seg": lam})
                     for n, lam in CANDIDATES)]
+
+
+def gate_status() -> str:
+    """The reused E003 baseline needs a passed no-change gate."""
+    path = E011_RESULTS / "e011_identity.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"{path}: no-change gate result missing (README, E011)")
+    gate = json.loads(path.read_text(encoding="utf-8"))
+    if gate.get("all_ok") is not True:
+        raise ValueError(f"{path}: no-change gate did not pass; see PLAN.md for the fallback")
+    return f"passed (code {gate['code'].get('commit')})"
 
 
 def score_shape(scores: np.ndarray, labels: np.ndarray) -> dict:
@@ -120,22 +136,27 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description="E011 stage D1 analysis")
     ap.add_argument("--base_runs", required=True, type=Path)
     ap.add_argument("--runs", required=True, type=Path)
+    ap.add_argument("--fresh_baseline", type=Path,
+                    help="re-run baseline root (gate failed for environment reasons only)")
     args = ap.parse_args(argv)
+    if args.fresh_baseline is None:
+        baseline = {"source": "E003 base runs (reused)", "gate": gate_status()}
+        all_arms = arms(args.base_runs, args.runs)
+    else:
+        baseline = {"source": f"fresh baseline runs: {args.fresh_baseline}"}
+        all_arms = arms(args.fresh_baseline, args.runs, reuse_e003=False)
     cal = calibration()
-    all_arms = arms(args.base_runs, args.runs)
     data = {d: load_dataset(all_arms, d) for d in DATASETS}       # every run checked first
-    fits = {d: fit_dataset(data[d], cal[d]) for d in DATASETS}
-    for d in DATASETS:
-        check_reused_baseline(d, all_arms[0], fits[d], cal[d])
+    fits = {d: fit_dataset(data[d], cal[d], d, baseline=all_arms[0]) for d in DATASETS}
     results = [compare(c, all_arms[0], data, fits, cal) for c in all_arms[1:]]
     rows = run_rows(all_arms, data, fits)
     desc = descriptives(all_arms, data, rows)
     write_csv(E011_RESULTS / "e011_runs.csv", rows)
     write_json(E011_RESULTS / "e011_summary.json", {
         "check": "E011 stage D1 (PLAN.md)", "code": code_version(),
-        "calibration": cal,
-        "cross_fit": {d: {"R": f.R, "splits_sha256": f.splits_sha256, "mc": f.mc}
-                      for d, f in fits.items()},
+        "calibration": cal, "baseline": baseline,
+        "cross_fit": {d: {"R": f.R, "splits_sha256": f.splits_sha256, "mc": f.mc,
+                          "checks": f.checks} for d, f in fits.items()},
         "candidates": results, "chosen": choose(results),
         "descriptives": desc,
         "note": "descriptives (score shape, loss ratio, UCA proxy frame AP) are not used for "
