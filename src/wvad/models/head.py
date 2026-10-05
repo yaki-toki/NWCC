@@ -30,12 +30,16 @@ LEGACY_PREFIXES = {"shared_temporal_context.": "context.",
                    "mil_segment_classifier.": "classifier.",
                    "mil_attention.": "attention."}
 LEGACY_DROPPED = ("anticipation_heads.",)
+GLOBAL_MODES = ("none", "mean", "stats")
 
 
 class SegmentHead(nn.Module):
     def __init__(self, feature_dim: int, use_input_ln: bool = False, p_context: float = 0.3,
-                 p_mil: float = 0.5, legacy_aux_heads: int = 3):
+                 p_mil: float = 0.5, legacy_aux_heads: int = 3, global_mode: str = "none"):
         super().__init__()
+        if global_mode not in GLOBAL_MODES:
+            raise ValueError(f"global_mode {global_mode!r} not in {GLOBAL_MODES}")
+        self.global_mode = global_mode
         layers: list[nn.Module] = [nn.LayerNorm(feature_dim)] if use_input_ln else []
         layers += [nn.Linear(feature_dim, HIDDEN), nn.ReLU(), nn.Dropout(p_context)]
         self.context = nn.Sequential(*layers)
@@ -47,9 +51,25 @@ class SegmentHead(nn.Module):
             nn.Dropout(p_mil / 2), nn.Linear(CLASSIFIER_HIDDEN, 1))
         self.attention = nn.Sequential(
             nn.Linear(HIDDEN, CLASSIFIER_HIDDEN), nn.Tanh(), nn.Linear(CLASSIFIER_HIDDEN, 1))
+        # Global offset (stage D, E016), created last and from zeros: no random draws, so the
+        # other layers' initial weights and the data order equal the baseline's, and the
+        # initial output is unchanged. Names differ per mode (strict state-dict loading).
+        # Registered on the module itself, they come first in parameters() / state_dict().
+        if global_mode == "mean":
+            self.offset_gamma = nn.Parameter(torch.zeros(()))
+        elif global_mode == "stats":
+            self.offset_w = nn.Parameter(torch.zeros(2 * HIDDEN))
+            self.offset_b = nn.Parameter(torch.zeros(()))
 
     def forward(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """features (B, S, D) -> video logits (B,), segment logits (B, S), segment scores (B, S)."""
+        """features (B, S, D) -> video logits (B,), segment logits (B, S), segment scores (B, S).
+
+        With a global mode the segment logits are z_t + c(v) and the scores sigma(z_t + c(v));
+        the video logit stays the attention pooling of the offset-free z_t."""
+        if self.global_mode != "none":
+            video_logits, local_logits, offset = self._parts(features)
+            segment_logits = local_logits + offset.to(local_logits.dtype)[:, None]
+            return video_logits, segment_logits, torch.sigmoid(segment_logits)
         b, s, _ = features.shape
         context = self.context(features.reshape(b * s, -1)).reshape(b, s, HIDDEN)
         segment_logits = self.classifier(context).squeeze(-1)
@@ -57,6 +77,32 @@ class SegmentHead(nn.Module):
         weights = torch.softmax(self.attention(context).squeeze(-1), dim=1)
         video_logits = (weights * segment_logits).sum(dim=1)
         return video_logits, segment_logits, segment_scores
+
+    def _parts(self, features: torch.Tensor):
+        """Video logits, offset-free segment logits z (B, S) and the offset c(v) (B,), fp32."""
+        b, s, _ = features.shape
+        flat = features.reshape(b * s, -1)
+        pre = self.context[:-1](flat)            # same modules and order as self.context
+        context = self.context[-1](pre).reshape(b, s, HIDDEN)
+        local_logits = self.classifier(context).squeeze(-1)
+        weights = torch.softmax(self.attention(context).squeeze(-1), dim=1)
+        video_logits = (weights * local_logits).sum(dim=1)
+        with torch.autocast(device_type=features.device.type, enabled=False):
+            if self.global_mode == "mean":
+                offset = self.offset_gamma * local_logits.float().mean(dim=1)
+            else:                                # statistics before dropout, per video
+                p = pre.reshape(b, s, HIDDEN).float()
+                stats = torch.cat([p.mean(dim=1), torch.std(p, dim=1, correction=0)], dim=1)
+                offset = stats @ self.offset_w + self.offset_b
+        return video_logits, local_logits, offset
+
+    def offset_parts(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Offset c(v) (B,) and offset-free scores sigma(z) (B, S) for the validation record
+        (call in eval mode within the validation loop: no random draws)."""
+        if self.global_mode == "none":
+            raise ValueError("offset_parts needs a global mode")
+        _, local_logits, offset = self._parts(features)
+        return offset.float(), torch.sigmoid(local_logits.float())
 
     @staticmethod
     def convert_legacy_state_dict(state: Mapping[str, torch.Tensor]) -> dict[str, torch.Tensor]:

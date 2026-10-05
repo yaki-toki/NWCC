@@ -11,6 +11,7 @@ import math
 from dataclasses import replace
 
 from wvad.data import DATASETS, ENCODER_PAIRS
+from wvad.models.head import GLOBAL_MODES
 from wvad.train.loop import LossWeights
 from wvad.train.stages import (
     Stage1Config,
@@ -51,6 +52,10 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--video_topk", type=_topk,
                    help="video BCE on the mean probability of the top-k segments instead of "
                         "the attention-pooled logit (stage D2; default 0 = attention pooling)")
+    p.add_argument("--global_mode", choices=GLOBAL_MODES,
+                   help="per-video offset added to the segment logits: mean (gamma x mean "
+                        "logit) or stats (linear in mean/std of the context features); both "
+                        "stages must use the same mode (E016; default none = off)")
 
 
 def parse(argv=None) -> argparse.Namespace:
@@ -79,7 +84,8 @@ def _given(args: argparse.Namespace, *names: str) -> dict:
 def main(argv=None) -> None:
     args = parse(argv)
     base = {"dataset": args.dataset, "pair": args.pair, "seed": args.seed,
-            "out_dir": args.out_dir, "record": args.record, **_given(args, "lr", "batch_size")}
+            "out_dir": args.out_dir, "record": args.record,
+            **_given(args, "lr", "batch_size", "global_mode")}
     extra = {} if args.lambda_normal_seg is None else {"normal_seg": args.lambda_normal_seg}
     if args.video_topk is not None:
         extra["video_topk"] = args.video_topk

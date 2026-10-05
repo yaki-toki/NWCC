@@ -47,6 +47,7 @@ class Stage1Config:
     batch_size: int = 32
     weights: LossWeights = field(default_factory=LossWeights)
     record: bool = False            # save per-epoch validation scores (does not change training)
+    global_mode: str = "none"       # per-video offset on the segment logits (E016; none = off)
 
 
 def stage2_default_weights() -> LossWeights:
@@ -72,6 +73,7 @@ class Stage2Config:
     top_k_neg: int = 0
     weights: LossWeights = field(default_factory=stage2_default_weights)
     record: bool = False            # save validation and pseudo-label scores (training unchanged)
+    global_mode: str = "none"       # must equal the stage-1 checkpoint's (E016)
 
 
 def _device() -> tuple[torch.device, bool]:
@@ -98,6 +100,31 @@ def _write_json(path: str, payload) -> None:
         json.dump(payload, fh, indent=1)
 
 
+def _adam_steps(optimizer: torch.optim.Optimizer) -> int:
+    """Optimizer steps taken so far (the GradScaler skips the step on non-finite gradients);
+    the largest step count over all parameters, independent of parameter order."""
+    return max((int(s["step"]) for s in optimizer.state.values() if "step" in s), default=0)
+
+
+def _offset_entry(model, n_batches: int, steps_before: int,
+                  optimizer: torch.optim.Optimizer) -> dict:
+    """History fields of a global-offset head (never added for global_mode none)."""
+    out = {"amp_skipped_steps": n_batches - (_adam_steps(optimizer) - steps_before)}
+    if model.global_mode == "mean":
+        out["offset_gamma"] = float(model.offset_gamma.detach())
+    else:
+        out["offset_w_norm"] = float(model.offset_w.detach().norm())
+        out["offset_b"] = float(model.offset_b.detach())
+    return out
+
+
+def _save_offset_record(out_dir: str, epochs: np.ndarray, offset_record: list, split) -> None:
+    np.savez_compressed(os.path.join(out_dir, "record_val_offset.npz"), epochs=epochs,
+                        offsets=np.stack([o for o, _ in offset_record]),
+                        local_scores=np.stack([s for _, s in offset_record]),
+                        val_indices=np.asarray(split.val_indices))
+
+
 def _pseudo_array(pseudo: list[torch.Tensor | None], n_segments: int) -> np.ndarray:
     """(n_videos, S) pseudo-labels; NaN where a segment (or a whole video) has none."""
     return np.stack([np.full(n_segments, np.nan, dtype=np.float32) if p is None
@@ -111,16 +138,24 @@ def run_stage1(cfg: Stage1Config) -> dict:
     train_fs, val_fs, split, dim = _train_val(cfg.dataset, cfg.pair)
     train_loader = make_loader(VideoBags(train_fs), cfg.batch_size, True, device)
     val_loader = make_loader(VideoBags(val_fs), cfg.batch_size, False, device)
-    model = SegmentHead(dim, use_input_ln=INPUT_LAYER_NORM[cfg.pair]).to(device)
+    model = SegmentHead(dim, use_input_ln=INPUT_LAYER_NORM[cfg.pair],
+                        global_mode=cfg.global_mode).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     scaler = GradScaler() if use_amp else None
     best, best_epoch, history = -math.inf, None, []
     val_record = [] if cfg.record else None
+    offset = cfg.global_mode != "none"
+    offset_record = [] if cfg.record and offset else None
     for epoch in range(1, cfg.epochs + 1):
+        steps_before = _adam_steps(optimizer)
         losses = train_one_epoch(model, train_loader, optimizer, scaler, cfg.weights, device,
                                  use_amp)
-        auc = validation_video_auc(model, val_loader, device, record=val_record)
-        history.append({"epoch": epoch, **losses, "val_video_auc": auc})
+        auc = validation_video_auc(model, val_loader, device, record=val_record,
+                                   offset_record=offset_record)
+        entry = {"epoch": epoch, **losses, "val_video_auc": auc}
+        if offset:
+            entry |= _offset_entry(model, len(train_loader), steps_before, optimizer)
+        history.append(entry)
         _save(os.path.join(cfg.out_dir, "ckpt_last.pt"), model, cfg, epoch, auc, split.sha256)
         if auc > best:
             best, best_epoch = auc, epoch
@@ -135,6 +170,8 @@ def run_stage1(cfg: Stage1Config) -> dict:
         np.savez_compressed(os.path.join(cfg.out_dir, "record_val_scores.npz"),
                             epochs=np.arange(1, cfg.epochs + 1), scores=np.stack(val_record),
                             val_indices=np.asarray(split.val_indices))
+        if offset_record is not None:
+            _save_offset_record(cfg.out_dir, np.arange(1, cfg.epochs + 1), offset_record, split)
     return selection
 
 
@@ -153,8 +190,13 @@ def run_stage2(cfg: Stage2Config) -> dict:
     if init.get("val_split_sha") != split.sha256:
         raise ValueError(f"{cfg.init} was trained on split {init.get('val_split_sha')}, "
                          f"not {split.sha256}")
+    init_mode = init.get("config", {}).get("global_mode", "none")
+    if init_mode != cfg.global_mode:
+        raise ValueError(f"{cfg.init} has global_mode {init_mode!r}, stage 2 asks for "
+                         f"{cfg.global_mode!r}")
     train_fs, val_fs, _, dim = _train_val(cfg.dataset, cfg.pair)
-    model = SegmentHead(dim, use_input_ln=INPUT_LAYER_NORM[cfg.pair])
+    model = SegmentHead(dim, use_input_ln=INPUT_LAYER_NORM[cfg.pair],
+                        global_mode=cfg.global_mode)
     model.load_state_dict(init["model_state_dict"])
     model.to(device)
     bags = VideoBags(train_fs, with_pseudo=True)
@@ -162,7 +204,10 @@ def run_stage2(cfg: Stage2Config) -> dict:
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     scaler = GradScaler() if use_amp else None
     val_record = [] if cfg.record else None
-    base = validation_video_auc(model, val_loader, device, record=val_record)
+    offset = cfg.global_mode != "none"
+    offset_record = [] if cfg.record and offset else None
+    base = validation_video_auc(model, val_loader, device, record=val_record,
+                                offset_record=offset_record)
     best, best_epoch, history = -math.inf, None, []
     pseudo_scores, pseudo_labels, schedule = [], [], []
     for iteration in range(1, cfg.iterations + 1):
@@ -179,12 +224,16 @@ def run_stage2(cfg: Stage2Config) -> dict:
         train_loader = make_loader(bags, cfg.batch_size, True, device)
         for ep in range(cfg.epochs_per_iter):
             epoch = (iteration - 1) * cfg.epochs_per_iter + ep + 1
+            steps_before = _adam_steps(optimizer)
             losses = train_one_epoch(model, train_loader, optimizer, scaler, cfg.weights,
                                      device, use_amp)
-            auc = validation_video_auc(model, val_loader, device, record=val_record)
-            history.append({"iteration": iteration, "epoch": epoch, "top_k": top_k,
-                            "confidence_min": conf, **asdict(stats), **losses,
-                            "val_video_auc": auc})
+            auc = validation_video_auc(model, val_loader, device, record=val_record,
+                                       offset_record=offset_record)
+            entry = {"iteration": iteration, "epoch": epoch, "top_k": top_k,
+                     "confidence_min": conf, **asdict(stats), **losses, "val_video_auc": auc}
+            if offset:
+                entry |= _offset_entry(model, len(train_loader), steps_before, optimizer)
+            history.append(entry)
             if auc > best:
                 best, best_epoch = auc, epoch
                 _save(os.path.join(cfg.out_dir, "ckpt_best_val.pt"), model, cfg, epoch, auc,
@@ -198,6 +247,10 @@ def run_stage2(cfg: Stage2Config) -> dict:
     _write_json(os.path.join(cfg.out_dir, "history.json"), history)
     _write_json(os.path.join(cfg.out_dir, "selection.json"), selection)
     if cfg.record:
+        if offset_record is not None:
+            _save_offset_record(cfg.out_dir,
+                                np.arange(0, cfg.iterations * cfg.epochs_per_iter + 1),
+                                offset_record, split)
         _save_stage2_record(cfg, model, train_fs, split, device, use_amp, val_record,
                             pseudo_scores, pseudo_labels, schedule)
     return selection

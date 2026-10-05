@@ -147,21 +147,31 @@ def train_one_epoch(model, loader: DataLoader, optimizer: torch.optim.Optimizer,
 
 
 def validation_video_auc(model, loader: DataLoader, device: torch.device,
-                         record: list | None = None) -> float:
+                         record: list | None = None, offset_record: list | None = None) -> float:
     """Video AUC on validation videos: max over segments of p, fp32 (autocast off).
 
     With ``record`` given, the (n_videos, S) segment scores of this same pass are appended
     to it; nothing else changes (no extra pass over the loader, no extra random draws).
+    With ``offset_record`` given (global-offset heads, E016), the offset c(v) (n_videos,) and
+    the offset-free scores sigma(z) (n_videos, S) of the same batches are appended as a pair
+    (eval mode, same loop: no extra random draws).
     """
     model.eval()
-    scores, labels = [], []
+    scores, labels, offsets, local = [], [], [], []
     with torch.no_grad():
         for batch in loader:
             feats = batch[0].to(device).float()
             with autocast(device_type=device.type, enabled=False):
                 _, _, seg_scores = model(feats)
+                if offset_record is not None:
+                    c, s_local = model.offset_parts(feats)
+                    offsets.extend(c.cpu().numpy())
+                    local.extend(s_local.cpu().numpy())
             scores.extend(seg_scores.float().cpu().numpy())
             labels.extend(batch[1].tolist())
     if record is not None:
         record.append(np.stack(scores).astype(np.float32))
+    if offset_record is not None:
+        offset_record.append((np.asarray(offsets, dtype=np.float32),
+                              np.stack(local).astype(np.float32)))
     return max_video_auc(scores, labels)

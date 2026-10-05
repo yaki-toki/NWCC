@@ -394,6 +394,62 @@ python -m wvad.diagnostics.e015 --e003 <local runs root>/e003 --e013 <local runs
     --runs <local runs root>/e015
 ```
 
+### Stage D — E016 global offset on segment logits ([plan](experiments/E016_global_offset/PLAN.md))
+The head adds a per-video offset c(v) to every segment logit, in both stages: `g1a` (`--global_mode mean`, c = gamma x mean segment logit, gamma from 0) or `g1b` (`--global_mode stats`, c linear in the mean/std of the pre-dropout context features, from 0). The video BCE keeps the attention-pooled offset-free logit. Each arm is retrained from stage 1 (20 epochs) -> `ckpt_last.pt` -> stage 2 (30 epochs, no pseudo labels). The baseline is the existing E013 `l20` runs. `--global_mode` defaults to none (the earlier head, no new parameters); stage 2 stops if its mode differs from the stage-1 checkpoint's. With `--record`, candidate runs also write `record_val_offset.npz` (c(v) and the offset-free scores of the same validation pass).
+
+**No-change gate** (server, before any candidate): two chains with the new code at the default; the XD chain gives `--global_mode none` explicitly in both stages. Deploy the committed code first.
+```bash
+git diff 18cb944 -- src/wvad/data src/wvad/eval src/wvad/losses src/wvad/paths.py   # local: empty
+GATE=~/wvad_runs/e016_gate_$(head -c 8 DEPLOYED_COMMIT)    # one folder per deployed commit
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+mkdir "$GATE" && for spec in "ucf xcb_xcl" "xdv xcb_siglip --global_mode none"; do   # launches only into a new folder
+  set -- $spec; c=${1}_${2}_s0; T="--dataset $1 --pair $2 --seed 0 $3 $4"
+  setsid nohup bash -c "
+    python -m wvad.train stage1 $T --out_dir $GATE/$c/stage1 --record > $GATE/$c.s1.log 2>&1 &&
+    python -m wvad.train stage2 $T --init $GATE/$c/stage1/ckpt_last.pt --out_dir $GATE/$c/l20 \
+        $Z > $GATE/$c.l20.log 2>&1" < /dev/null > /dev/null 2>&1 &
+done
+ls $GATE/*/{stage1,l20}/selection.json | wc -l                  # 4 when done, and
+pgrep -fc "wvad[.]train"                                        # 0 (records are written after selection.json), then
+python tests/equivalence/check_e016_gate.py --e003_runs ~/wvad_runs/e003 \
+    --e013_runs ~/wvad_runs/e013 --gate_runs $GATE              # must print all_ok=True
+```
+The checker also requires that the gate runs come from this deployment (new config key, files newer than `DEPLOYED_COMMIT`) and that the default writes no `record_val_offset.npz`. Copy `experiments/E016_global_offset/results/e016_identity.json` back from the server and commit it.
+If the gate fails, check the cause before running candidates (plan): deploy commit `b9d4b95` to a separate folder and run the same two chains there into another gate folder; its CLI has no `--global_mode`, so the XD chain runs without it. Compare them from that folder with `tests/equivalence/check_e015_gate.py` (deployed with the tests as usual; same arguments; its new-code marker `video_topk` exists at `b9d4b95`), not with `check_e016_gate.py`: that checker requires the `global_mode` key and, run from the main tree, would overwrite `e016_identity.json`. If those runs also differ from E003 / E013 the cause is the environment, otherwise the code.
+
+**Candidates** (server, same deployed commit as the gate): check GPU and host memory first and use what is free (shared H100: memory only). With room for 24 processes (about 1 GB GPU and 2.5 GB host each, plus 2 GB / 8 GB spare) launch both datasets at once (`DS="ucf xdv"`); otherwise one dataset per batch (`DS=ucf`, then `DS=xdv`). Each dataset first records its environment and commit and checks them against the passed `e016_identity.json` (gate (f)); it is launched only if that check passes.
+```bash
+RUNS=~/wvad_runs/e016 && mkdir -p $RUNS
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv && free -g
+DS="ucf xdv"                             # or DS=ucf, then DS=xdv when that batch is done
+for ds in $DS; do
+  python -c "from wvad.diagnostics.e016 import record_env; record_env('$RUNS/env_$ds.json')" || continue
+  for pair in xcb_xcl xcb_siglip; do
+    for seed in 0 1 2; do
+      c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+      for arm in g1a:mean g1b:stats; do
+        a=${arm%:*}; T="--dataset $ds --pair $pair --seed $seed --global_mode ${arm#*:}"
+        setsid nohup bash -c "
+          python -m wvad.train stage1 $T --out_dir $d/${a}_stage1 --record > $d.${a}_s1.log 2>&1 &&
+          python -m wvad.train stage2 $T --init $d/${a}_stage1/ckpt_last.pt --out_dir $d/$a \
+              $Z > $d.$a.log 2>&1" < /dev/null > /dev/null 2>&1 &
+      done
+    done
+  done
+done
+ls $RUNS/*/g1?/selection.json | wc -l                            # 12 per dataset, 24 when done, then
+pgrep -fc "wvad[.]train"                                        # 0 before the next batch / copying
+```
+A numerical failure is not re-run (that arm is failed); an infrastructure failure is re-run once (stage 1 again means stage 2 again). An exception in the new code path is a code defect: fix it, pass the no-change gate again and re-run all 24 chains with that commit.
+
+**Analysis** (local CPU): gates (a)-(f) first (`results/e016_gate.json`: epoch-0 scores, init paths, `global_mode` in the candidate and baseline configs, the option is active and the arms differ, the offset parameters were learned in both stages, commit and environment as in the no-change gate); stops if a gate fails or a run or its offset record is unreadable. The verdict uses Delta alone (`outcome_delta`); `results/e016_summary.json` is written in three steps: verdict and choice, then the descriptives (readout decomposition, G1a budget rule, G0 labelled selection-contaminated), then the UCF UCA proxy AP (descriptive only; `--no_proxy` skips it).
+```bash
+ssh <server> 'tar -cf - -C ~/wvad_runs e016' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e016 --e003 <local runs root>/e003 --e013 <local runs root>/e013 \
+    --runs <local runs root>/e016
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/

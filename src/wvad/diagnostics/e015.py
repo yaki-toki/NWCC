@@ -130,11 +130,12 @@ def same_env(env, want: Mapping) -> bool:
 
 def env_check(runs: Path, identity: Path) -> dict:
     """Gate (f): each batch's env_<dataset>.json (environment and deployed commit) equals the
-    no-change gate record e015_identity.json, and that gate passed."""
+    no-change gate record (e015_identity.json, or the given experiment's), and that gate
+    passed."""
     try:
         want, passed = identity_target(identity)
     except (OSError, ValueError, KeyError, TypeError) as exc:
-        return {"ok": False, "reason": f"e015_identity.json unreadable: {exc!r}"}
+        return {"ok": False, "reason": f"{identity.name} unreadable: {exc!r}"}
     out = {"identity_all_ok": passed, "want": want, "batches": {}}
     for d in DATASETS:
         try:
