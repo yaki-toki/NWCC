@@ -15,6 +15,8 @@ are deliberate design changes for later stages.
     pseudo_label_bce     BCE on segments carrying pseudo-labels of one value
     normal_segment_bce   BCE (target 0) on every segment of every normal video: segments of
                          a normal video are sure negatives under weak labels (stage D1, E011)
+    topk_video_bce       BCE on the mean probability of each video's k highest-scoring
+                         segments, replacing the attention-pooled video logit (stage D2, E015)
 """
 
 from __future__ import annotations
@@ -72,3 +74,17 @@ def pseudo_label_bce(segment_logits: torch.Tensor, pseudo: torch.Tensor,
 def normal_segment_bce(normal_logits: torch.Tensor) -> torch.Tensor:
     """Mean BCE-with-logits against 0 over all segment logits (n_normal, S) of normal videos."""
     return F.binary_cross_entropy_with_logits(normal_logits, torch.zeros_like(normal_logits))
+
+
+def topk_video_bce(segment_logits: torch.Tensor, labels: torch.Tensor, k: int) -> torch.Tensor:
+    """BCE between the video labels and the mean probability of each video's k highest-scoring
+    segments (segment logits (B, S)).
+
+    The video logit is logit(mean of the top-k probabilities), computed in fp32 as
+    logsumexp(logsigmoid(z)) - logsumexp(logsigmoid(-z)): no clamping and no saturation of a
+    probability at 1.0, and safe under autocast; k = 1 gives the top segment logit itself.
+    """
+    top = segment_logits.topk(k, dim=1).values.float()
+    video_logits = (torch.logsumexp(F.logsigmoid(top), dim=1)
+                    - torch.logsumexp(F.logsigmoid(-top), dim=1))
+    return F.binary_cross_entropy_with_logits(video_logits, labels.float())

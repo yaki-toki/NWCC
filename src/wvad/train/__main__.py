@@ -29,6 +29,14 @@ def _weight(text: str) -> float:
     return value
 
 
+def _topk(text: str) -> int:
+    """0 (attention-pooled video BCE) or a segment count 1-32 (top-k video BCE)."""
+    value = int(text)
+    if not 0 <= value <= 32:
+        raise argparse.ArgumentTypeError(f"video_topk must be 0 or 1-32, got {text}")
+    return value
+
+
 def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--dataset", required=True, choices=DATASETS)
     p.add_argument("--pair", required=True, choices=list(ENCODER_PAIRS))
@@ -40,6 +48,9 @@ def _common(p: argparse.ArgumentParser) -> None:
                    help="save validation (and stage-2 pseudo-label) scores; training unchanged")
     p.add_argument("--lambda_normal_seg", type=_weight,
                    help="BCE weight on every normal-video segment (stage D1; default 0 = off)")
+    p.add_argument("--video_topk", type=_topk,
+                   help="video BCE on the mean probability of the top-k segments instead of "
+                        "the attention-pooled logit (stage D2; default 0 = attention pooling)")
 
 
 def parse(argv=None) -> argparse.Namespace:
@@ -69,15 +80,17 @@ def main(argv=None) -> None:
     args = parse(argv)
     base = {"dataset": args.dataset, "pair": args.pair, "seed": args.seed,
             "out_dir": args.out_dir, "record": args.record, **_given(args, "lr", "batch_size")}
-    normal = {} if args.lambda_normal_seg is None else {"normal_seg": args.lambda_normal_seg}
+    extra = {} if args.lambda_normal_seg is None else {"normal_seg": args.lambda_normal_seg}
+    if args.video_topk is not None:
+        extra["video_topk"] = args.video_topk
     if args.stage == "stage1":
-        weights = replace(LossWeights(), **normal)
+        weights = replace(LossWeights(), **extra)
         result = run_stage1(Stage1Config(**base, weights=weights, **_given(args, "epochs")))
     else:
         overrides = {k: v for k, v in (("dense", args.lambda_dense),
                                         ("pseudo", args.lambda_pseudo),
                                         ("neg_pseudo", args.lambda_neg_pseudo)) if v is not None}
-        weights = replace(stage2_default_weights(), **overrides, **normal)
+        weights = replace(stage2_default_weights(), **overrides, **extra)
         cfg = Stage2Config(**base, init=args.init, curriculum=not args.no_curriculum,
                            weights=weights, **_given(args, "iterations", "epochs_per_iter"))
         result = run_stage2(cfg)

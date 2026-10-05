@@ -38,6 +38,7 @@ SETTINGS = tuple(itertools.product(DATASETS, PAIRS))
 STAGE1_EPOCHS, STAGE2_EPOCHS = 20, 30
 R_LARGE, MC_LIMIT = 1000, 0.25
 WEIGHT_KEYS = ("dense", "pseudo", "neg_pseudo", "normal_seg")
+LOSS_OPTIONS = {"video_topk": 0}           # integer loss options and their defaults (E015)
 INIT_TOL = 1e-5
 INIT_CKPTS = ("ckpt_best_val.pt", "ckpt_last.pt")
 SIGMA_FACTOR = math.sqrt(2 / 3)
@@ -117,6 +118,10 @@ def check_config(cfg: Mapping, dataset: str, pair: str, seed: int,
         if float(w.get(k, 0.0)) != float(weights.get(k, 0.0)):
             raise ValueError(f"{where}: loss weight {k}={w.get(k, 0.0)}, expected "
                              f"{weights.get(k, 0.0)}")
+    for k, default in LOSS_OPTIONS.items():       # absent in earlier configs = the default
+        if int(w.get(k, default)) != int(weights.get(k, default)):
+            raise ValueError(f"{where}: loss option {k}={w.get(k, default)}, expected "
+                             f"{weights.get(k, default)}")
     for k, v in (expect or {}).items():
         if cfg.get(k) != v:
             raise ValueError(f"{where}: config {k}={cfg.get(k)!r}, expected {v!r}")

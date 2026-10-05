@@ -338,6 +338,62 @@ python -m wvad.diagnostics.e014 --e003 <local runs root>/e003 --e013 <local runs
     --runs <local runs root>/e014
 ```
 
+### Stage D — E015 D2: video BCE on segment scores ([plan](experiments/E015_topk_mil/PLAN.md))
+The video BCE uses the top segment probability (`kb1`, `--video_topk 1`) or the mean of the top-3 segment probabilities (`kb3`, `--video_topk 3`) instead of the attention-pooled logit, in both stages; each arm is retrained from stage 1 (20 epochs) -> `ckpt_last.pt` -> stage 2 (30 epochs, no pseudo labels). The baseline is the existing E013 `l20` runs. `--video_topk` defaults to 0 (attention pooling, the earlier code path).
+
+**No-change gate** (server, before any candidate): two chains with the new code at the default; the XD chain gives `--video_topk 0` explicitly in both stages. Deploy the committed code first.
+```bash
+git diff 8b46731b -- src/wvad/models src/wvad/data src/wvad/eval src/wvad/paths.py   # local: empty
+GATE=~/wvad_runs/e015_gate_$(head -c 8 DEPLOYED_COMMIT)    # one folder per deployed commit
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+mkdir "$GATE" && for spec in "ucf xcb_xcl" "xdv xcb_siglip --video_topk 0"; do   # launches only into a new folder
+  set -- $spec; c=${1}_${2}_s0; T="--dataset $1 --pair $2 --seed 0 $3 $4"
+  setsid nohup bash -c "
+    python -m wvad.train stage1 $T --out_dir $GATE/$c/stage1 --record > $GATE/$c.s1.log 2>&1 &&
+    python -m wvad.train stage2 $T --init $GATE/$c/stage1/ckpt_last.pt --out_dir $GATE/$c/l20 \
+        $Z > $GATE/$c.l20.log 2>&1" < /dev/null > /dev/null 2>&1 &
+done
+ls $GATE/*/{stage1,l20}/selection.json | wc -l                  # 4 when done, and
+pgrep -fc "wvad[.]train"                                        # 0 (records are written after selection.json), then
+python tests/equivalence/check_e015_gate.py --e003_runs ~/wvad_runs/e003 \
+    --e013_runs ~/wvad_runs/e013 --gate_runs $GATE              # must print all_ok=True
+```
+The checker also requires that the gate runs come from this deployment (new config key, files newer than `DEPLOYED_COMMIT`). Copy `experiments/E015_topk_mil/results/e015_identity.json` back from the server and commit it.
+If the gate fails, check the cause before running candidates (plan): deploy commit `bb671a2` to a separate folder and run the same two chains there into another gate folder; its CLI has no `--video_topk`, so the XD chain runs without it. If those runs also differ from E003 / E013 the cause is the environment, otherwise the code.
+
+**Candidates** (server, same deployed commit as the gate): check GPU and host memory first and use what is free (shared H100: memory only). With room for 24 processes (about 1 GB GPU and 2.5 GB host each, plus 2 GB / 8 GB spare) launch both datasets at once (`DS="ucf xdv"`); otherwise one dataset per batch (`DS=ucf`, then `DS=xdv`). Each dataset first records its environment and commit and checks them against the passed `e015_identity.json` (gate (f)); it is launched only if that check passes.
+```bash
+RUNS=~/wvad_runs/e015 && mkdir -p $RUNS
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv && free -g
+DS="ucf xdv"                             # or DS=ucf, then DS=xdv when that batch is done
+for ds in $DS; do
+  python -c "from wvad.diagnostics.e015 import record_env; record_env('$RUNS/env_$ds.json')" || continue
+  for pair in xcb_xcl xcb_siglip; do
+    for seed in 0 1 2; do
+      c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+      for arm in kb1 kb3; do
+        T="--dataset $ds --pair $pair --seed $seed --video_topk ${arm#kb}"
+        setsid nohup bash -c "
+          python -m wvad.train stage1 $T --out_dir $d/${arm}_stage1 --record > $d.${arm}_s1.log 2>&1 &&
+          python -m wvad.train stage2 $T --init $d/${arm}_stage1/ckpt_last.pt --out_dir $d/$arm \
+              $Z > $d.$arm.log 2>&1" < /dev/null > /dev/null 2>&1 &
+      done
+    done
+  done
+done
+ls $RUNS/*/kb?/selection.json | wc -l                            # 12 per dataset, 24 when done, then
+pgrep -fc "wvad[.]train"                                        # 0 before the next batch / copying
+```
+A numerical failure is not re-run (that arm is failed); an infrastructure failure is re-run once (stage 1 again means stage 2 again). An exception in the new code path is a code defect: fix it, pass the no-change gate again and re-run all 24 chains with that commit.
+
+**Analysis** (local CPU): gates (a)-(f) first (`results/e015_gate.json`: epoch-0 scores, init paths, `video_topk` in the configs, the option is active and k is used, the attention branch is never updated, commit and environment as in the no-change gate); stops if a gate fails. The verdict uses Delta alone (`outcome_delta`); `results/e015_summary.json` is written in three steps: verdict and choice, then the descriptives, then the UCF UCA proxy AP (descriptive only; `--no_proxy` skips it).
+```bash
+ssh <server> 'tar -cf - -C ~/wvad_runs e015' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e015 --e003 <local runs root>/e003 --e013 <local runs root>/e013 \
+    --runs <local runs root>/e015
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/

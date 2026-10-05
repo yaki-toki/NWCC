@@ -24,6 +24,7 @@ from wvad.losses import (
     pseudo_label_bce,
     smoothness_loss,
     sparsity_loss,
+    topk_video_bce,
     video_bce,
 )
 
@@ -39,6 +40,8 @@ class LossWeights:
     pseudo: float = 0.0            # pseudo-positive BCE (stage 2)
     neg_pseudo: float = 0.0        # pseudo-negative BCE (stage 2)
     normal_seg: float = 0.0        # BCE on every normal-video segment (stage D1; 0 = off)
+    video_topk: int = 0            # video BCE: 0 = attention-pooled logit; k >= 1 = mean
+                                   # probability of the top-k segments (stage D2, E015)
 
 
 class VideoBags(Dataset):
@@ -85,7 +88,10 @@ def _losses(model, batch, w: LossWeights, device: torch.device):
     video_logits, seg_logits, seg_scores = model(feats)
     anomaly, normal = labels == 1, labels == 0
     zero = torch.tensor(0.0, device=device)
-    l_bce = video_bce(video_logits, labels)
+    if w.video_topk == 0:          # baseline path, unchanged
+        l_bce = video_bce(video_logits, labels)
+    else:                          # the attention branch then gets no gradient at all
+        l_bce = topk_video_bce(seg_logits, labels, w.video_topk)
     l_rank, l_dense = zero, zero
     if anomaly.sum() > 0 and normal.sum() > 0:
         l_rank = max_ranking_loss(seg_scores[anomaly], seg_scores[normal], w.rank_margin)

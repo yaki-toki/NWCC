@@ -45,6 +45,20 @@ def code_version() -> dict:
     return {"commit": None, "source": None, "dirty": None}
 
 
+def gpu_environment() -> dict:
+    """torch, CUDA, GPU name and NVIDIA driver of the machine running the code (server gates)."""
+    import torch
+    try:
+        driver = subprocess.run(
+            ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+            capture_output=True, text=True, check=False).stdout.strip()
+    except OSError:
+        driver = None
+    return {"torch": torch.__version__, "cuda": torch.version.cuda,
+            "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+            "driver": driver}
+
+
 def write_json(path: Path, obj: Mapping) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(obj, indent=1) + "\n", encoding="utf-8", newline="\n")
