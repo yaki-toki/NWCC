@@ -109,6 +109,8 @@ def check_selection(d: Path, scores: np.ndarray, labels: np.ndarray, sel: Mappin
     if abs(best - float(sel["best_val_video_auc"])) > SELECTION_TOL:
         raise ValueError(f"{d}: recorded scores give selection AUC {best:.6f}, "
                          f"selection.json {sel['best_val_video_auc']:.6f}")
+    if not 1 <= int(sel["best_epoch"]) <= len(aucs):
+        raise ValueError(f"{d}: selected epoch {sel['best_epoch']} outside 1-{len(aucs)}")
     if abs(float(aucs[int(sel["best_epoch"]) - 1]) - best) > 1e-12:
         raise ValueError(f"{d}: selected epoch {sel['best_epoch']} is not a maximum of the "
                          f"recorded scores")
