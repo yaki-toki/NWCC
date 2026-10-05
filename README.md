@@ -278,6 +278,32 @@ ssh <server> 'tar -cf - -C ~/wvad_runs e012' | tar -xf - -C <local runs root>
 python -m wvad.diagnostics.e012 --base_runs <local runs root>/e003 --runs <local runs root>/e012
 ```
 
+### Stage D — E013 stage 2 from the stage-1 last checkpoint ([plan](experiments/E013_stage1_last_checkpoint/PLAN.md))
+Stage 2 (30 epochs, base cell) started from `ckpt_last.pt` of the existing stage-1 runs: `l20` from the E003 20-epoch stage 1, `l40` from the E012 40-epoch stage 1; the per-pair arm Lmix (XCB+XCL from `l40`, XCB+SigLIP from `l20`) is composed in the analysis. The training code is unchanged; `--init` accepts any stage-1 checkpoint (its help text names `ckpt_best_val.pt`). Deploy the committed code first.
+```bash
+RUNS=~/wvad_runs/e013 E3=~/wvad_runs/e003 E12=~/wvad_runs/e012 && mkdir -p $RUNS
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+for spec in "ucf xcb_xcl" "ucf xcb_siglip" "xdv xcb_xcl" "xdv xcb_siglip"; do
+  set -- $spec
+  for seed in 0 1 2; do
+    c=${1}_${2}_s${seed}; d=$RUNS/$c; mkdir -p $d
+    T="--dataset $1 --pair $2 --seed $seed"
+    setsid nohup python -m wvad.train stage2 $T --init $E3/$c/stage1/ckpt_last.pt \
+        --out_dir $d/l20 $Z > $d.l20.log 2>&1 < /dev/null &
+    setsid nohup python -m wvad.train stage2 $T --init $E12/$c/s40_stage1/ckpt_last.pt \
+        --out_dir $d/l40 $Z > $d.l40.log 2>&1 < /dev/null &
+  done
+done
+ls $RUNS/*/l?0/selection.json | wc -l                            # 24 when done, and then
+pgrep -fc "[w]vad.train"                                        # 0 before copying
+```
+**Analysis** (local CPU): gates (a)-(c) first (`results/e013_gate.json`); stops if a gate fails.
+```bash
+ssh <server> 'tar -cf - -C ~/wvad_runs e013' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e013 --e003 <local runs root>/e003 --e012 <local runs root>/e012 \
+    --runs <local runs root>/e013
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
