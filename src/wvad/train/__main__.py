@@ -65,8 +65,9 @@ def _common(p: argparse.ArgumentParser) -> None:
                         "logit) or stats (linear in mean/std of the context features); both "
                         "stages must use the same mode (E016; default none = off)")
     p.add_argument("--offset_lr_mult", type=_positive,
-                   help="learning-rate multiplier of the offset parameters only (E017; needs a "
-                        "global_mode other than none unless 1; default 1 = one optimizer group)")
+                   help="learning-rate multiplier of the offset parameters only, which form "
+                        "their own optimizer group (E017; needs a global_mode other than none "
+                        "unless 1; default 1)")
 
 
 def parse(argv=None) -> argparse.Namespace:
@@ -77,7 +78,8 @@ def parse(argv=None) -> argparse.Namespace:
     s1.add_argument("--epochs", type=int)
     s2 = sub.add_parser("stage2", help="pseudo-label self-training from a stage-1 checkpoint")
     _common(s2)
-    s2.add_argument("--init", required=True, help="stage-1 ckpt_best_val.pt")
+    s2.add_argument("--init", required=True,
+                    help="stage-1 checkpoint (ckpt_last.pt in the reference pipeline, E013)")
     s2.add_argument("--iterations", type=int)
     s2.add_argument("--epochs_per_iter", type=int)
     s2.add_argument("--no_curriculum", action="store_true")
