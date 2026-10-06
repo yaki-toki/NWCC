@@ -31,7 +31,8 @@ from wvad.train.loop import (
 )
 from wvad.train.pseudo import generate_pseudo_labels
 
-INPUT_LAYER_NORM = {"xcb_xcl": False, "xcb_siglip": True}
+INPUT_LAYER_NORM = {"xcb_xcl": False, "xcb_siglip": True,
+                    "xcb": False, "xcl": False, "siglip": True}   # LN iff SigLIP is in
 CURRICULUM = {1: (3, 0.65), 2: (4, 0.58), 3: (5, 0.50)}     # iteration -> (top_k, confidence)
 
 

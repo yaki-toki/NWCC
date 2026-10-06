@@ -7,7 +7,9 @@ from pathlib import Path
 from wvad.paths import REPO_ROOT, Paths
 
 DATASETS = ("ucf", "xdv")
-ENCODER_PAIRS = {"xcb_xcl": ("xcb", "xcl"), "xcb_siglip": ("xcb", "siglip")}
+ENCODER_PAIRS = {"xcb_xcl": ("xcb", "xcl"), "xcb_siglip": ("xcb", "siglip"),
+                 # single encoders (E019 pre-check), used through the same "pair" argument
+                 "xcb": ("xcb",), "xcl": ("xcl",), "siglip": ("siglip",)}
 SPLIT_FILES = {"ucf": "data/splits/ucf_val_split_15.json",
                "xdv": "data/splits/xdv_val_split_15.json"}
 SEGMENTS_PER_VIDEO = 32
