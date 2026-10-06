@@ -1,0 +1,7 @@
+{
+ "torch": "2.5.1+cu124",
+ "cuda": "12.4",
+ "gpu": "NVIDIA H100 80GB HBM3",
+ "driver": "580.126.20",
+ "commit": "70d41384ac6e53cde1d6b4305342160f7f67f151"
+}
