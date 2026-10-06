@@ -201,9 +201,11 @@ def check_ref_arm(dataset: str, cell: Arm, data: DatasetData, fits, cal) -> str:
 
 def r_end(gamma2: Sequence[float], dataset: str, arm: str) -> float:
     """Mean per-epoch gamma change over stage-2 epochs 26-30, as a fraction of the most Adam
-    can move gamma per stage-2 epoch for this arm (sign kept; PLAN.md descriptive 8)."""
+    can move gamma per stage-2 epoch for this arm, times sign(final gamma): movement away
+    from 0 is positive (PLAN.md descriptive 8)."""
     per_epoch = (gamma2[-1] - gamma2[-6]) / 5
-    return per_epoch / (N_BATCHES[dataset] * LR2 * MULT.get(arm, 1.0))
+    return float(np.sign(gamma2[-1])) * per_epoch / (N_BATCHES[dataset] * LR2
+                                                     * MULT.get(arm, 1.0))
 
 
 def gamma_track(data: DatasetData, arm: str, pair: str, dataset: str) -> list[dict]:
@@ -282,18 +284,18 @@ def proxy_logit_summary(cells: Mapping[str, Arm], data: DatasetData, ok: Sequenc
 
 
 def budget(data: Mapping[str, DatasetData], arms_: Sequence[str]) -> dict:
-    """Budget rule per arm (PLAN.md): any of its 12 runs with |gamma| at the end of stage 2 >=
-    0.8 x the arm's reachable distance -> 'budget-bound'."""
+    """Descriptive only (PLAN.md descriptive 8): per run |gamma| at the end of stage 2 over the
+    arm's reachable distance, and the runs at >= 0.8 of it."""
     out = {}
     for a in arms_:
-        hits = []
+        ratios = {}
         for d in DATASETS:
             for p in PAIRS:
                 for s in DEV_SEEDS:
                     g = data[d].runs[(a, p, s)].history2[-1]["offset_gamma"]
-                    if abs(g) >= BUDGET_FRACTION * bound(d, a):
-                        hits.append({"run": f"{d}_{p}_s{s}", "gamma": g, "bound": bound(d, a)})
-        out[a] = {"budget_bound": bool(hits), "runs": hits}
+                    ratios[f"{d}_{p}_s{s}"] = abs(g) / bound(d, a)
+        out[a] = {"gamma_end_over_bound": ratios,
+                  "runs_ge_0.8_of_bound": [r for r, x in ratios.items() if x >= BUDGET_FRACTION]}
     return out
 
 
