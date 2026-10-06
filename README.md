@@ -505,6 +505,51 @@ python -m wvad.diagnostics.e017 --e003 <local runs root>/e003 --e013 <local runs
     --e016 <local runs root>/e016 --runs <local runs root>/e017
 ```
 
+### Stage D — E018 delta recalibration on the M10 pipeline ([plan](experiments/E018_delta_recalibration/PLAN.md))
+The stage-D threshold delta is re-estimated on the adopted pipeline (E017 M10) from 6 seeds per (dataset, pair): the E017 dev-seed runs (0-2) and three calibration-only seeds (100-102, never used in comparisons or stage-F confirmation). Same metric, splits and MC rule as E010; no new code path: the calibration chains run the E017 M10 command on the E017 gate commit (`2b0cfdf`).
+```bash
+RUNS=~/wvad_runs/e018 && mkdir -p $RUNS
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+for ds in ucf xdv; do
+  python -c "from wvad.diagnostics.e017 import record_env; record_env('$RUNS/env_$ds.json')" || continue
+  for pair in xcb_xcl xcb_siglip; do
+    for seed in 100 101 102; do
+      c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+      T="--dataset $ds --pair $pair --seed $seed --global_mode mean --offset_lr_mult 10"
+      setsid nohup bash -c "
+        python -m wvad.train stage1 $T --out_dir $d/m10_stage1 --record > $d.m10_s1.log 2>&1 &&
+        python -m wvad.train stage2 $T --init $d/m10_stage1/ckpt_last.pt --out_dir $d/m10 \
+            $Z > $d.m10.log 2>&1" < /dev/null > /dev/null 2>&1 &
+    done
+  done
+done
+```
+**Analysis** (local CPU): gates (config equal to E017 M10 except seed, init chain, environment, record/selection, dev-seed runs equal `e017_runs.csv`), then SD_d and delta_d per dataset (`results/e018_summary.json`, read by later stage-D analyses).
+```bash
+ssh <server> 'tar -cf - -C ~/wvad_runs e018' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e018 --e017 <local runs root>/e017 --runs <local runs root>/e018
+```
+
+### Stage D — E019 C05 pre-check: single-encoder heads and late fusion ([plan](experiments/E019_encoder_late_fusion/PLAN.md))
+Single-encoder "pairs" `xcb`, `xcl`, `siglip` (input LayerNorm only with SigLIP) trained with the M10 pipeline; their offset-including logits are averaged per seed and epoch (late fusion) and compared with the concatenated M10 baseline. Go to the C05 main experiment if at least one setting gains delta (E018).
+
+**No-change gate** (server): the catalog change must leave the two original pairs unchanged.
+```bash
+GATE=~/wvad_runs/e019_gate_$(head -c 8 DEPLOYED_COMMIT)
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+mkdir "$GATE" && for spec in "ucf xcb_xcl stage1 l20" \
+                             "xdv xcb_siglip m10_stage1 m10 --global_mode mean --offset_lr_mult 10"; do
+  set -- $spec; c=${1}_${2}_s0; T="--dataset $1 --pair $2 --seed 0 $5 $6 $7 $8"
+  setsid nohup bash -c "
+    python -m wvad.train stage1 $T --out_dir $GATE/$c/$3 --record > $GATE/$c.$3.log 2>&1 &&
+    python -m wvad.train stage2 $T --init $GATE/$c/$3/ckpt_last.pt --out_dir $GATE/$c/$4 \
+        $Z > $GATE/$c.$4.log 2>&1" < /dev/null > /dev/null 2>&1 &
+done
+pgrep -fc "wvad[.]train"                                        # 0, then
+python tests/equivalence/check_e019_gate.py --e003_runs ~/wvad_runs/e003 --e013_runs ~/wvad_runs/e013 \
+    --e017_runs ~/wvad_runs/e017 --gate_runs $GATE              # must print all_ok=True
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
