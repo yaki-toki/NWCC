@@ -25,7 +25,7 @@ import torch
 
 from wvad.data import load_split, split_file
 from wvad.data.manifests import load_manifest, manifest_file
-from wvad.diagnostics import e016
+from wvad.diagnostics import e014, e015, e016
 from wvad.diagnostics.c0 import PROXY_FILE
 from wvad.diagnostics.common import (
     DEV_SEEDS,
@@ -85,6 +85,9 @@ from wvad.paths import REPO_ROOT
 E017_RESULTS = REPO_ROOT / "experiments" / "E017_offset_scale" / "results"
 E016_RUNS_CSV = REPO_ROOT / "experiments" / "E016_global_offset" / "results" / "e016_runs.csv"
 BASE, REF = "l20", "g1a"                 # baseline (verdict) and E016 G1a (descriptive only)
+# The reused helpers (e014 reference table, e015.tidy / stage1_end / convergence_flag,
+# e016.decomposition / proxy_summary) compare against their own module's baseline name.
+assert e014.BASE == e015.BASE == e016.BASE == BASE, "helpers assume the same baseline arm"
 MULT = {"m3": 3.0, "m10": 10.0}          # candidates; stage_d.choose order (tie -> smaller m)
 CANDIDATES = tuple(MULT)
 START_EPOCH = 20
@@ -399,6 +402,14 @@ def csv_rows(cells: Mapping[str, Arm], data, fits) -> list[dict]:
     return rows
 
 
+def experiment_status(verdicts: Mapping[str, dict]) -> str:
+    """The best arm's verdict (adopt > not detected / hold > worse > failed; PLAN.md);
+    not detected and hold rank equal and are reported together."""
+    rank = {"adopt": 0, "not_detected": 1, "hold": 1, "worse": 2, "failed": 3}
+    best = min(rank[v["verdict"]] for v in verdicts.values())
+    return {0: "adopt", 1: "not_detected/hold", 2: "worse", 3: "failed"}[best]
+
+
 # --- main -----------------------------------------------------------------------------------
 
 def main(argv: list[str] | None = None) -> None:
@@ -443,6 +454,7 @@ def main(argv: list[str] | None = None) -> None:
                                       for k, st in compared[a].get("settings", {}).items()}
                                   for a in CANDIDATES},
         "chosen": chosen,
+        "experiment_status": experiment_status(verdicts),
         "sd_validity": sd_validity(fits, chosen, cal) if chosen else None,
         "notes": ["verdict = outcome_delta (Delta alone); the Delta' fields and verdicts of "
                   "stage_d.compare are dropped: no arm selects a stage-1 checkpoint",
