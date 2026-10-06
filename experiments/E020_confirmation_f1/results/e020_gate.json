@@ -1,6 +1,6 @@
 {
  "code": {
-  "commit": "57279661587ee4ffd8da51447100b30d3194c866",
+  "commit": "769c14004efc7b5ac2d7cc8ed49ef248d3d24844",
   "source": "git",
   "dirty": false
  },
@@ -6298,7 +6298,8 @@
   "t": true,
   "v0": true,
   "test_scores": true,
-  "v": true
+  "v": true,
+  "access": true
  },
  "v": {
   "basis": "v0_passing_base_runs",
@@ -8640,12 +8641,13 @@
  },
  "test_scores": {
   "files": {
-   "files": 160,
-   "expected": 160,
+   "files": 400,
+   "expected": 400,
    "missing": [],
    "unexpected": [],
    "unlisted": [],
    "sha256_mismatch": [],
+   "matches_results_list": true,
    "ok": true
   },
   "unbound": [],
@@ -8664,8 +8666,70 @@
     "plan_ok": true,
     "descends_from_freeze": true,
     "gate_v_ok": true
+   },
+   {
+    "meta": "meta_2.json",
+    "cells": [
+     "l20",
+     "m10b",
+     "m10"
+    ],
+    "commit": "2f1f80d9591b759b51f56b016eeda00824e28b47",
+    "environment_ok": true,
+    "same_environment_as_val": true,
+    "same_commit_as_val": true,
+    "caches_ok": true,
+    "plan_ok": true,
+    "descends_from_freeze": true,
+    "gate_v_ok": true
    }
   ],
+  "ok": true
+ },
+ "access": {
+  "freeze_commit": "2f1f80d9591b759b51f56b016eeda00824e28b47",
+  "entries": [
+   {
+    "line": 1,
+    "time_utc": "2026-10-06T10:46:33+00:00",
+    "cells": [
+     "base"
+    ],
+    "rescore": null,
+    "missing_only": false,
+    "deployed_commit": "2f1f80d9591b759b51f56b016eeda00824e28b47",
+    "plan_sha256": "406f12b7f773c54d88c7fa47a042540d6a62b0e1b119b065a0a2d918b6e50ed6",
+    "out_dir": "/home/user/wvad_runs/e020_scores/test",
+    "descends_from_freeze": true,
+    "plan_ok": true
+   },
+   {
+    "line": 2,
+    "time_utc": "2026-10-06T10:50:11+00:00",
+    "cells": [
+     "l20",
+     "m10b",
+     "m10"
+    ],
+    "rescore": null,
+    "missing_only": false,
+    "deployed_commit": "2f1f80d9591b759b51f56b016eeda00824e28b47",
+    "plan_sha256": "406f12b7f773c54d88c7fa47a042540d6a62b0e1b119b065a0a2d918b6e50ed6",
+    "out_dir": "/home/user/wvad_runs/e020_scores/test",
+    "descends_from_freeze": true,
+    "plan_ok": true
+   }
+  ],
+  "base_first": true,
+  "no_base_after_later": true,
+  "full_base_reads": {
+   "base": 1,
+   "p000_base": 0
+  },
+  "later_bound_to_gate_v": true,
+  "metas_match_log": true,
+  "lines_without_meta": [],
+  "same_access_log": true,
   "ok": true
  }
 }
