@@ -23,7 +23,10 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from wvad.data import load_split, split_file
+from wvad.data.manifests import load_manifest, manifest_file
 from wvad.diagnostics import e016
+from wvad.diagnostics.c0 import PROXY_FILE
 from wvad.diagnostics.common import (
     DEV_SEEDS,
     code_version,
@@ -58,7 +61,8 @@ from wvad.diagnostics.e015 import (
     tidy,
     top_scores,
 )
-from wvad.diagnostics.runs import PAIRS
+from wvad.diagnostics.proxy_eval import proxy_video_set
+from wvad.diagnostics.runs import PAIRS, rows_of
 from wvad.diagnostics.stage_d import (
     DATASETS,
     SETTINGS,
@@ -74,6 +78,7 @@ from wvad.diagnostics.stage_d import (
     load_dataset,
     run_rows,
 )
+from wvad.diagnostics.uca import VARIANTS, load_proxy
 from wvad.eval.crossfit import METRICS
 from wvad.paths import REPO_ROOT
 
@@ -86,6 +91,10 @@ START_EPOCH = 20
 ADAM_BOUND = {"ucf": 0.12, "xdv": 0.30}  # gamma reachable at multiplier 1 (E016 PLAN.md)
 BUDGET_FRACTION = 0.8
 GAMMA_EPOCHS = {"stage1": (5, 10, 15, 20), "stage2": (10, 20, 30)}
+N_BATCHES = {"ucf": 42, "xdv": 104}      # training batches per epoch (drop_last)
+LR2 = 3e-5                               # stage-2 learning rate
+R_END_MIN = 0.4                          # 'learning-rate bound' threshold on r_end (PLAN.md)
+CLIP = 1e-7
 
 
 def arms(e003: Path, e013: Path, e016_runs: Path, runs: Path) -> dict[str, Arm]:
@@ -187,9 +196,16 @@ def check_ref_arm(dataset: str, cell: Arm, data: DatasetData, fits, cal) -> str:
 
 # --- descriptives ---------------------------------------------------------------------------
 
-def gamma_track(data: DatasetData, arm: str, pair: str) -> list[dict]:
-    """Per seed: gamma at the planned epochs, the stage-2 movement ratio (last 5 epochs over the
-    first 5) and the final value."""
+def r_end(gamma2: Sequence[float], dataset: str, arm: str) -> float:
+    """Mean per-epoch gamma change over stage-2 epochs 26-30, as a fraction of the most Adam
+    can move gamma per stage-2 epoch for this arm (sign kept; PLAN.md descriptive 8)."""
+    per_epoch = (gamma2[-1] - gamma2[-6]) / 5
+    return per_epoch / (N_BATCHES[dataset] * LR2 * MULT.get(arm, 1.0))
+
+
+def gamma_track(data: DatasetData, arm: str, pair: str, dataset: str) -> list[dict]:
+    """Per seed: gamma at the planned epochs, r_end, the stage-2 movement ratio (last 5 epochs
+    over the first 5; descriptive only) and the final value."""
     out = []
     for s in DEV_SEEDS:
         run = data.runs[(arm, pair, s)]
@@ -198,8 +214,67 @@ def gamma_track(data: DatasetData, arm: str, pair: str) -> list[dict]:
         first, last = g2[4] - g1[max(g1)], g2[-1] - g2[-6]
         out.append({"stage1": {str(e): g1[e] for e in GAMMA_EPOCHS["stage1"]},
                     "stage2": {str(e): g2[e - 1] for e in GAMMA_EPOCHS["stage2"]},
+                    "r_end": r_end(g2, dataset, arm),
                     "stage2_last5_over_first5": (last / first) if first != 0 else None,
                     "end": g2[-1]})
+    return out
+
+
+def lr_bound(tracks: Sequence[dict]) -> dict:
+    """A setting is 'learning-rate bound' (gamma not at a stationary point) for an arm if at
+    least 2 of its 3 seeds have r_end >= 0.4 (PLAN.md)."""
+    hits = sum(t["r_end"] >= R_END_MIN for t in tracks)
+    return {"seeds_r_end_ge_0.4": hits, "lr_bound": hits >= 2}
+
+
+def saturation(scores: np.ndarray, labels: np.ndarray) -> dict:
+    """Inside anomalous videos: share of segments whose stored fp32 score is exactly 1.0, and
+    share of anomalous videos with two or more such segments (within-video ties)."""
+    a = scores[labels == 1] == np.float32(1.0)
+    return {"segments_at_1": float(a.mean()), "videos_with_tied_1": float(np.mean(a.sum(1) >= 2))}
+
+
+def _seed_mean(rows: Sequence[dict]) -> dict:
+    return {k: float(np.mean([r[k] for r in rows])) for k in rows[0]}
+
+
+def _selected_offset(cell: Arm, data: DatasetData, dataset: str, pair: str,
+                     seed: int) -> tuple[np.ndarray, np.ndarray]:
+    """c(v) (n,) and the offset-free scores sigma(z) (n, S) at the selected stage-2 epoch."""
+    rec = e016.offset_record(cell, dataset, pair, seed)
+    i = int(np.flatnonzero(rec["epochs"] == data.runs[(cell.name, pair, seed)].s2_epoch)[0])
+    return rec["offsets"][i], rec["local_scores"][i]
+
+
+def logit_readout(c: np.ndarray, local: np.ndarray) -> np.ndarray:
+    """z' = logit(sigma(z)) + c in float64 from the offset record (sigma(z) clipped to
+    [1e-7, 1 - 1e-7]); unlike the stored fp32 probabilities it does not saturate at 1.0."""
+    p = np.clip(local.astype(np.float64), CLIP, 1 - CLIP)
+    return np.log(p) - np.log1p(-p) + c.astype(np.float64)[:, None]
+
+
+def proxy_logit_summary(cells: Mapping[str, Arm], data: DatasetData, ok: Sequence[str]) -> dict:
+    """UCF UCA proxy frame AP of each candidate's selected checkpoint scored by the logit
+    readout z' (all videos and anomalous only), minus the baseline's AP on its stored scores
+    (the baseline has no offset record); descriptive only (decision 0004)."""
+    manifest, proxy = load_manifest(manifest_file("ucf")), load_proxy(PROXY_FILE)
+    val_idx = np.asarray(load_split(split_file("ucf")).val_indices)
+    sets = {v: proxy_video_set(manifest, proxy, v, val_idx) for v in VARIANTS}
+
+    def aps(scores):
+        r = {}
+        for v, vs in sets.items():
+            sc = scores[rows_of(val_idx, vs.indices)]
+            r[v], r[f"{v}_anomalous_only"] = vs.ap(sc), vs.ap(sc, rows=vs.anomalous)
+        return r
+    out = {}
+    for p in PAIRS:
+        base = [aps(data.runs[(BASE, p, s)].s2_best) for s in DEV_SEEDS]
+        per = {a: [aps(logit_readout(*_selected_offset(cells[a], data, "ucf", p, s)))
+                   for s in DEV_SEEDS] for a in ok}
+        out[p] = {"per_seed": per, "minus_base": {
+            a: {k: float(np.mean([x[k] for x in per[a]]) - np.mean([x[k] for x in base]))
+                for k in base[0]} for a in ok}}
     return out
 
 
@@ -257,7 +332,7 @@ def descriptives(cells, data, fits, cal, compared: Mapping[str, dict], ok: list[
     out, dec_by_arm = {}, {a: {} for a in ok}
     for d, p in SETTINGS:
         k = f"{d}/{p}"
-        tracks = {a: gamma_track(data[d], a, p) for a in (REF, *ok)}
+        tracks = {a: gamma_track(data[d], a, p, d) for a in (REF, *ok)}
         entry = {
             "curves": curves(data[d], arms_all, p),
             "stage1_epoch20_minus_base_over_delta": {a: stage1_end(data[d], a, p, thr[d])
@@ -268,6 +343,14 @@ def descriptives(cells, data, fits, cal, compared: Mapping[str, dict], ok: list[
                                                     for s in DEV_SEEDS])) for a in arms_all},
             "gamma": tracks,
             "gamma_positive_seeds": {a: sum(r["end"] > 0 for r in t) for a, t in tracks.items()},
+            "lr_bound": {a: lr_bound(t) for a, t in tracks.items()},
+            "saturation_anomalous": {
+                a: {"readout": _seed_mean([saturation(data[d].runs[(a, p, s)].s2_best,
+                                                      data[d].labels) for s in DEV_SEEDS]),
+                    **({"offset_free": _seed_mean([saturation(
+                        _selected_offset(cells[a], data[d], d, p, s)[1], data[d].labels)
+                        for s in DEV_SEEDS])} if a in ok else {})}
+                for a in arms_all},
             "amp_skipped_steps": {a: e016.amp_skips(data[d], a, p) for a in ok},
             "offset_distribution": {a: e016.offset_distribution(cells[a], data[d], d, p)
                                     for a in ok},
@@ -379,7 +462,8 @@ def main(argv: list[str] | None = None) -> None:
             "note": "descriptive only (decision 0004): not used for the verdict, the choice, "
                     "the pipeline, the next candidate, reruns or claims about localisation; "
                     "low split-half reliability in E003 C5",
-            "ucf": e016.proxy_summary(data["ucf"], ok)}
+            "ucf": e016.proxy_summary(data["ucf"], ok),
+            "ucf_logit_readout": proxy_logit_summary(cells, data["ucf"], ok)}
         write_json(E017_RESULTS / "e017_summary.json", summary)
 
 

@@ -450,6 +450,61 @@ python -m wvad.diagnostics.e016 --e003 <local runs root>/e003 --e013 <local runs
     --runs <local runs root>/e016
 ```
 
+### Stage D — E017 learning-rate multiplier on the G1a gamma ([plan](experiments/E017_offset_scale/PLAN.md))
+The E016 G1a head (`--global_mode mean`) with the learning rate of the offset parameters multiplied: `m3` (`--offset_lr_mult 3`) and `m10` (`--offset_lr_mult 10`), in both stages; each arm is retrained from stage 1 (20 epochs) -> `ckpt_last.pt` -> stage 2 (30 epochs, no pseudo labels). The baseline is the existing E013 `l20` runs; the E016 `g1a` runs (multiplier 1) are a descriptive reference arm. With a global offset the offset parameters always form their own AdamW group (learning rate x multiplier, x 1 by default); without one (`none`) the optimizer is the earlier one, and a multiplier other than 1 is rejected.
+
+**No-change gate** (server, before any candidate): three chains with the new code: two at the default (the XD chain gives `--global_mode none --offset_lr_mult 1` explicitly in both stages) compared with E003 / E013, and one G1a chain (`--global_mode mean`, multiplier 1, two-group path) compared with E016 `g1a_stage1` / `g1a`. Deploy the committed code first.
+```bash
+GATE=~/wvad_runs/e017_gate_$(head -c 8 DEPLOYED_COMMIT)    # one folder per deployed commit
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+mkdir "$GATE" && for spec in "ucf xcb_xcl stage1 l20" "xdv xcb_siglip stage1 l20 --global_mode none --offset_lr_mult 1" \
+                             "ucf xcb_xcl g1a_stage1 g1a --global_mode mean"; do   # launches only into a new folder
+  set -- $spec; c=${1}_${2}_s0; T="--dataset $1 --pair $2 --seed 0 $5 $6 $7 $8"
+  setsid nohup bash -c "
+    python -m wvad.train stage1 $T --out_dir $GATE/$c/$3 --record > $GATE/$c.$3.log 2>&1 &&
+    python -m wvad.train stage2 $T --init $GATE/$c/$3/ckpt_last.pt --out_dir $GATE/$c/$4 \
+        $Z > $GATE/$c.$4.log 2>&1" < /dev/null > /dev/null 2>&1 &
+done
+ls $GATE/*/{l20,g1a}/selection.json | wc -l                    # 3 when done, and
+pgrep -fc "wvad[.]train"                                        # 0 (records are written after selection.json), then
+python tests/equivalence/check_e017_gate.py --e003_runs ~/wvad_runs/e003 --e013_runs ~/wvad_runs/e013 \
+    --e016_runs ~/wvad_runs/e016 --gate_runs $GATE              # must print all_ok=True
+```
+Copy `experiments/E017_offset_scale/results/e017_identity.json` back from the server and commit it. If the gate fails, check the cause before running candidates (plan): deploy commit `77e2222` to a separate folder and run the same chains there without `--offset_lr_mult`; compare the first two with that folder's `check_e016_gate.py` and the third directly with the E016 G1a runs (the comparisons of `check_e017_gate.py`, without its new-code marker).
+
+**Candidates** (server, same deployed commit as the gate): check GPU and host memory first and use what is free (shared H100: memory only). With room for 24 processes (about 1 GB GPU and 2.5 GB host each, plus 2 GB / 8 GB spare) launch both datasets at once (`DS="ucf xdv"`); otherwise one dataset per batch. Each dataset first records its environment and commit and checks them against the passed `e017_identity.json` (gate (f)).
+```bash
+RUNS=~/wvad_runs/e017 && mkdir -p $RUNS
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv && free -g
+DS="ucf xdv"                             # or DS=ucf, then DS=xdv when that batch is done
+for ds in $DS; do
+  python -c "from wvad.diagnostics.e017 import record_env; record_env('$RUNS/env_$ds.json')" || continue
+  for pair in xcb_xcl xcb_siglip; do
+    for seed in 0 1 2; do
+      c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+      for arm in m3 m10; do
+        T="--dataset $ds --pair $pair --seed $seed --global_mode mean --offset_lr_mult ${arm#m}"
+        setsid nohup bash -c "
+          python -m wvad.train stage1 $T --out_dir $d/${arm}_stage1 --record > $d.${arm}_s1.log 2>&1 &&
+          python -m wvad.train stage2 $T --init $d/${arm}_stage1/ckpt_last.pt --out_dir $d/$arm \
+              $Z > $d.$arm.log 2>&1" < /dev/null > /dev/null 2>&1 &
+      done
+    done
+  done
+done
+ls $RUNS/*/m{3,10}/selection.json | wc -l                        # 12 per dataset, 24 when done, then
+pgrep -fc "wvad[.]train"                                        # 0 before the next batch / copying
+```
+A numerical failure is not re-run (that arm is failed); an infrastructure failure is re-run once (stage 1 again means stage 2 again). An exception in the new code path is a code defect: fix it, pass the no-change gate again and re-run all 24 chains with that commit.
+
+**Analysis** (local CPU): gates (a)-(f) first (`results/e017_gate.json`); stops if a gate fails or a run or its offset record is unreadable. The E016 G1a runs must reproduce `e016_runs.csv`. The verdict uses Delta alone (`outcome_delta`); `results/e017_summary.json` is written in three steps: verdict and choice, then the descriptives (gamma trajectories and the learning-rate-bound rule, dose-response with the m = 1 reference, readout decomposition, saturation), then the UCF UCA proxy AP on the stored scores and on the logit readout (descriptive only; `--no_proxy` skips it).
+```bash
+ssh <server> 'tar -cf - -C ~/wvad_runs e017' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e017 --e003 <local runs root>/e003 --e013 <local runs root>/e013 \
+    --e016 <local runs root>/e016 --runs <local runs root>/e017
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/

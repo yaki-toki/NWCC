@@ -117,11 +117,13 @@ def _check_offset_lr_mult(cfg) -> None:
 
 
 def _optimizer(model, cfg) -> torch.optim.AdamW:
-    """AdamW over the head. At offset_lr_mult 1 this is the earlier optimizer (one group, same
-    parameter order); otherwise the offset parameters (names offset_*) form a second group
-    whose learning rate is multiplied (E017). Gradients and the other group are unchanged."""
+    """AdamW over the head. Without a global offset (none) this is the earlier optimizer (one
+    group, same parameter order). With one, the offset parameters (names offset_*) always form
+    a second group with learning rate x offset_lr_mult (E017), also at 1, so the candidates'
+    two-group path is the one the no-change gate checks against E016; AdamW's update is
+    elementwise, so the split alone changes nothing. Gradients are unchanged."""
     _check_offset_lr_mult(cfg)
-    if cfg.offset_lr_mult == 1.0:
+    if cfg.global_mode == "none":
         return torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     named = list(model.named_parameters())
     rest = [p for n, p in named if not n.startswith("offset_")]
