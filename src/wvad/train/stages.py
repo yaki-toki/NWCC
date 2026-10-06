@@ -48,6 +48,7 @@ class Stage1Config:
     weights: LossWeights = field(default_factory=LossWeights)
     record: bool = False            # save per-epoch validation scores (does not change training)
     global_mode: str = "none"       # per-video offset on the segment logits (E016; none = off)
+    offset_lr_mult: float = 1.0     # learning-rate multiplier of the offset parameters (E017)
 
 
 def stage2_default_weights() -> LossWeights:
@@ -74,6 +75,7 @@ class Stage2Config:
     weights: LossWeights = field(default_factory=stage2_default_weights)
     record: bool = False            # save validation and pseudo-label scores (training unchanged)
     global_mode: str = "none"       # must equal the stage-1 checkpoint's (E016)
+    offset_lr_mult: float = 1.0     # learning-rate multiplier of the offset parameters (E017)
 
 
 def _device() -> tuple[torch.device, bool]:
@@ -106,6 +108,29 @@ def _adam_steps(optimizer: torch.optim.Optimizer) -> int:
     return max((int(s["step"]) for s in optimizer.state.values() if "step" in s), default=0)
 
 
+def _check_offset_lr_mult(cfg) -> None:
+    m = cfg.offset_lr_mult
+    if not (math.isfinite(m) and m > 0):
+        raise ValueError(f"offset_lr_mult must be finite and > 0, got {m}")
+    if m != 1.0 and cfg.global_mode == "none":
+        raise ValueError(f"offset_lr_mult {m} needs a global_mode with offset parameters")
+
+
+def _optimizer(model, cfg) -> torch.optim.AdamW:
+    """AdamW over the head. At offset_lr_mult 1 this is the earlier optimizer (one group, same
+    parameter order); otherwise the offset parameters (names offset_*) form a second group
+    whose learning rate is multiplied (E017). Gradients and the other group are unchanged."""
+    _check_offset_lr_mult(cfg)
+    if cfg.offset_lr_mult == 1.0:
+        return torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
+    named = list(model.named_parameters())
+    rest = [p for n, p in named if not n.startswith("offset_")]
+    offset = [p for n, p in named if n.startswith("offset_")]
+    return torch.optim.AdamW([{"params": rest},
+                              {"params": offset, "lr": cfg.lr * cfg.offset_lr_mult}],
+                             lr=cfg.lr, weight_decay=cfg.weight_decay)
+
+
 def _offset_entry(model, n_batches: int, steps_before: int,
                   optimizer: torch.optim.Optimizer) -> dict:
     """History fields of a global-offset head (never added for global_mode none)."""
@@ -132,6 +157,7 @@ def _pseudo_array(pseudo: list[torch.Tensor | None], n_segments: int) -> np.ndar
 
 
 def run_stage1(cfg: Stage1Config) -> dict:
+    _check_offset_lr_mult(cfg)
     os.makedirs(cfg.out_dir, exist_ok=True)
     device, use_amp = _device()
     seed_everything(cfg.seed)
@@ -140,7 +166,7 @@ def run_stage1(cfg: Stage1Config) -> dict:
     val_loader = make_loader(VideoBags(val_fs), cfg.batch_size, False, device)
     model = SegmentHead(dim, use_input_ln=INPUT_LAYER_NORM[cfg.pair],
                         global_mode=cfg.global_mode).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
+    optimizer = _optimizer(model, cfg)
     scaler = GradScaler() if use_amp else None
     best, best_epoch, history = -math.inf, None, []
     val_record = [] if cfg.record else None
@@ -182,6 +208,7 @@ def _pseudo_schedule(cfg: Stage2Config, iteration: int) -> tuple[int, float]:
 
 
 def run_stage2(cfg: Stage2Config) -> dict:
+    _check_offset_lr_mult(cfg)
     os.makedirs(cfg.out_dir, exist_ok=True)
     device, use_amp = _device()
     seed_everything(cfg.seed)
@@ -201,7 +228,7 @@ def run_stage2(cfg: Stage2Config) -> dict:
     model.to(device)
     bags = VideoBags(train_fs, with_pseudo=True)
     val_loader = make_loader(VideoBags(val_fs), cfg.batch_size, False, device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
+    optimizer = _optimizer(model, cfg)
     scaler = GradScaler() if use_amp else None
     val_record = [] if cfg.record else None
     offset = cfg.global_mode != "none"

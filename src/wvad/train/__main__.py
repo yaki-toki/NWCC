@@ -38,6 +38,14 @@ def _topk(text: str) -> int:
     return value
 
 
+def _positive(text: str) -> float:
+    """A finite learning-rate multiplier > 0."""
+    value = float(text)
+    if not math.isfinite(value) or value <= 0:
+        raise argparse.ArgumentTypeError(f"multiplier must be finite and > 0, got {text}")
+    return value
+
+
 def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--dataset", required=True, choices=DATASETS)
     p.add_argument("--pair", required=True, choices=list(ENCODER_PAIRS))
@@ -56,6 +64,9 @@ def _common(p: argparse.ArgumentParser) -> None:
                    help="per-video offset added to the segment logits: mean (gamma x mean "
                         "logit) or stats (linear in mean/std of the context features); both "
                         "stages must use the same mode (E016; default none = off)")
+    p.add_argument("--offset_lr_mult", type=_positive,
+                   help="learning-rate multiplier of the offset parameters only (E017; needs a "
+                        "global_mode other than none unless 1; default 1 = one optimizer group)")
 
 
 def parse(argv=None) -> argparse.Namespace:
@@ -85,7 +96,7 @@ def main(argv=None) -> None:
     args = parse(argv)
     base = {"dataset": args.dataset, "pair": args.pair, "seed": args.seed,
             "out_dir": args.out_dir, "record": args.record,
-            **_given(args, "lr", "batch_size", "global_mode")}
+            **_given(args, "lr", "batch_size", "global_mode", "offset_lr_mult")}
     extra = {} if args.lambda_normal_seg is None else {"normal_seg": args.lambda_normal_seg}
     if args.video_topk is not None:
         extra["video_topk"] = args.video_topk
