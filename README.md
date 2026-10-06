@@ -582,6 +582,126 @@ ssh <server> 'tar -cf - -C ~/wvad_runs e019' | tar -xf - -C <local runs root>
 python -m wvad.diagnostics.e019 --e017 <local runs root>/e017 --runs <local runs root>/e019
 ```
 
+### Stage F — E020 F1 confirmation experiment ([plan](experiments/E020_confirmation_f1/PLAN.md))
+2x2 factorial on the test set, used once after the plan freeze: stage-2 start (A: stage-1 best-validation vs last checkpoint) x offset (B: off vs M10), 2 datasets x 2 feature pairs x the 10 confirmation seeds. Test manifests are copied from the previous project's lists and checked against the official annotations (no model score is read):
+```bash
+python -m wvad.prep.eval_manifests ucf --previous <ucf_test_manifest.json> \
+    --annotation <Temporal_Anomaly_Annotation_for_Testing_Videos.txt> --out data/manifests/ucf_test.json
+python -m wvad.prep.eval_manifests xdv --previous <xdv_test_manifest.json> \
+    --annotation <XD-Violence/annotations/test_annotation.txt> --out data/manifests/xdv_test.json
+```
+**Training** (server, deployed commit `70d4138`, before the plan freeze; no test data): L20 and M10 chains (stage 1 -> `ckpt_last.pt` -> stage 2), 24 at a time, as launched on 2026-10-06 13:14:
+```bash
+export RUNS=~/wvad_runs/e020 Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+mkdir -p $RUNS && ID=experiments/E019_encoder_late_fusion/results/e019_identity.json
+for ds in ucf xdv; do
+  python -c "from wvad.diagnostics.e017 import record_env; record_env('$RUNS/env_$ds.json', '$ID')" || exit 1
+done
+for seed in 42 123 777 1000 2025 7 13 99 555 31337; do
+  for ds in ucf xdv; do for pair in xcb_xcl xcb_siglip; do for arm in l20 m10; do
+    echo $arm $ds $pair $seed
+  done; done; done
+done > $RUNS/jobs.txt
+setsid nohup xargs -P 24 -L 1 bash -c '
+  arm=$0; ds=$1; pair=$2; seed=$3; c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+  T="--dataset $ds --pair $pair --seed $seed"
+  if [ $arm = m10 ]; then T="$T --global_mode mean --offset_lr_mult 10"; fi
+  python -m wvad.train stage1 $T --out_dir $d/${arm}_stage1 --record > $d.${arm}_s1.log 2>&1 &&
+  python -m wvad.train stage2 $T --init $d/${arm}_stage1/ckpt_last.pt --out_dir $d/$arm $Z > $d.$arm.log 2>&1
+' < $RUNS/jobs.txt > $RUNS/queue.log 2>&1 &
+```
+The base and m10b cells (stage 2 only, from each chain's stage-1 `ckpt_best_val.pt`; m10b with the M10 options) were queued at 13:48 in the same shell (same deploy, `RUNS` and `Z`); the queue waited for the first `xargs`, then ran 24 at a time. This batch wrote no environment record (gate (e) uses the deploy evidence below):
+```bash
+for seed in 42 123 777 1000 2025 7 13 99 555 31337; do
+  for ds in ucf xdv; do for pair in xcb_xcl xcb_siglip; do for cell in base m10b; do
+    echo $cell $ds $pair $seed
+  done; done; done
+done > $RUNS/jobs_best.txt
+FIRST=$(pgrep -x xargs | head -1); echo "first queue xargs pid: $FIRST"   # the 13:14 queue
+setsid nohup bash -c "
+  while kill -0 $FIRST 2>/dev/null; do sleep 20; done
+  date > $RUNS/queue_best.start
+  xargs -P 24 -L 1 bash -c '
+    cell=\$0; ds=\$1; pair=\$2; seed=\$3; c=\${ds}_\${pair}_s\${seed}; d=$RUNS/\$c
+    T=\"--dataset \$ds --pair \$pair --seed \$seed\"; s1=l20_stage1
+    if [ \$cell = m10b ]; then T=\"\$T --global_mode mean --offset_lr_mult 10\"; s1=m10_stage1; fi
+    python -m wvad.train stage2 \$T --init \$d/\$s1/ckpt_best_val.pt --out_dir \$d/\$cell $Z > \$d.\$cell.log 2>&1
+  ' < $RUNS/jobs_best.txt > $RUNS/queue_best.log 2>&1
+" < /dev/null > /dev/null 2>&1 &
+```
+**Plan freeze** (local, after the code review; no e020 run output opened before): `PLAN.sha256` holds the sha256 of `PLAN.md` before its `## 변경 기록` line (change-log entries keep the hash), written as `<sha256>  PLAN.md (before ## 변경 기록)`. Commit the plan, the reviewed code, the test manifests and this README first: `freeze` refuses unless `PLAN.md` is committed unmodified at HEAD and the tracked tree is clean. Then commit `PLAN.sha256` alone: that commit is the freeze commit (its tree holds the plan committed before). Every test-scoring call must run on it or a descendant (checked by the analysis). It is the only commit that may touch `PLAN.sha256`: `gates --check v` and `analyze` stop unless the file was added once, by the freeze commit, with the hash of the current plan and of `PLAN.md` in that commit (a later "re-freeze" is refused). Check the seal history right after the freeze commit, before deploying:
+```bash
+git add experiments/E020_confirmation_f1 src data/manifests README.md && git commit   # plan, reviewed code, manifests
+python -m wvad.diagnostics.e020 freeze
+git add experiments/E020_confirmation_f1/PLAN.sha256 && git commit    # the freeze commit: PLAN.sha256 alone
+python -c "from wvad.diagnostics.e020 import seal_history; print(seal_history())"
+```
+**Scoring deploy** (server): the freeze commit goes to a separate folder, so the training deploy keeps `DEPLOYED_COMMIT` `70d4138`. Server commands below run in `~/frozen-vlm-wvad-e020` with `SCORES`, the score root (`~/wvad_runs/e020_scores`; for a new root after a forward-path fix (step 4), change it and its local copy `S` of step 1); path (ii) (CPU, batch 256) runs under P000's thread set-up: `OMP_NUM_THREADS` and `MKL_NUM_THREADS` exported as 6 before Python starts (the scoring checks them and `torch.get_num_threads()` = 6, never sets threads itself, and records torch's parallel info and MKL version).
+```bash
+git archive --format=tar HEAD | ssh <server> 'mkdir -p ~/frozen-vlm-wvad-e020 && tar -x -C ~/frozen-vlm-wvad-e020'
+git rev-parse HEAD | ssh <server> 'cat > ~/frozen-vlm-wvad-e020/DEPLOYED_COMMIT'
+ssh <server> 'cp ~/frozen-vlm-wvad/configs/paths.yaml ~/frozen-vlm-wvad-e020/configs/'
+# on the server, in ~/frozen-vlm-wvad-e020, with the Python environment active:
+export PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE OMP_NUM_THREADS=6 MKL_NUM_THREADS=6
+SCORES=~/wvad_runs/e020_scores        # the score root; a new one after a forward-path fix (step 4)
+```
+**1. Gates before scoring** (local CPU): (a)-(f), (t) and the selection part of (v0). Gate (e) checks the 13:14 batch by `env_{ucf,xdv}.json` and the 13:48 batch by the deploy evidence (file times on the server, read before copying anything; the commit must be the E019 gate's, the deploy must precede the queue and the first base / m10b log, the first log must not be later than the last, and all 80 base / m10b logs must be there; a run of `--infra_failed` may lack its log). The evidence is written by `wvad.diagnostics.e020_gates.write_deploy_evidence`, run from the scoring deploy. Every `gates` and `analyze` call writes `results/e020_gate.json`, also when a gate fails: commit it either way (a failed gate file is a record, and the clean-tree commands refuse while it is uncommitted):
+```bash
+D=~/frozen-vlm-wvad; R=~/wvad_runs/e020         # on the server, in ~/frozen-vlm-wvad-e020; D: the training deploy
+python -c "from wvad.diagnostics.e020_gates import write_deploy_evidence; write_deploy_evidence('$D', '$R', '$R/deploy_evidence.json')"
+# local
+ssh <server> 'tar -cf - -C ~/wvad_runs e020 e019_gate_70d41384' | tar -xf - -C <local runs root>
+mkdir -p experiments/E020_confirmation_f1/results
+cp <local runs root>/e020/deploy_evidence.json experiments/E020_confirmation_f1/results/e020_deploy_evidence.json
+G="--runs <local runs root>/e020 --e019_gate <local runs root>/e019_gate_70d41384 \
+   --deploy_evidence experiments/E020_confirmation_f1/results/e020_deploy_evidence.json"
+S=<local runs root>/e020_scores       # local copy of $SCORES (same folder name; a new root changes both)
+python -m wvad.diagnostics.e020 gates $G         # results/e020_gate.json; commit it and the evidence
+```
+**2. Validation scoring** (server): path (i) for the 160 runs x 2 rules (gate (s)), path (ii) for the 40 base runs (pre-check against P000's `val_video_auc`, 6 decimals) and the base weights against P000's checkpoints (gate (v0), recorded in `val/meta.json` with the commit and environment, which every test call must share). Then locally (s), the pre-check (`s_precheck`, not blocking) and (v0) (not blocking; only passing base runs enter (v)); the gate file records the sha256 of the `val/scores.sha256` it checked and is copied to the server for step 3:
+```bash
+python -m wvad.diagnostics.e020_score --runs ~/wvad_runs/e020 --out $SCORES \
+    --split val --p000_root ~/sear_phase1/outputs
+ssh <server> "tar -cf - -C ~/wvad_runs $(basename $S)/val" | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e020 gates $G --scores $S     # clean tree; commit the gate file
+scp experiments/E020_confirmation_f1/results/e020_gate.json <server>:wvad_runs/e020_gate_s.json
+```
+Validation scores are written once. After a rerun the plan allows before test scoring ((b), (c) or (e) failure, infrastructure), copy the runs again (the `ssh <server> 'tar ... e020 e019_gate_70d41384'` line of step 1), score all of them again with `--rescore '<reason>'` (the old `val/` moves to `val/superseded/<UTC time>/`), then rerun `gates`, commit and copy the gate file. A code change after test scoring began (step 4) needs a new `--out` root instead (refused under the old one once an access-log line names its `test/`, even of a call cut short).
+
+**3. Base test scoring** (server, once, after (a)-(f), (t), (s) passed): the 40 base runs x 2 rules by both paths. The command refuses unless the copied gate file shows (a)-(f), (t) and (s) passed with no unreadable run, was written from a clean tree and checked this server's `val/scores.sha256` (same sha256); it also checks the frozen plan hash, the commit and environment of the validation scoring, that every checkpoint has the sha256 its validation file recorded and names its own run (config, `init`, `out_dir`), and path (ii)'s threads. Right before any test feature is deserialised (after the six test caches' sha256 matched the plan's table, a read of bytes only), it appends one line to `~/wvad_runs/e020/test_access.log` (its realpath recorded; refused if the score root already has a meta of that line or later, or an earlier call used another log) and writes the call's `test/meta_<k>.json` with `"complete": false`, rewritten with `"complete": true` at the end. Score files are written under a temporary name (`*.npz.part`) and renamed. The scoring runs detached (an ssh drop does not stop it); wait for its end (`tail $SCORES.base.log`: the last line counts the files written). If it stopped early for infrastructure reasons (the log ends in an error, the meta keeps `"complete": false`), only the missing files are scored, before any metric (`--rescore '<reason>' --missing_only`: a file that is not a readable zip counts as missing and is moved aside unread; not a full read, and gate (v) binds both calls). Only if (v0) failed for all 40 runs (and was evaluated without error), P000's own `abl_base` checkpoints are scored by path (ii) for (v) (each first loaded as the scoring loads it):
+```bash
+setsid nohup python -m wvad.diagnostics.e020_score --runs ~/wvad_runs/e020 --out $SCORES --split test \
+    --cells base --gate_s ~/wvad_runs/e020_gate_s.json > $SCORES.base.log 2>&1 < /dev/null &
+# only after an infrastructure failure of that call (the missing files):
+# setsid nohup python -m wvad.diagnostics.e020_score --runs ~/wvad_runs/e020 --out $SCORES --split test --cells base \
+#     --rescore '<reason>' --missing_only --gate_s ~/wvad_runs/e020_gate_s.json > $SCORES.base_missing.log 2>&1 < /dev/null &
+# only if (v0) failed for every base run (detached in the same way):
+# python -m wvad.diagnostics.e020_score ... --split test --cells p000_base --gate_s ~/wvad_runs/e020_gate_s.json --p000_root ~/sear_phase1/outputs
+```
+**4. Gate (v)** (local, clean working tree, before any other test scoring): path (ii) sigma readout vs P000 `abl_base` (best / final rows) within 1e-4 points, on the files of the last full base read (and its `--missing_only` calls; a call cut short counts), all of one commit and plan hash and run with P000's threads; (i) - (ii) differences are recorded only. If (v) fails, the later cells are not scored (PLAN.md failure rule); commit the failed gate file as a record. The cause is looked for in the base scores only:
+- metric or ground-truth computation: a local fix only, no redeploy (the later cells must be scored by the deployed commit that wrote the base and validation scores; a redeploy is refused). Commit the fix, run `gates --check v` again on the saved scores (no test feature is read again), then `analyze` with `--allow_code_change '<reason>'` and the reason in the plan's change log.
+- forward path: the fix is committed and deployed (as above), then scored under a new `--out` root (set `SCORES` and `S` to it, e.g. `~/wvad_runs/e020_scores_2`): `--split val`, local `gates $G --scores $S` (commit and copy the gate file), and base once more with `--rescore '<reason>' --gate_s ...`. Base is read in full at most twice and never after a later cell (the command refuses).
+```bash
+ssh <server> "tar -cf - -C ~/wvad_runs $(basename $S)/test" | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e020 gates $G --scores $S --check v
+git add experiments/E020_confirmation_f1/results/e020_gate.json && git commit    # passed or failed
+```
+**5. Later cells** (server): l20, m10b, m10 by path (i), refused unless the copied gate file shows (v) passed on base scores of this deployed commit and plan hash. Detached and waited for as in step 3 (`tail $SCORES.later.log`); after an infrastructure failure, only the missing files are scored, before any metric (the same command with `--rescore '<reason>' --missing_only`; a file that is not a readable zip counts as missing and is moved aside unread).
+```bash
+scp experiments/E020_confirmation_f1/results/e020_gate.json <server>:wvad_runs/e020_gate_v.json
+setsid nohup python -m wvad.diagnostics.e020_score --runs ~/wvad_runs/e020 --out $SCORES --split test \
+    --cells l20 m10b m10 --gate_v ~/wvad_runs/e020_gate_v.json > $SCORES.later.log 2>&1 < /dev/null &
+```
+**6. Analysis** (local, clean working tree): copy the access log and the score sha256 list into `results/` and commit them (`*.log` is git-ignored: add it with `-f`), then the seal history, the gates, (v), the test files (each with the checkpoint sha256 of the local run copy and of its validation file, the selected epoch (last rule: 30), the recorded `val_video_auc` and its path's conditions) and the access log (every call on the freeze commit or a descendant, frozen plan hash, base first and read in full at most twice, the later cells on the commit and plan of (v), one access log, every call of this score root with its meta; every call on the validation scoring's commit and the later cells unlocked by this (v)) are checked again before the verdict, flags, factorial, bootstrap and descriptives (`results/e020_summary.json` with the library versions and the Wilcoxon method SciPy used, `results/e020_runs.csv` in points). Files under `src/` or `data/manifests/` changed since the freeze commit stop it unless `--allow_code_change '<reason>'` is given (the reason also goes to the plan's change log).
+```bash
+ssh <server> "tar -cf - -C ~/wvad_runs $(basename $S)/test" | tar -xf - -C <local runs root>
+scp <server>:wvad_runs/e020/test_access.log experiments/E020_confirmation_f1/results/e020_test_access.log
+scp <server>:wvad_runs/$(basename $S)/test/scores.sha256 experiments/E020_confirmation_f1/results/e020_test_scores.sha256
+git add -f experiments/E020_confirmation_f1/results/e020_test_access.log
+git add experiments/E020_confirmation_f1/results/e020_test_scores.sha256 && git commit
+python -m wvad.diagnostics.e020 analyze $G --scores $S     # after a metric fix: --allow_code_change '<reason>'
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/

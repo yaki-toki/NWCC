@@ -10,7 +10,9 @@ stores no names). Columns are parallel lists:
     fps            frame rate from the video header (UCF; null when not recorded)
     rel_paths      path of the video inside the dataset root (UCF; null when not recorded)
 
-Only training videos are listed; test videos never appear in a manifest.
+Only training videos are listed; test videos never appear in a training manifest. The test-set
+manifests of the confirmation experiment (stage F) are separate files read by
+``wvad.data.eval_manifests``.
 """
 
 from __future__ import annotations
