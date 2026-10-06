@@ -1,0 +1,238 @@
+{
+ "code": {
+  "commit": "0a5a6ca64e6f1e82f00a761b9dcb8f7be7cf155c",
+  "source": "git",
+  "dirty": false
+ },
+ "chains": [
+  {
+   "chain": "ucf_xcb_xcl_s0",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "ucf_xcb_xcl_s1",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "ucf_xcb_xcl_s2",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s0",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s1",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "ucf_xcb_siglip_s2",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s0",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s1",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "xdv_xcb_xcl_s2",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s0",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s1",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  },
+  {
+   "chain": "xdv_xcb_siglip_s2",
+   "a_m3": true,
+   "b_m3": true,
+   "c_m3": true,
+   "d_m3": true,
+   "e_m3": true,
+   "a_m10": true,
+   "b_m10": true,
+   "c_m10": true,
+   "d_m10": true,
+   "e_m10": true,
+   "c_base": true,
+   "d_m3_m10": true
+  }
+ ],
+ "status": {
+  "a_m3": true,
+  "a_m10": true,
+  "b_m3": true,
+  "b_m10": true,
+  "c_m3": true,
+  "c_m10": true,
+  "d_m3": true,
+  "d_m10": true,
+  "e_m3": true,
+  "e_m10": true,
+  "c_base": true,
+  "d_m3_m10": true,
+  "f": true
+ },
+ "environment": {
+  "identity_all_ok": true,
+  "want": {
+   "torch": "2.5.1+cu124",
+   "cuda": "12.4",
+   "gpu": "NVIDIA H100 80GB HBM3",
+   "driver": "580.126.20",
+   "commit": "2b0cfdf933cdcadff9bfaf64ac945ce886738a85"
+  },
+  "batches": {
+   "ucf": {
+    "env": {
+     "torch": "2.5.1+cu124",
+     "cuda": "12.4",
+     "gpu": "NVIDIA H100 80GB HBM3",
+     "driver": "580.126.20",
+     "commit": "2b0cfdf933cdcadff9bfaf64ac945ce886738a85"
+    },
+    "same": true
+   },
+   "xdv": {
+    "env": {
+     "torch": "2.5.1+cu124",
+     "cuda": "12.4",
+     "gpu": "NVIDIA H100 80GB HBM3",
+     "driver": "580.126.20",
+     "commit": "2b0cfdf933cdcadff9bfaf64ac945ce886738a85"
+    },
+    "same": true
+   }
+  },
+  "ok": true
+ },
+ "errors": []
+}
