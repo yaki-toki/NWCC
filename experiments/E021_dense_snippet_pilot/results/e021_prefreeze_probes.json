@@ -1,0 +1,482 @@
+{
+ "purpose": "E021 pre-freeze probes re-run unchanged by the main session (plan: 고정 전 측정, R11); training-split videos only; nothing written by the scripts",
+ "env": {
+  "python": "3.10.19",
+  "torch": "2.5.1+cu121",
+  "cuda": "12.1",
+  "cudnn": 90100,
+  "opencv": "4.13.0",
+  "transformers": "5.0.0",
+  "numpy": "2.2.6",
+  "gpu": "NVIDIA GeForce RTX 4080",
+  "tf32": {
+   "cuda.matmul.allow_tf32": false,
+   "cudnn.allow_tf32": true,
+   "cudnn.benchmark": false
+  },
+  "driver": "591.86"
+ },
+ "probes": [
+  {
+   "script": "xd_precision_probe.py",
+   "sha256": "0828c391c7da4a85296565a0a31337d26a5ac038af2b179e98a7d56e9ddf0c56",
+   "cmd": [
+    "<riskdet env python>",
+    "xd_precision_probe.py"
+   ],
+   "start": "2026-10-07T07:40:03",
+   "end": "2026-10-07T07:40:40",
+   "returncode": 0,
+   "stdout": [
+    "picked [(51, 'Bad.Boys.1995__#00-26-51_00-27-53_label_B2-0-0', 1489, 1), (53, 'Bad.Boys.1995__#00-38-16_00-38-50_label_B2-0-0', 817, 1), (1, 'A.Beautiful.Mind.2001__#00-03-00_00-04-05_label_A', 1561, 0), (2, 'A.Beautiful.Mind.2001__#00-04-20_00-05-35_label_A', 1801, 0)]",
+    "  Loading microsoft/xclip-base-patch16 ...",
+    "  Params: 121M  feature_dim: 768",
+    "xcb idx 51 fp32_tf32conv  rel L2 median 0.00e+00 max 0.00e+00 bit-exact clips 1.00",
+    "xcb idx 51 fp32_strict    rel L2 median 1.22e-03 max 2.90e-03 bit-exact clips 0.00",
+    "xcb idx 51 autocast       rel L2 median 7.98e-04 max 1.25e-03 bit-exact clips 0.00",
+    "xcb idx 53 fp32_tf32conv  rel L2 median 0.00e+00 max 0.00e+00 bit-exact clips 1.00",
+    "xcb idx 53 fp32_strict    rel L2 median 1.42e-03 max 2.39e-03 bit-exact clips 0.00",
+    "xcb idx 53 autocast       rel L2 median 7.81e-04 max 9.99e-04 bit-exact clips 0.00",
+    "xcb idx 1 fp32_tf32conv  rel L2 median 0.00e+00 max 0.00e+00 bit-exact clips 1.00",
+    "xcb idx 1 fp32_strict    rel L2 median 9.01e-04 max 2.66e-03 bit-exact clips 0.00",
+    "xcb idx 1 autocast       rel L2 median 7.01e-04 max 1.03e-03 bit-exact clips 0.00",
+    "xcb idx 2 fp32_tf32conv  rel L2 median 0.00e+00 max 0.00e+00 bit-exact clips 1.00",
+    "xcb idx 2 fp32_strict    rel L2 median 8.44e-04 max 2.87e-03 bit-exact clips 0.00",
+    "xcb idx 2 autocast       rel L2 median 7.56e-04 max 1.02e-03 bit-exact clips 0.00",
+    "  Loading microsoft/xclip-large-patch14 ...",
+    "  Params: 429M  feature_dim: 1024",
+    "xcl idx 51 fp32_tf32conv  rel L2 median 0.00e+00 max 0.00e+00 bit-exact clips 1.00",
+    "xcl idx 51 fp32_strict    rel L2 median 2.91e-03 max 5.61e-03 bit-exact clips 0.00",
+    "xcl idx 51 autocast       rel L2 median 1.36e-03 max 1.73e-03 bit-exact clips 0.00",
+    "xcl idx 53 fp32_tf32conv  rel L2 median 0.00e+00 max 0.00e+00 bit-exact clips 1.00",
+    "xcl idx 53 fp32_strict    rel L2 median 3.19e-03 max 6.08e-03 bit-exact clips 0.00",
+    "xcl idx 53 autocast       rel L2 median 1.36e-03 max 1.95e-03 bit-exact clips 0.00",
+    "xcl idx 1 fp32_tf32conv  rel L2 median 0.00e+00 max 0.00e+00 bit-exact clips 1.00",
+    "xcl idx 1 fp32_strict    rel L2 median 2.21e-03 max 4.24e-03 bit-exact clips 0.00",
+    "xcl idx 1 autocast       rel L2 median 1.46e-03 max 2.83e-03 bit-exact clips 0.00",
+    "xcl idx 2 fp32_tf32conv  rel L2 median 0.00e+00 max 0.00e+00 bit-exact clips 1.00",
+    "xcl idx 2 fp32_strict    rel L2 median 2.48e-03 max 6.26e-03 bit-exact clips 0.00",
+    "xcl idx 2 autocast       rel L2 median 1.31e-03 max 2.23e-03 bit-exact clips 0.00"
+   ],
+   "stderr_tail": [
+    "prompts_generator.decoder.{0, 1}.cross_attn.proj.weight      | UNEXPECTED |  | ",
+    "prompts_generator.decoder.{0, 1}.cross_attn.k_proj.weight    | UNEXPECTED |  | ",
+    "text_model.final_layer_norm.weight                           | UNEXPECTED |  | ",
+    "prompts_generator.decoder.{0, 1}.norm1.weight                | UNEXPECTED |  | ",
+    "text_model.final_layer_norm.bias                             | UNEXPECTED |  | ",
+    "text_model.embeddings.position_ids                           | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.self_attn.k_proj.bias                   | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.mlp.fc1.weight                          | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.layer_norm2.bias                        | UNEXPECTED |  | ",
+    "vision_model.embeddings.position_ids                         | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.layer_norm1.weight                      | UNEXPECTED |  | ",
+    "text_projection.weight                                       | UNEXPECTED |  | ",
+    "text_model.embeddings.position_embedding.weight              | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.self_attn.out_proj.weight               | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.self_attn.out_proj.bias                 | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.self_attn.v_proj.bias                   | UNEXPECTED |  | ",
+    "prompts_generator.layernorm.bias                             | UNEXPECTED |  | ",
+    "",
+    "Notes:",
+    "- UNEXPECTED\t:can be ignored when loading from different task/architecture; not ok if you expect identical arch."
+   ],
+   "location": "session scratch directory (not in the repository; decision 0002)"
+  },
+  {
+   "script": "xd_siglip_probe.py",
+   "sha256": "f1acacce2877ab791ea9f6f6671839d9ab8561fe5bd10e770169c4e05ea0f424",
+   "cmd": [
+    "<riskdet env python>",
+    "xd_siglip_probe.py"
+   ],
+   "start": "2026-10-07T07:40:40",
+   "end": "2026-10-07T07:41:10",
+   "returncode": 0,
+   "stdout": [
+    "siglip idx 51 fp32_tf32conv  rel L2 median 4.95e-06 max 1.23e-05 bit-exact clips 0.00",
+    "siglip idx 51 autocast       rel L2 median 1.85e-03 max 3.12e-03 bit-exact clips 0.00",
+    "siglip idx 1 fp32_tf32conv  rel L2 median 3.54e-06 max 8.16e-06 bit-exact clips 0.00",
+    "siglip idx 1 autocast       rel L2 median 1.49e-03 max 2.28e-03 bit-exact clips 0.00"
+   ],
+   "stderr_tail": [
+    "text_model.encoder.layers.{0...26}.self_attn.q_proj.bias     | UNEXPECTED |  | ",
+    "text_model.encoder.layers.{0...26}.layer_norm1.bias          | UNEXPECTED |  | ",
+    "text_model.encoder.layers.{0...26}.self_attn.q_proj.weight   | UNEXPECTED |  | ",
+    "text_model.encoder.layers.{0...26}.layer_norm2.bias          | UNEXPECTED |  | ",
+    "text_model.encoder.layers.{0...26}.mlp.fc2.bias              | UNEXPECTED |  | ",
+    "text_model.encoder.layers.{0...26}.self_attn.v_proj.bias     | UNEXPECTED |  | ",
+    "text_model.encoder.layers.{0...26}.self_attn.k_proj.bias     | UNEXPECTED |  | ",
+    "text_model.encoder.layers.{0...26}.self_attn.out_proj.weight | UNEXPECTED |  | ",
+    "text_model.encoder.layers.{0...26}.self_attn.k_proj.weight   | UNEXPECTED |  | ",
+    "text_model.final_layer_norm.bias                             | UNEXPECTED |  | ",
+    "text_model.head.weight                                       | UNEXPECTED |  | ",
+    "text_model.embeddings.position_embedding.weight              | UNEXPECTED |  | ",
+    "text_model.head.bias                                         | UNEXPECTED |  | ",
+    "logit_bias                                                   | UNEXPECTED |  | ",
+    "logit_scale                                                  | UNEXPECTED |  | ",
+    "text_model.embeddings.token_embedding.weight                 | UNEXPECTED |  | ",
+    "text_model.final_layer_norm.weight                           | UNEXPECTED |  | ",
+    "",
+    "Notes:",
+    "- UNEXPECTED\t:can be ignored when loading from different task/architecture; not ok if you expect identical arch."
+   ],
+   "location": "session scratch directory (not in the repository; decision 0002)"
+  },
+  {
+   "script": "ucf_position_probe.py",
+   "sha256": "9ddec47f5c3dadc7a34679db5a490405bf38fba44b5301d3947cdf6b555602f9",
+   "cmd": [
+    "<riskdet env python>",
+    "ucf_position_probe.py"
+   ],
+   "start": "2026-10-07T07:41:10",
+   "end": "2026-10-07T07:42:20",
+   "returncode": 0,
+   "stdout": [
+    "picked [(38, 'Abuse041_x264', 1385, 1), (823, 'Normal_Videos233_x264', 918, 0)]",
+    "  Loading microsoft/xclip-base-patch16 ...",
+    "  Params: 121M  feature_dim: 768",
+    "xcb idx 38 T 1385 L 43: best rel L2 median 0.00e+00 max 7.61e-04; 2nd-best median 1.74e-02; relative position in range median 0.46 (IQR 0.30-0.63)",
+    "xcb idx 823 T 918 L 28: best rel L2 median 2.54e-08 max 8.28e-08; 2nd-best median 2.88e-02; relative position in range median 0.62 (IQR 0.33-0.75)",
+    "  Loading microsoft/xclip-large-patch14 ...",
+    "  Params: 429M  feature_dim: 1024",
+    "xcl idx 38 T 1385 L 43: best rel L2 median 0.00e+00 max 1.96e-03; 2nd-best median 1.58e-02; relative position in range median 0.56 (IQR 0.28-0.78)",
+    "xcl idx 823 T 918 L 28: best rel L2 median 0.00e+00 max 6.80e-08; 2nd-best median 3.26e-02; relative position in range median 0.58 (IQR 0.56-0.92)",
+    "idx 38: XCB and XCL best starts equal in 0.06 of segments; median |diff| 6 frames",
+    "idx 823: XCB and XCL best starts equal in 0.16 of segments; median |diff| 5 frames"
+   ],
+   "stderr_tail": [
+    "prompts_generator.decoder.{0, 1}.cross_attn.v_proj.weight    | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.self_attn.v_proj.weight                 | UNEXPECTED |  | ",
+    "text_model.final_layer_norm.bias                             | UNEXPECTED |  | ",
+    "text_model.embeddings.position_ids                           | UNEXPECTED |  | ",
+    "prompts_generator.decoder.{0, 1}.norm3.weight                | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.self_attn.k_proj.bias                   | UNEXPECTED |  | ",
+    "visual_projection.weight                                     | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.self_attn.k_proj.weight                 | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.layer_norm2.bias                        | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.layer_norm1.bias                        | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.layer_norm2.weight                      | UNEXPECTED |  | ",
+    "prompts_generator.layernorm.bias                             | UNEXPECTED |  | ",
+    "prompts_visual_layernorm.bias                                | UNEXPECTED |  | ",
+    "prompts_visual_projection                                    | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.mlp.fc1.bias                            | UNEXPECTED |  | ",
+    "prompts_visual_layernorm.weight                              | UNEXPECTED |  | ",
+    "mit.encoder.layers.0.self_attn.q_proj.weight                 | UNEXPECTED |  | ",
+    "",
+    "Notes:",
+    "- UNEXPECTED\t:can be ignored when loading from different task/architecture; not ok if you expect identical arch."
+   ],
+   "location": "session scratch directory (not in the repository; decision 0002)"
+  }
+ ],
+ "extracted": {
+  "xd_precision": [
+   {
+    "encoder": "xcb",
+    "video_index": 51,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 0.0,
+    "rel_l2_max": 0.0,
+    "bit_exact_fraction": 1.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 51,
+    "mode": "fp32_strict",
+    "rel_l2_median": 0.00122,
+    "rel_l2_max": 0.0029,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 51,
+    "mode": "autocast",
+    "rel_l2_median": 0.000798,
+    "rel_l2_max": 0.00125,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 53,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 0.0,
+    "rel_l2_max": 0.0,
+    "bit_exact_fraction": 1.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 53,
+    "mode": "fp32_strict",
+    "rel_l2_median": 0.00142,
+    "rel_l2_max": 0.00239,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 53,
+    "mode": "autocast",
+    "rel_l2_median": 0.000781,
+    "rel_l2_max": 0.000999,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 1,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 0.0,
+    "rel_l2_max": 0.0,
+    "bit_exact_fraction": 1.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 1,
+    "mode": "fp32_strict",
+    "rel_l2_median": 0.000901,
+    "rel_l2_max": 0.00266,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 1,
+    "mode": "autocast",
+    "rel_l2_median": 0.000701,
+    "rel_l2_max": 0.00103,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 2,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 0.0,
+    "rel_l2_max": 0.0,
+    "bit_exact_fraction": 1.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 2,
+    "mode": "fp32_strict",
+    "rel_l2_median": 0.000844,
+    "rel_l2_max": 0.00287,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 2,
+    "mode": "autocast",
+    "rel_l2_median": 0.000756,
+    "rel_l2_max": 0.00102,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 51,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 0.0,
+    "rel_l2_max": 0.0,
+    "bit_exact_fraction": 1.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 51,
+    "mode": "fp32_strict",
+    "rel_l2_median": 0.00291,
+    "rel_l2_max": 0.00561,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 51,
+    "mode": "autocast",
+    "rel_l2_median": 0.00136,
+    "rel_l2_max": 0.00173,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 53,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 0.0,
+    "rel_l2_max": 0.0,
+    "bit_exact_fraction": 1.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 53,
+    "mode": "fp32_strict",
+    "rel_l2_median": 0.00319,
+    "rel_l2_max": 0.00608,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 53,
+    "mode": "autocast",
+    "rel_l2_median": 0.00136,
+    "rel_l2_max": 0.00195,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 1,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 0.0,
+    "rel_l2_max": 0.0,
+    "bit_exact_fraction": 1.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 1,
+    "mode": "fp32_strict",
+    "rel_l2_median": 0.00221,
+    "rel_l2_max": 0.00424,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 1,
+    "mode": "autocast",
+    "rel_l2_median": 0.00146,
+    "rel_l2_max": 0.00283,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 2,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 0.0,
+    "rel_l2_max": 0.0,
+    "bit_exact_fraction": 1.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 2,
+    "mode": "fp32_strict",
+    "rel_l2_median": 0.00248,
+    "rel_l2_max": 0.00626,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 2,
+    "mode": "autocast",
+    "rel_l2_median": 0.00131,
+    "rel_l2_max": 0.00223,
+    "bit_exact_fraction": 0.0
+   }
+  ],
+  "xd_siglip": [
+   {
+    "encoder": "siglip",
+    "video_index": 51,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 4.95e-06,
+    "rel_l2_max": 1.23e-05,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "siglip",
+    "video_index": 51,
+    "mode": "autocast",
+    "rel_l2_median": 0.00185,
+    "rel_l2_max": 0.00312,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "siglip",
+    "video_index": 1,
+    "mode": "fp32_tf32conv",
+    "rel_l2_median": 3.54e-06,
+    "rel_l2_max": 8.16e-06,
+    "bit_exact_fraction": 0.0
+   },
+   {
+    "encoder": "siglip",
+    "video_index": 1,
+    "mode": "autocast",
+    "rel_l2_median": 0.00149,
+    "rel_l2_max": 0.00228,
+    "bit_exact_fraction": 0.0
+   }
+  ],
+  "ucf_position": [
+   {
+    "encoder": "xcb",
+    "video_index": 38,
+    "T": 1385,
+    "L": 43,
+    "e_best_median": 0.0,
+    "e_best_max": 0.000761,
+    "e_second_median": 0.0174,
+    "rel_pos_median": 0.46,
+    "rel_pos_iqr": [
+     0.3,
+     0.63
+    ]
+   },
+   {
+    "encoder": "xcb",
+    "video_index": 823,
+    "T": 918,
+    "L": 28,
+    "e_best_median": 2.54e-08,
+    "e_best_max": 8.28e-08,
+    "e_second_median": 0.0288,
+    "rel_pos_median": 0.62,
+    "rel_pos_iqr": [
+     0.33,
+     0.75
+    ]
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 38,
+    "T": 1385,
+    "L": 43,
+    "e_best_median": 0.0,
+    "e_best_max": 0.00196,
+    "e_second_median": 0.0158,
+    "rel_pos_median": 0.56,
+    "rel_pos_iqr": [
+     0.28,
+     0.78
+    ]
+   },
+   {
+    "encoder": "xcl",
+    "video_index": 823,
+    "T": 918,
+    "L": 28,
+    "e_best_median": 0.0,
+    "e_best_max": 6.8e-08,
+    "e_second_median": 0.0326,
+    "rel_pos_median": 0.58,
+    "rel_pos_iqr": [
+     0.56,
+     0.92
+    ]
+   }
+  ],
+  "ucf_agreement": [
+   {
+    "video_index": 38,
+    "equal_fraction": 0.06,
+    "median_abs_diff_frames": 6
+   },
+   {
+    "video_index": 823,
+    "equal_fraction": 0.16,
+    "median_abs_diff_frames": 5
+   }
+  ]
+ },
+ "placeholders": {
+  "ucf_e_s_star_max_xcb": 0.000761,
+  "ucf_e_s_star_max_xcl": 0.00196,
+  "tau_amp": 0.005,
+  "route": {
+   "xcb": "normal (<= tau_amp)",
+   "xcl": "normal (<= tau_amp)"
+  }
+ }
+}
