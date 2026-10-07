@@ -89,6 +89,32 @@ def _encoders(names, device):
     return {e: Encoder.load(e, device) for e in names}
 
 
+def _x1_by_encoder(gate, paths, args, manifest, split, device, open_video) -> dict:
+    """(x1) with one encoder on the GPU at a time, merged into one result. The three encoders
+    together with the earlier fp32 batch of 32 clips exceed the RTX 4080's memory, and Windows
+    then spills into shared memory (about 17 min per XD video). Each encoder's computation is
+    unchanged; every run must decode the same videos to the same frames (E021 PLAN change log)."""
+    import torch
+
+    merged = None
+    for name in args.encoders:
+        encoders = _encoders([name], device)
+        part = gate.run_x1(paths, args.dataset, manifest, split, encoders, device, open_video)
+        del encoders
+        if device.type == "cuda":
+            torch.cuda.empty_cache()
+        if merged is None:
+            merged = part
+            continue
+        if part["videos"] != merged["videos"] or part["frame_hashes"] != merged["frame_hashes"]:
+            raise RuntimeError("(x1): the per-encoder runs decoded different videos or frames")
+        merged["encoders"] |= part["encoders"]
+        merged["batch"] |= part["batch"]
+        if merged["positions"] is not None:
+            merged["positions"] |= part["positions"]
+    return merged
+
+
 def _provenance() -> tuple[dict, dict]:
     from wvad.diagnostics.common import code_version
     from wvad.extract.encoders import extraction_environment
@@ -137,11 +163,11 @@ def cmd_gate(args) -> None:
                                       "purpose": args.check}])
         return os.fspath(video_path(paths, args.dataset, manifest, index))
 
-    encoders = _encoders(args.encoders, device)
     commit, env = _provenance()
     if args.check == "x1":
-        result = gate.run_x1(paths, args.dataset, manifest, split, encoders, device, open_video)
+        result = _x1_by_encoder(gate, paths, args, manifest, split, device, open_video)
     else:
+        encoders = _encoders(args.encoders, device)
         x1 = json.loads(Path(args.x1).read_text(encoding="utf-8"))
         result = gate.run_x2(paths, args.dataset, manifest, x1, encoders, device, open_video,
                              args.batch, normalize=args.normalize)
