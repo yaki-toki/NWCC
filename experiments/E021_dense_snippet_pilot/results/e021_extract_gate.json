@@ -1523,7 +1523,11 @@
   "sha_mismatch": [],
   "outside_training_manifest": 0,
   "opened_without_sha": 0,
-  "status": "pass"
+  "status": "pass",
+  "recheck": {
+   "files": 4727,
+   "changed": []
+  }
  },
  "x3a": {
   "videos": 5560,
