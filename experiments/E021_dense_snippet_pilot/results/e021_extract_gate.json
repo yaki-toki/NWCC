@@ -1910,5 +1910,215 @@
     }
    }
   }
+ },
+ "x3_ucf_val": {
+  "xcb": {
+   "videos": 241,
+   "grab_attempts_not_T": [],
+   "over_1pct": [],
+   "status": "pass"
+  },
+  "xcl": {
+   "videos": 241,
+   "grab_attempts_not_T": [],
+   "over_1pct": [],
+   "status": "pass"
+  },
+  "siglip": {
+   "videos": 241,
+   "grab_attempts_not_T": [],
+   "over_1pct": [],
+   "status": "pass"
+  }
+ },
+ "x4_ucf_val": {
+  "xcb": {
+   "videos": 241,
+   "runs": 1,
+   "run_ids": [
+    "val-2026-10-07T05:35:13+00:00-370a0930"
+   ],
+   "commit": "7b43cca5cdf91de0346e216d24d71e49485a3f6b",
+   "run_commits": [
+    "7b43cca5cdf91de0346e216d24d71e49485a3f6b"
+   ],
+   "problems": [],
+   "status": "pass"
+  },
+  "xcl": {
+   "videos": 241,
+   "runs": 1,
+   "run_ids": [
+    "val-2026-10-07T05:35:19+00:00-4a5bcf0d"
+   ],
+   "commit": "7b43cca5cdf91de0346e216d24d71e49485a3f6b",
+   "run_commits": [
+    "7b43cca5cdf91de0346e216d24d71e49485a3f6b"
+   ],
+   "problems": [],
+   "status": "pass"
+  },
+  "siglip": {
+   "videos": 241,
+   "runs": 1,
+   "run_ids": [
+    "val-2026-10-07T05:35:12+00:00-b2ee1cab"
+   ],
+   "commit": "7b43cca5cdf91de0346e216d24d71e49485a3f6b",
+   "run_commits": [
+    "7b43cca5cdf91de0346e216d24d71e49485a3f6b"
+   ],
+   "problems": [],
+   "status": "pass"
+  }
+ },
+ "x3_xdv_val": {
+  "xcb": {
+   "videos": 592,
+   "grab_attempts_not_T": [],
+   "over_1pct": [],
+   "status": "pass"
+  },
+  "xcl": {
+   "videos": 592,
+   "grab_attempts_not_T": [],
+   "over_1pct": [],
+   "status": "pass"
+  },
+  "siglip": {
+   "videos": 592,
+   "grab_attempts_not_T": [],
+   "over_1pct": [],
+   "status": "pass"
+  }
+ },
+ "x4_xdv_val": {
+  "xcb": {
+   "videos": 592,
+   "runs": 1,
+   "run_ids": [
+    "val-2026-10-07T05:35:19+00:00-f0b1c6ac"
+   ],
+   "commit": "7b43cca5cdf91de0346e216d24d71e49485a3f6b",
+   "run_commits": [
+    "7b43cca5cdf91de0346e216d24d71e49485a3f6b"
+   ],
+   "problems": [],
+   "status": "pass"
+  },
+  "xcl": {
+   "videos": 592,
+   "runs": 1,
+   "run_ids": [
+    "val-2026-10-07T05:35:20+00:00-af940feb"
+   ],
+   "commit": "7b43cca5cdf91de0346e216d24d71e49485a3f6b",
+   "run_commits": [
+    "7b43cca5cdf91de0346e216d24d71e49485a3f6b"
+   ],
+   "problems": [],
+   "status": "pass"
+  },
+  "siglip": {
+   "videos": 592,
+   "runs": 1,
+   "run_ids": [
+    "val-2026-10-07T05:35:16+00:00-664e7dd0"
+   ],
+   "commit": "7b43cca5cdf91de0346e216d24d71e49485a3f6b",
+   "run_commits": [
+    "7b43cca5cdf91de0346e216d24d71e49485a3f6b"
+   ],
+   "problems": [],
+   "status": "pass"
+  }
+ },
+ "x5_ucf_stage1": {
+  "xcb": {
+   "d16c": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r1": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r2": {
+    "problems": [],
+    "status": "pass"
+   }
+  },
+  "xcl": {
+   "d16c": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r1": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r2": {
+    "problems": [],
+    "status": "pass"
+   }
+  },
+  "siglip": {
+   "d16c": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r1": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r2": {
+    "problems": [],
+    "status": "pass"
+   }
+  }
+ },
+ "x5_xdv_stage1": {
+  "xcb": {
+   "d16c": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r": {
+    "problems": [],
+    "status": "pass"
+   }
+  },
+  "xcl": {
+   "d16c": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r": {
+    "problems": [],
+    "status": "pass"
+   }
+  },
+  "siglip": {
+   "d16c": {
+    "problems": [],
+    "status": "pass"
+   },
+   "d16r": {
+    "problems": [],
+    "status": "pass"
+   }
+  }
  }
 }
