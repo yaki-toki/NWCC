@@ -5,7 +5,8 @@ segment, the last segment also takes T % 32). Frame AP with segment-constant sco
 a weighted AP over segments whose weights are the positive / negative frame counts, which
 is what this module computes (identical to ``sklearn.metrics.average_precision_score`` on
 the expanded frames; checked in the local unit tests). Proxy frame labels always come from
-``Proxy.frame_labels`` (half-open intervals).
+``Proxy.frame_labels`` (half-open intervals). ``support_frame_counts`` gives the same counts for
+units on any frame supports (E021: 16-frame snippet supports, evaluator windows).
 """
 
 from __future__ import annotations
@@ -30,6 +31,29 @@ def segment_frame_counts(labels: np.ndarray, n_segments: int = N_SEGMENTS
     pos = np.bincount(seg, weights=labels.astype(np.float64), minlength=n_segments)
     tot = np.bincount(seg, minlength=n_segments).astype(np.float64)
     return pos, tot - pos
+
+
+def support_frame_counts(labels: np.ndarray, starts: Sequence[int] | np.ndarray,
+                         ends: Sequence[int] | np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """(positive, negative) frame counts of one video's 0/1 frame labels inside each support
+    interval [start, end) (any intervals within [0, T), e.g. the 16-frame snippet supports or the
+    evaluator windows; E021). When the intervals partition [0, T) and each unit's score covers
+    its support, ``weighted_ap`` / ``weighted_auc`` of the counts equal the frame metrics on the
+    expanded frames."""
+    lab = np.asarray(labels)
+    s, e = np.asarray(starts), np.asarray(ends)
+    if lab.ndim != 1:
+        raise ValueError("labels must be one video's 1-D frame labels")
+    if s.ndim != 1 or s.shape != e.shape:
+        raise ValueError(f"starts {s.shape} and ends {e.shape} must be 1-D of the same length")
+    if s.size and not (np.issubdtype(s.dtype, np.integer) and np.issubdtype(e.dtype, np.integer)):
+        raise ValueError("support bounds must be integers")
+    if s.size and not ((s >= 0).all() and (s <= e).all() and (e <= len(lab)).all()):
+        raise ValueError(f"support intervals must satisfy 0 <= start <= end <= {len(lab)}")
+    s, e = s.astype(np.int64), e.astype(np.int64)
+    cum = np.concatenate([[0.0], np.cumsum(lab, dtype=np.float64)])
+    pos = cum[e] - cum[s]
+    return pos, (e - s) - pos
 
 
 def weighted_ap(scores: np.ndarray, pos_w: np.ndarray, neg_w: np.ndarray) -> float:

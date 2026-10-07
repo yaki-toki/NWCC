@@ -11,6 +11,9 @@ Small, tracked inputs. Feature caches, videos and checkpoints are **not** stored
 | `manifests/ucf_test.json` | The 290 UCF-Crime test videos (140 anomalous) in test feature-cache order: name, category, label, annotated intervals (inclusive end frames, official temporal annotation), frame count and fps (video headers) | previous project's test list, checked against `Temporal_Anomaly_Annotation_for_Testing_Videos.txt`; `python -m wvad.prep.eval_manifests ucf` (stage F) |
 | `manifests/xdv_test.json` | The 800 XD-Violence test videos (500 anomalous) in test feature-cache order: name, label code, label, annotated intervals (official `test_annotation.txt`), frame count (the cache's) and fps | previous project's test list, checked against the official annotation; `python -m wvad.prep.eval_manifests xdv` (stage F) |
 | `annotations/ucf_train_uca_proxy.json` | UCA proxy intervals (frames) for the anomalous UCF-Crime **training** videos: sentences matching the category lexicon (M1 substring, M2 word-start), one interval per sentence (S), their union (A) and hull (B). Diagnostics only; never used for training or model selection | derived from UCA; `python -m wvad.diagnostics.uca` |
+| `annotations/glancevad/ucf_glance_annotations.csv` | GlanceVAD glance points of the 810 anomalous UCF-Crime **training** videos: `video-id`, `glance` (one frame inside each anomalous event; 2,026 rows). Diagnostics only (E021); never used for training, selection or verdicts | GlanceVAD, upstream file byte for byte (see below) |
+| `annotations/glancevad/xd_glance_annotations.csv` | GlanceVAD glance points of 1,905 violent XD-Violence **training** videos, same columns (4,278 rows). Diagnostics only (E021); never used for training, selection or verdicts | GlanceVAD, upstream file byte for byte (see below) |
+| `annotations/glancevad/LICENSE.GlanceVAD` | GlanceVAD's MIT license, upstream text unchanged | GlanceVAD |
 
 Each split stores the indices of the validation and remaining training videos in the order of the training feature cache, plus the per-video labels used to check that a cache matches the split.
 
@@ -22,5 +25,15 @@ Each split stores the indices of the validation and remaining training videos in
 The proxy intervals are derived from UCA (UCF-Crime Annotation; Yuan et al., "Towards Surveillance Video-and-Language Understanding: New Dataset, Baselines, and Challenges", CVPR 2024, arXiv:2309.13925), released under Apache-2.0 for academic and research purposes only (https://github.com/Xuange923/Surveillance-Video-Understanding). The raw UCA files are not redistributed here (`configs/paths.yaml`, `annotations.uca`). The UCF-Crime videos keep their own terms.
 
 Known limits of the proxy: only the onset of the M1 rule was compared with test annotations in the previous project (median absolute error 0.053 of the video length); interval ends and lengths are unverified, and sentences can be longer than the events they describe. Coverage differs strongly by category (see `experiments/E002_diagnostics/results/c0_proxy_by_category.csv`).
+
+## GlanceVAD annotations
+The glance points come from GlanceVAD (Zhang et al., "GlanceVAD: Exploring Glance Supervision for Label-efficient Video Anomaly Detection", IEEE ICME 2025, doi:10.1109/ICME59968.2025.11209281; arXiv:2403.06154), https://github.com/pipixin321/GlanceVAD, released under the MIT license (`annotations/glancevad/LICENSE.GlanceVAD`, the upstream text unchanged, "Copyright (c) 2024 Huaxin Zhang"). The two CSV files are the upstream `data/ucf-crime/ucf_glance_annotations.csv` and `data/xd-violence/xd_glance_annotations.csv` byte for byte, from `master` at commit `18ff774d0b8f607f7bd63e44541d1cf5f67894e5` (2025-03-23), checked against that commit on 2026-10-07. Their sha256 are in `SHA256SUMS`, and `wvad.diagnostics.glance` checks them on reading. The UCF-Crime and XD-Violence videos keep their own terms.
+
+- Format: `video-id` is the video name as in the training manifests; `glance` is one frame inside an anomalous event, used as a 0-based frame index. One row per event.
+- Coverage (names and frame counts only, no scores; 2026-10-07):
+  - XD-Violence: 1,904 of the 1,905 annotated videos match a training-manifest name exactly; the other is a video that could not be decoded at extraction. All 285 violent validation videos have points (639 points, median 2 and at most 6 per video, all 9 ≤ g < T).
+  - UCF-Crime: all 810 anomalous training videos match. All 121 anomalous validation videos have points (295 points, median 2 and at most 6 per video, all 52 ≤ g < T).
+  - Normal videos have no points; no point is duplicated.
+- **Diagnostics only; never used for training, selection or verdicts.** E021 reads only the rows of the validation part's videos (the anomalous videos' points), never the training part's points (XD 3,635 and UCF 1,731), and computes its glance diagnostics once, after its verdict file is committed (E021 PLAN.md, "시간 주석 진단").
 
 `SHA256SUMS` lists the file hashes; run `sha256sum -c SHA256SUMS` from this folder to check them.
