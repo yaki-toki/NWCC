@@ -1,0 +1,114 @@
+{
+ "python": "3.10.22",
+ "platform": "Linux-5.15.0-163-generic-x86_64-with-glibc2.35",
+ "torch": "2.5.1+cu121",
+ "torch.version.cuda": "12.1",
+ "cudnn": 90100,
+ "opencv": "4.13.0",
+ "transformers": "5.0.0",
+ "numpy": "2.2.6",
+ "gpu": "NVIDIA H100 80GB HBM3",
+ "driver": "580.126.20",
+ "tf32": {
+  "cuda.matmul.allow_tf32": false,
+  "cudnn.allow_tf32": true,
+  "cudnn.benchmark": false,
+  "cudnn.deterministic": false
+ },
+ "pip_freeze": [
+  "annotated-doc==0.0.5",
+  "anyio==4.15.1",
+  "certifi==2026.7.22",
+  "click==8.5.0",
+  "exceptiongroup==1.3.1",
+  "filelock==3.32.3",
+  "fsspec==2026.7.0",
+  "h11==0.16.0",
+  "hf-xet==1.7.0",
+  "httpcore==1.0.9",
+  "httpx==0.28.1",
+  "huggingface_hub==1.33.0",
+  "idna==3.20",
+  "Jinja2==3.1.6",
+  "markdown-it-py==4.2.0",
+  "MarkupSafe==3.0.3",
+  "mdurl==0.1.2",
+  "mpmath==1.3.0",
+  "networkx==3.4.2",
+  "numpy==2.2.6",
+  "nvidia-cublas-cu12==12.1.3.1",
+  "nvidia-cuda-cupti-cu12==12.1.105",
+  "nvidia-cuda-nvrtc-cu12==12.1.105",
+  "nvidia-cuda-runtime-cu12==12.1.105",
+  "nvidia-cudnn-cu12==9.1.0.70",
+  "nvidia-cufft-cu12==11.0.2.54",
+  "nvidia-curand-cu12==10.3.2.106",
+  "nvidia-cusolver-cu12==11.4.5.107",
+  "nvidia-cusparse-cu12==12.1.0.106",
+  "nvidia-nccl-cu12==2.21.5",
+  "nvidia-nvjitlink-cu12==12.9.86",
+  "nvidia-nvtx-cu12==12.1.105",
+  "opencv-python==4.13.0.90",
+  "packaging==26.3",
+  "Pygments==2.21.0",
+  "PyYAML==6.0.3",
+  "regex==2026.9.29",
+  "rich==15.0.0",
+  "safetensors==0.8.0",
+  "shellingham==1.5.4",
+  "sympy==1.13.1",
+  "tokenizers==0.22.2",
+  "tomli==2.4.1",
+  "torch==2.5.1+cu121",
+  "tqdm==4.70.1",
+  "transformers==5.0.0",
+  "triton==3.1.0",
+  "typer==0.27.3",
+  "typer-slim==0.24.0",
+  "typing_extensions==4.16.0"
+ ],
+ "encoders": {
+  "xcb": {
+   "name": "xcb",
+   "model_id": "microsoft/xclip-base-patch16",
+   "revision": "d6184e3fd8780d04c85d0f1eabe5f94bf44d98f6",
+   "loaded_commit": "d6184e3fd8780d04c85d0f1eabe5f94bf44d98f6",
+   "attn_implementation": "eager",
+   "parameter_dtypes": [
+    "torch.float32"
+   ],
+   "input_size": 224,
+   "dim": 768
+  },
+  "xcl": {
+   "name": "xcl",
+   "model_id": "microsoft/xclip-large-patch14",
+   "revision": "a9dd1429a16cf305df2aaea232d5e8dceba1c675",
+   "loaded_commit": "a9dd1429a16cf305df2aaea232d5e8dceba1c675",
+   "attn_implementation": "eager",
+   "parameter_dtypes": [
+    "torch.float32"
+   ],
+   "input_size": 224,
+   "dim": 1024
+  },
+  "siglip": {
+   "name": "siglip",
+   "model_id": "google/siglip-so400m-patch14-384",
+   "revision": "9fdffc58afc957d1a03a25b10dba0329ab15c2a3",
+   "loaded_commit": "9fdffc58afc957d1a03a25b10dba0329ab15c2a3",
+   "attn_implementation": "sdpa",
+   "parameter_dtypes": [
+    "torch.float32"
+   ],
+   "input_size": 384,
+   "dim": 1152
+  }
+ },
+ "commit": {
+  "commit": "7b43cca5cdf91de0346e216d24d71e49485a3f6b",
+  "source": "deployed",
+  "dirty": null
+ },
+ "utc": "2026-10-07T04:48:07+00:00"
+}
