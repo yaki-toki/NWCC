@@ -6,8 +6,9 @@ file is committed: ``stage1`` and ``verdict`` import neither the glance nor the 
 
     freeze    PLAN.sha256 = sha256 of PLAN.md before its change log (PLAN.md committed unmodified
               at HEAD, clean tracked tree; once)
-    stage1    gates (a)-(h), (s), (s2), (p), (f), the extraction gates (x0)-(x6) of stage 1 and the
-              no-change gates (g1), (g2) -> stage-1 verdict (A0) -> flags -> descriptives and the
+    stage1    gates (a)-(h), (s), (s2), (p), (f), the extraction gates (x0)-(x6) of stage 1, the
+              no-change gates (g1), (g2) and the freeze descent of the (g1), (x4), batch, scoring
+              and analysis commits -> stage-1 verdict (A0) -> flags -> descriptives and the
               stage-2 start conditions: results/e021_stage1_gate.json, e021_stage1_runs.csv,
               e021_stage1_summary.json
     verdict   after stage 2: the gates of both stages (and (s3)) -> final verdict (C; eight final
@@ -57,7 +58,7 @@ from wvad.diagnostics.e021_score import (
 )
 from wvad.eval.crossfit import METRICS, crossfit, snippets_per_window, stratified_half_splits
 from wvad.eval.crossfit import video_auc as v_auc_metric
-from wvad.eval.dense import sigmoid32
+from wvad.eval.dense_readout import sigmoid32
 from wvad.extract import grid
 from wvad.paths import REPO_ROOT
 
@@ -305,39 +306,46 @@ def projected_hours(meta_files: Sequence[Path] | None,
 
 
 def all_gates(args: argparse.Namespace, stage: int, runs: Mapping, errors: Sequence[str],
-              identity: Mapping, names: Mapping) -> dict:
+              identity: Mapping, names: Mapping, freeze: str | None) -> dict:
     """Every gate the stage needs before its verdict: analysis gates (without (h)), the
-    extraction gate record with the user approvals, and the no-change gates."""
+    extraction gate record with the user approvals, the no-change gates and the freeze descent
+    of the (g1), (x4), batch, scoring and analysis commits (``freeze``: the freeze commit). A run
+    whose dense scores are non-finite is marked failed by the score gates (numerical failure)."""
     keys = [k for st in range(1, stage + 1) for k in run_keys(st)]
+    code = code_version()
+    record = _json_or(EXTRACT_GATE, {})
     tg = gates.training_gates(args.runs, runs)
     sg = {st: gates.score_gates(runs, args.scores, st) for st in range(1, stage + 1)}
     files = {st: gates.verify_scores(args.scores, st, run_keys(st)) for st in range(1, stage + 1)}
     fg = gates.gate_f(args.runs, args.scores, stage, identity)
-    ext = rules.extraction_gates(_json_or(EXTRACT_GATE, {}), _json_or(APPROVALS, {}), stage,
-                                 names)
+    ext = rules.extraction_gates(record, _json_or(APPROVALS, {}), stage, names)
+    descent = gates.freeze_descent(freeze, identity, record, args.runs, args.scores, stage,
+                                   code.get("commit"))
     _, _, ident = gates.identity_target(identity)
     status = {**{g: tg["status"][g] for g in "abcdeg"},
               **{g: all(sg[st]["status"].get(g, True) for st in sg) for g in ("s", "s2", "p")},
               "f": fg["ok"], "score_files": all(f["ok"] for f in files.values()),
-              "extraction": ext["ok"], "g1": ident["g1"], "g2": ident["g2"]}
+              "extraction": ext["ok"], "g1": ident["g1"], "g2": ident["g2"],
+              "freeze_descent": descent["ok"]}
     if stage == 2:
         status["s3"] = sg[2]["status"]["s3"]
-    return {"code": code_version(), "stage": stage, "runs_expected": len(keys),
+    return {"code": code, "stage": stage, "runs_expected": len(keys),
             "errors": [*errors, *tg["errors"], *(e for s in sg.values() for e in s["errors"])],
             "status": status, "training": tg, "scores": sg, "score_files": files, "f": fg,
-            "extraction": ext, "identity": ident,
+            "extraction": ext, "identity": ident, "freeze_descent": descent,
             "numerically_failed": sorted(f"{k.chain}/{k.run}" for k, r in runs.items()
                                          if r.failed)}
 
 
-def gated_analysis(args: argparse.Namespace, stage: int, gate_file: Path) -> tuple[dict, dict]:
+def gated_analysis(args: argparse.Namespace, stage: int, gate_file: Path,
+                   plan: Mapping) -> tuple[dict, dict]:
     """Gates, then (if they pass) the analysis and gate (h); stops with the gate file written
-    when a gate fails (PLAN.md: no verdict without the gates)."""
+    when a gate fails (PLAN.md: no verdict without the gates). ``plan``: ``plan_seal()``."""
     lineage = rules.lineage_thresholds()
     runs, errors = gates.stage_runs(args.runs, range(1, stage + 1))
     identity = _json_or(gates.IDENTITY, {})
     names = {d: load_manifest(manifest_file(d)).names for d in DATASETS}
-    gate = all_gates(args, stage, runs, errors, identity, names)
+    gate = all_gates(args, stage, runs, errors, identity, names, plan.get("freeze_commit"))
     write_json(gate_file, _clean(gate))
     if gate["errors"] or not all(gate["status"].values()):
         raise SystemExit(f"gate failed or runs unreadable (PLAN.md failure handling); see "
@@ -381,7 +389,7 @@ def header(an: Mapping, plan: Mapping) -> dict:
 
 def stage1_command(args: argparse.Namespace) -> None:
     plan = plan_seal()
-    an, gate = gated_analysis(args, 1, OUT["stage1_gate"])
+    an, gate = gated_analysis(args, 1, OUT["stage1_gate"], plan)
     an["train"] = desc.training(an["runs"], {d: v["labels"] for d, v in an["inputs"].items()},
                                 an["lineage"])
     verdict = rules.stage1_verdict(an["z"])
@@ -447,7 +455,7 @@ def verdict_command(args: argparse.Namespace) -> None:
 
 
 def final_analysis(args: argparse.Namespace, plan: Mapping) -> dict:
-    an, gate = gated_analysis(args, 2, OUT["gate"])
+    an, gate = gated_analysis(args, 2, OUT["gate"], plan)
     an["train"] = desc.training(an["runs"], {d: v["labels"] for d, v in an["inputs"].items()},
                                 an["lineage"])
     fv = rules.final_verdict(an["z"], gates_ok=True,
@@ -484,13 +492,13 @@ def choice_command(args: argparse.Namespace) -> None:
     if cat not in OPTIONS or args.option not in OPTIONS[cat]:
         raise SystemExit(f"category {cat}: options {OPTIONS.get(cat, ())}")
     d = _json_or(OUT["describe"], None)
+    after = bool(d and d.get("complete"))
     v.setdefault("user_choices", []).append({
         "option": args.option, "user_words": args.quote,
         "time_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
-        "after_describe": bool(d and d.get("complete")),
-        "verdict_sha256_before_this_entry": before})
+        "after_describe": after, "verdict_sha256_before_this_entry": before})
     write_json(OUT["verdict"], v)
-    print(f"choice {args.option} recorded ({'after' if d else 'before'} describe)")
+    print(f"choice {args.option} recorded ({'after' if after else 'before'} describe)")
 
 
 def describe_command(args: argparse.Namespace) -> None:

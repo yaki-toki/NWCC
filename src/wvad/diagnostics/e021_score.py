@@ -49,7 +49,9 @@ the replaced frames of every validation snippet and the dense index columns of e
         --stage 1|2 [--datasets ucf xdv] [--pairs xcb_xcl xcb_siglip] [--rescore <reason>]
 
 A rerun after an infrastructure failure is the same command: finished files are kept and only
-the missing ones are scored. ``--rescore`` moves the stage's files to superseded/<UTC time>/.
+the missing ones are scored. ``--rescore`` moves the stage's files to superseded/<UTC time>/;
+with a subset of --datasets / --pairs only the score and feature files of that subset are moved
+(meta.json and scores.sha256 stay, copied beside them) and scored again.
 """
 
 from __future__ import annotations
@@ -409,20 +411,39 @@ def sha256_list(files: Sequence[Path], base: Path) -> str:
     return "".join(f"{sha}  {rel}\n" for rel, sha in rows)
 
 
-def supersede(target: Path, reason: str) -> str | None:
-    """--rescore: move the stage's current files aside (kept for the report)."""
-    files = [f for f in Path(target).rglob("*") if f.is_file()
-             and "superseded" not in f.relative_to(target).parts]
-    if not files:
+def supersede(target: Path, reason: str, files: Sequence[Path] | None = None) -> str | None:
+    """--rescore: move the stage's current files aside (kept for the report): all of them, or
+    only ``files`` (a subset of datasets / pairs; meta.json and scores.sha256 then stay and are
+    copied beside the moved files)."""
+    target = Path(target)
+    if files is None:
+        moving = [f for f in target.rglob("*") if f.is_file()
+                  and "superseded" not in f.relative_to(target).parts]
+        copies = []
+    else:
+        moving = [Path(f) for f in files if Path(f).is_file()]
+        copies = [target / n for n in ("meta.json", "scores.sha256") if (target / n).is_file()]
+    if not moving:
         return None
-    dest = Path(target) / "superseded" / dt.datetime.now(dt.timezone.utc).strftime(
-        "%Y%m%dT%H%M%SZ")
-    for f in files:
+    dest = target / "superseded" / dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    for f in moving:
         new = dest / f.relative_to(target)
         new.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(f), str(new))
+    for f in copies:
+        shutil.copy2(f, dest / f.name)
     (dest / "REASON.txt").write_text(reason + "\n", encoding="utf-8")
     return str(dest)
+
+
+def selected_files(out: Path, stage: int, keys: Sequence[RunKey], datasets: Sequence[str],
+                   pairs: Sequence[str]) -> list[Path] | None:
+    """The files a --rescore of this selection replaces: None (every file of the stage) for all
+    datasets and pairs, else the selected runs' score files and the selected feature files."""
+    if set(datasets) == set(DATASETS) and set(pairs) == set(PAIRS):
+        return None
+    return [*(score_path(out, stage, k) for k in keys),
+            *(features_path(out, stage, d, p) for d in datasets for p in pairs)]
 
 
 def read_meta(target: Path) -> dict:
@@ -447,7 +468,9 @@ def main(argv: list[str] | None = None) -> None:
     target = Path(args.out) / f"stage{args.stage}"
     keys = run_keys(args.stage, args.datasets, args.pairs)
     check_runs(args.runs, keys)
-    moved = supersede(target, args.rescore) if args.rescore else None
+    moved = (supersede(target, args.rescore, selected_files(args.out, args.stage, keys,
+                                                            args.datasets, args.pairs))
+             if args.rescore else None)
     todo = [k for k in keys if not score_path(args.out, args.stage, k).is_file()]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     call = {"time_utc": now_utc(), "code": code_version(), "environment": gpu_environment(),

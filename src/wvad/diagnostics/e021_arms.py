@@ -9,9 +9,10 @@ An arm is a head read on validation units (PLAN.md "팔과 대비"):
     B (hb, 32 own d16m)   C (hb, W)   C.G (hb, G)   Bm (hbm, 32 own d16m2)   Cm (hbm, Wm)
 
 Readouts: primary = fp32 sigma (32-unit arms on their own features: the training record, the
-stage-D standard; other 32-unit arms: the scoring's sigma; W / Wm / G: wvad.eval.dense.readout,
-sigma in fp32), logit = the same without sigma (selection and metrics). The video score is the
-maximum over the 32 units (G: over all snippets; NS-AUC is not computed for G).
+stage-D standard; other 32-unit arms: the scoring's sigma; W / Wm / G:
+wvad.eval.dense_readout.readout, sigma in fp32), logit = the same without sigma (selection and
+metrics). The video score is the maximum over the 32 units (G: over all snippets; NS-AUC is not
+computed for G).
 
 Cross-fit (wvad.eval.crossfit): stage-2 epochs 1-30, the E010 / E018 splits (UCF R = 1000, XD R =
 200), the epoch selected per split by the arm's own readout (V-AUC), LS-AUC on the same halves.
@@ -56,7 +57,7 @@ from wvad.eval.crossfit import (
     stratified_half_splits,
     video_auc,
 )
-from wvad.eval.dense import readout, sigmoid32
+from wvad.eval.dense_readout import readout, sigmoid32
 
 R_LARGE, MC_LIMIT = 1000, 0.25
 
@@ -109,8 +110,8 @@ def seeds_of(arm: str) -> tuple[int, ...]:
 
 def dense_readouts(sf: Mapping[str, np.ndarray]) -> dict[str, np.ndarray]:
     """W and Wm window logits (E, n, 32), the G video maximum logit and fp32 sigma (E, n) of every
-    epoch and validation video (wvad.eval.dense.readout); M10 heads also the offset-free W (z
-    only) and the c(v) of W and Wm (E, n)."""
+    epoch and validation video (wvad.eval.dense_readout.readout); M10 heads also the offset-free
+    W (z only) and the c(v) of W and Wm (E, n)."""
     z, counts, totals = sf["dense_z"], np.asarray(sf["dense_counts"]), sf["total_frames"]
     gamma = sf["gamma"] if "gamma" in sf else None
     n_ep, n = z.shape[0], len(counts)

@@ -8,7 +8,8 @@ Same pooling as the earlier caches:
     siglip    SiglipVisionModel pooler_output averaged over the 8 frames
               (google/siglip-so400m-patch14-384, 1152-d; 384 px, mean = std = 0.5)
 
-Revisions are pinned (loaded with ``revision=`` and checked). Precision modes: ``autocast``
+Revisions are pinned (loaded with ``revision=`` and ``dtype=torch.float32``; the loaded revision
+must be known and equal the pin, every parameter float32). Precision modes: ``autocast``
 (CUDA fp16 autocast, production for both datasets), ``fp32`` (no autocast, TF32 flags left at
 their values: PyTorch's default is cuDNN TF32 convolutions on, TF32 matmul off, the earlier XD
 setting) and ``fp32_strict`` (TF32 off for convolutions and matmul while it runs). Outputs keep
@@ -61,6 +62,8 @@ SPECS = {
 LEGACY_BATCH = {"ucf": {"xcb": 8, "xcl": 8, "siglip": 4}, "xdv": {"xcb": 32, "xcl": 32,
                                                                   "siglip": 32}}
 LEGACY_PRECISION = {"ucf": "autocast", "xdv": "fp32"}
+PRODUCTION_BATCH = {"xcb": 8, "xcl": 8, "siglip": 4}       # both datasets (PLAN.md (x2), (x4))
+PRODUCTION_PRECISION = "autocast"
 
 
 def spec(name: str) -> EncoderSpec:
@@ -79,8 +82,8 @@ class Encoder:
 
     @classmethod
     def load(cls, name: str, device: torch.device) -> Encoder:
-        """The pinned revision (offline with HF_HUB_OFFLINE=1 and the files in the cache); the
-        cache snapshot holding its config must be that revision."""
+        """The pinned revision in float32 (offline with HF_HUB_OFFLINE=1 and the files in the
+        cache; ``check_loaded``)."""
         from huggingface_hub import try_to_load_from_cache
 
         s = spec(name)
@@ -88,13 +91,10 @@ class Encoder:
             from transformers import XCLIPVisionModel as Model
         else:
             from transformers import SiglipVisionModel as Model
-        model = Model.from_pretrained(s.model_id, revision=s.revision)
-        loaded = getattr(model.config, "_commit_hash", None)
+        model = Model.from_pretrained(s.model_id, revision=s.revision, dtype=torch.float32)
         cached = try_to_load_from_cache(s.model_id, "config.json", revision=s.revision)
         snapshot = Path(cached).parent.name if isinstance(cached, str) else None
-        if (loaded and loaded != s.revision) or (snapshot and snapshot != s.revision):
-            raise RuntimeError(f"{s.model_id}: loaded revision {loaded or snapshot} != pinned "
-                               f"{s.revision}")
+        check_loaded(s, model, snapshot)
         return cls(s, model, device, snapshot)
 
     @torch.no_grad()
@@ -122,6 +122,23 @@ class Encoder:
                 "attn_implementation": getattr(cfg, "_attn_implementation", None),
                 "parameter_dtypes": dtypes, "input_size": self.spec.input_size,
                 "dim": self.spec.dim}
+
+
+def check_loaded(s: EncoderSpec, model: torch.nn.Module, snapshot: str | None) -> None:
+    """The loaded model is the pinned revision (the config's commit hash and the cache snapshot
+    holding config.json; at least one must be known, every known one equal to the pin) and all
+    its parameters are float32 (transformers 5 loads with dtype "auto" unless told)."""
+    loaded = getattr(model.config, "_commit_hash", None)
+    known = {k: v for k, v in (("config commit", loaded), ("cache snapshot", snapshot)) if v}
+    if not known:
+        raise RuntimeError(f"{s.model_id}: loaded revision unknown (no commit hash, no cache "
+                           f"snapshot); pinned {s.revision}")
+    wrong = {k: v for k, v in known.items() if v != s.revision}
+    if wrong:
+        raise RuntimeError(f"{s.model_id}: loaded revision {wrong} != pinned {s.revision}")
+    dtypes = sorted({str(p.dtype) for p in model.parameters()})
+    if dtypes != [str(torch.float32)]:
+        raise RuntimeError(f"{s.model_id}: parameter dtypes {dtypes}, expected float32")
 
 
 def tf32_settings() -> dict:

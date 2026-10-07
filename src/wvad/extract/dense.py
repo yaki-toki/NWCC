@@ -10,12 +10,18 @@ batches -> one memory-mapped snippet cache per (dataset, encoder) (layout: ``wva
 * The consumer normalises with the lookup tables on the device, encodes each chunk in batches
   under the precision mode, writes the rows into the memory map and, after a video's last
   chunk, flushes the map and appends one line to each encoder's progress.jsonl: the completion
-  flag. A rerun skips (video, encoder) pairs already done (resume); a video whose decoding
-  failed stays undone and is reported.
+  flag, with the id and commit of the run that wrote it (gate (x4) checks every such run, also
+  one that crashed later). A rerun skips (video, encoder) pairs already done (resume); a video
+  whose decoding failed stays undone and is reported. An unterminated last progress line (a
+  crash during its append) is ignored and removed before the next append.
 * The first run of a cache creates features.npy full size (every training-split snippet) filled
-  with NaN; later phases fill their rows of the same file. index.npz is rebuilt from the
-  manifest and progress.jsonl at the end of every run; meta.json keeps one entry per run
-  (phase, commit, environment, precision, TF32, batch and chunk sizes, encoder revisions).
+  with NaN, under a temporary name renamed after meta.json is written (a crash during the fill
+  leaves no partial cache); later phases fill their rows of the same file. index.npz is rebuilt
+  from the manifest and progress.jsonl at the end of every run; meta.json keeps one entry per
+  run (phase, commit, environment, precision, TF32, batch and chunk sizes, encoder revisions).
+* A failure of the decode workers (an unreadable message, a worker that exits abnormally while
+  no message arrives) ends the run cleanly: the videos in progress are reported (left undone)
+  and the failure is recorded in the run's ``worker_failures``.
 """
 
 from __future__ import annotations
@@ -28,6 +34,8 @@ import os
 import queue
 import threading
 import time
+import uuid
+import warnings
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -58,6 +66,8 @@ UCF_FOLDER = "Anomaly-Detection-Dataset"
 XD_FOLDER = PurePosixPath("XD-Violence") / "train"
 DEFAULT_CHUNK = 32                     # snippets per worker message (a multiple of each batch)
 NAN_FILL_ROWS = 1 << 16
+WORKER_POLL_SECONDS = 30.0             # decode-queue polling interval
+WORKER_STALL_SECONDS = 120.0           # no message this long after an abnormal worker exit: stop
 ACCESS_FIELDS = ("utc", "command", "dataset", "index", "name", "path", "purpose")
 
 
@@ -167,7 +177,8 @@ def write_meta(path: Path, meta: Mapping) -> None:
 def open_store(directory: Path, layout: Layout, encoder: str, encoder_info: Mapping,
                dim: int, dtype: str) -> np.memmap:
     """The cache of one encoder, created full size (NaN) on first use, else checked against
-    this layout, encoder and dtype."""
+    this layout, encoder and dtype. A new features.npy is filled under a temporary name and
+    renamed after meta.json is written (an interrupted fill is redone by the next run)."""
     sd = store_dir(directory)
     sd.mkdir(parents=True, exist_ok=True)
     features, meta_path = sd / FEATURES_FILE, sd / META_FILE
@@ -176,13 +187,17 @@ def open_store(directory: Path, layout: Layout, encoder: str, encoder_info: Mapp
             "names_sha256": layout.names_sha256(), "grid": GRID,
             "model_id": encoder_info.get("model_id"), "revision": encoder_info.get("revision")}
     if not features.exists():
-        mm = np.lib.format.open_memmap(features, mode="w+", dtype=np.dtype(dtype),
+        if meta_path.exists() and read_json(meta_path).get("runs"):
+            raise ValueError(f"{sd}: meta.json lists runs but {FEATURES_FILE} is missing")
+        part = features.with_name(features.name + ".part")
+        mm = np.lib.format.open_memmap(part, mode="w+", dtype=np.dtype(dtype),
                                        shape=(layout.rows, int(dim)))
         for a in range(0, layout.rows, NAN_FILL_ROWS):
             mm[a:a + NAN_FILL_ROWS] = np.nan
         mm.flush()
+        del mm                                          # closed before the rename (Windows)
         write_meta(meta_path, {**want, "created_utc": utc_now(), "runs": []})
-        return mm
+        os.replace(part, features)
     meta = read_json(meta_path)
     bad = {k: (meta.get(k), v) for k, v in want.items() if meta.get(k) != v}
     if bad:
@@ -194,15 +209,40 @@ def open_store(directory: Path, layout: Layout, encoder: str, encoder_info: Mapp
 
 
 def read_progress(directory: Path) -> dict[int, dict]:
-    """Finished videos of one encoder cache (the last line of a video wins)."""
+    """Finished videos of one encoder cache (the last line of a video wins). An unterminated
+    last line (a crash during its append) is ignored with a warning; ``repair_progress`` removes
+    it before the next append."""
     path = store_dir(directory) / PROGRESS_FILE
     done: dict[int, dict] = {}
     if path.exists():
-        for line in path.read_text(encoding="utf-8").splitlines():
+        complete, _, torn = path.read_bytes().rpartition(b"\n")
+        if torn.strip():
+            warnings.warn(f"{path}: unterminated last line ignored ({len(torn)} bytes)",
+                          stacklevel=2)
+        for line in complete.decode("utf-8").split("\n"):
             if line.strip():
                 row = json.loads(line)
                 done[int(row["video"])] = row
     return done
+
+
+def repair_progress(directory: Path) -> int:
+    """Cut an unterminated last line off progress.jsonl (before appending); returns the bytes
+    removed."""
+    path = store_dir(directory) / PROGRESS_FILE
+    if not path.exists():
+        return 0
+    data = path.read_bytes()
+    keep = data.rfind(b"\n") + 1
+    if keep == len(data):
+        return 0
+    warnings.warn(f"{path}: unterminated last line removed ({len(data) - keep} bytes)",
+                  stacklevel=2)
+    with open(path, "r+b") as fh:
+        fh.truncate(keep)
+        fh.flush()
+        os.fsync(fh.fileno())
+    return len(data) - keep
 
 
 def _append_progress(directory: Path, row: Mapping) -> None:
@@ -260,15 +300,18 @@ class _Consumer:
     def __init__(self, stores: Mapping[str, np.memmap], dirs: Mapping[str, Path],
                  layout: Layout, encoders: Mapping[str, Encoder], device: torch.device,
                  mode: str, batch: Mapping[str, int], dtypes: Mapping[str, str], phase: str,
-                 todo: Mapping[int, tuple[str, ...]], normalize: str = "lut"):
+                 todo: Mapping[int, tuple[str, ...]], normalize: str = "lut",
+                 tags: Mapping | None = None):
         self.stores, self.dirs, self.layout, self.encoders = stores, dirs, layout, encoders
         self.device, self.mode, self.batch, self.dtypes = device, mode, batch, dtypes
         self.phase, self.todo = phase, todo
+        self.tags = dict(tags or {})              # run id and commit on every progress row
         self.normalizers = {e: make_normalizer(enc.spec.mean, enc.spec.std, device, normalize)
                             for e, enc in encoders.items()}
         self.replaced: dict[int, list[np.ndarray]] = {}
         self.finished: list[int] = []
         self.errors: dict[int, str] = {}
+        self.failures: list[str] = []
         self.encode_seconds = {e: 0.0 for e in encoders}
         self.snippets = 0
 
@@ -312,7 +355,7 @@ class _Consumer:
             self.errors[video] = f"{len(rep)} snippets for n_v {self.layout.counts[video]}"
             return
         row = {"video": video, "name": self.layout.names[video], "phase": self.phase,
-               "utc": utc_now(), **stats, "snippet_replaced": rep.tolist()}
+               "utc": utc_now(), **stats, **self.tags, "snippet_replaced": rep.tolist()}
         for e in self.todo[video]:
             self.stores[e].flush()
             _append_progress(self.dirs[e], row)
@@ -331,8 +374,18 @@ def _run_inline(tasks, sizes_of, chunk, consumer: _Consumer) -> None:
             consumer.handle(message)
 
 
+def _abnormal_exits(procs) -> list[str]:
+    return [f"decode worker {p.pid} exited with code {p.exitcode}" for p in procs
+            if p.exitcode not in (None, 0)]
+
+
 def _run_workers(tasks, sizes_of, chunk, consumer: _Consumer, workers: int,
                  queue_size: int) -> None:
+    """Spawned decode workers (``decode_worker``) feed the consumer through a receive thread.
+    A receive failure (an unreadable message, a broken pipe) or a worker that exited abnormally
+    while no message arrived for WORKER_STALL_SECONDS (a worker killed mid-message can leave the
+    queue unreadable) ends the run: the failure goes to ``consumer.failures``, the videos in
+    progress to ``consumer.errors`` (left undone, resumable) and the workers are stopped."""
     import multiprocessing as mp
 
     ctx = mp.get_context("spawn")
@@ -346,29 +399,58 @@ def _run_workers(tasks, sizes_of, chunk, consumer: _Consumer, workers: int,
     for p in procs:
         p.start()
     local: queue.Queue = queue.Queue(maxsize=4)        # unpickling overlaps the GPU work
+    poll, stall = WORKER_POLL_SECONDS, WORKER_STALL_SECONDS
 
     def receive() -> None:
         exited = 0
-        while exited < workers:
-            try:
-                message = result_q.get(timeout=30)
-            except queue.Empty:
-                if not any(p.is_alive() for p in procs):
-                    break
-                continue
-            if message[0] == "exit":
-                exited += 1
-            else:
-                local.put(message)
-        local.put(None)
+        try:
+            while exited < workers:
+                try:
+                    message = result_q.get(timeout=poll)
+                except queue.Empty:
+                    if not any(p.is_alive() for p in procs):
+                        break
+                    continue
+                if message[0] == "exit":
+                    exited += 1
+                else:
+                    local.put(message)
+        except Exception as exc:                       # recorded; the run ends cleanly
+            consumer.failures.append(f"receiving decode messages failed: {exc!r}")
+        finally:
+            local.put(None)
 
     thread = threading.Thread(target=receive, daemon=True)
     thread.start()
-    while (message := local.get()) is not None:
-        consumer.handle(message)
-    thread.join()
-    for p in procs:
-        p.join(timeout=10)
+    try:
+        waited = 0.0
+        while True:
+            try:
+                message = local.get(timeout=poll)
+            except queue.Empty:
+                waited += poll
+                dead = _abnormal_exits(procs)
+                if dead and waited >= stall:
+                    consumer.failures.append(f"no decode message for {waited:g} s after an "
+                                             f"abnormal worker exit ({'; '.join(dead)})")
+                    break
+                continue
+            waited = 0.0
+            if message is None:
+                break
+            consumer.handle(message)
+    finally:
+        for p in procs:
+            p.join(timeout=10)
+        dead = _abnormal_exits(procs)
+        alive = [p for p in procs if p.is_alive()]
+        for p in alive:
+            p.terminate()
+        if dead or alive:
+            task_q.cancel_join_thread()                # tasks left in the pipe: do not block exit
+        consumer.failures += [d for d in dead if not any(d in f for f in consumer.failures)]
+        if alive:
+            consumer.failures.append(f"{len(alive)} decode worker(s) stopped by the consumer")
     for v in [v for v in consumer.replaced if v not in consumer.errors]:
         consumer.errors[v] = "decode worker ended before the video finished"
 
@@ -391,21 +473,23 @@ def run_extraction(dirs: Mapping[str, Path], layout: Layout, tasks: Sequence[Vid
     infos = {e: encoders[e].info() for e in names}
     stores = {e: open_store(dirs[e], layout, e, infos[e], encoders[e].spec.dim, dtypes[e])
               for e in names}
+    repaired = {e: n for e in names if (n := repair_progress(dirs[e]))}
     done = {e: set(read_progress(dirs[e])) for e in names}
     todo = {t.index: tuple(e for e in names if t.index not in done[e]) for t in tasks}
     pending = [t for t in tasks if todo[t.index]]
     sizes_of = {t.index: tuple(sorted({encoders[e].spec.input_size for e in todo[t.index]}))
                 for t in pending}
-    run_id = f"{phase}-{utc_now()}"
+    run_id = f"{phase}-{utc_now()}-{uuid.uuid4().hex[:8]}"          # unique per run
     run = {"id": run_id, "phase": phase, "started_utc": utc_now(), "commit": commit,
            "environment": environment, "precision": mode, "tf32": tf32_settings(),
            "batch": {e: batch[e] for e in names}, "chunk": chunk, "workers": workers,
-           "normalize": normalize,
+           "normalize": normalize, "progress_repaired_bytes": repaired,
            "encoder": None, "videos_requested": len(tasks), "videos_pending": len(pending)}
     for e in names:
         _update_meta(dirs[e], {**run, "encoder": infos[e]})
     consumer = _Consumer(stores, dirs, layout, encoders, device, mode, batch, dtypes, phase,
-                         todo, normalize)
+                         todo, normalize,
+                         tags={"run": run_id, "commit": (commit or {}).get("commit")})
     log_access(access_log, [{"utc": utc_now(), "command": command, "dataset": layout.dataset,
                              "index": t.index, "name": t.name, "path": t.rel_path,
                              "purpose": phase} for t in pending])
@@ -421,6 +505,7 @@ def run_extraction(dirs: Mapping[str, Path], layout: Layout, tasks: Sequence[Vid
     end = {"finished_utc": utc_now(), "seconds": round(seconds, 3),
            "videos_finished": len(consumer.finished), "snippets": consumer.snippets,
            "errors": {str(k): v for k, v in sorted(consumer.errors.items())},
+           "worker_failures": list(consumer.failures),
            "encode_seconds": {e: round(s, 3) for e, s in consumer.encode_seconds.items()}}
     for e in names:
         _update_meta(dirs[e], {**run, "encoder": infos[e], **end}, key=run_id)

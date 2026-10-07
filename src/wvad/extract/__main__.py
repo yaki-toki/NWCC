@@ -1,6 +1,7 @@
 """Command line of the E021 dense extraction (commands are listed in the README).
 
     python -m wvad.extract gate env    --out env_extract.json
+    python -m wvad.extract gate tests  --junit <pytest JUnit XML> --record <gate json>
     python -m wvad.extract gate norm   --record <gate json>
     python -m wvad.extract gate x1     --dataset D --access_log CSV --out JSON [--record ...]
     python -m wvad.extract gate x2     --dataset D --x1 JSON --access_log CSV --out JSON [...]
@@ -109,6 +110,15 @@ def cmd_gate(args) -> None:
         commit, env = _provenance()         # models are loaded on the CPU (attention only)
         infos = {e: enc.info() for e, enc in _encoders(args.encoders, torch.device("cpu")).items()}
         _write_json(args.out, {**env, "encoders": infos, "commit": commit, "utc": utc_now()})
+        return
+    if args.check == "tests":
+        from wvad.diagnostics.common import code_version
+
+        result = gate.junit_summary(args.junit) | {
+            "commit": code_version(), "legacy_repo": os.environ.get("WVAD_LEGACY_REPO"),
+            "utc": utc_now()}
+        merge_record(args.record, "x0_tests", result)
+        print(json.dumps(result))
         return
     if args.check == "norm":
         from wvad.extract.preprocess import normalization_mismatches
@@ -230,9 +240,10 @@ def cmd_dense(args) -> None:
         environment=env, commit=commit, normalize=args.normalize)
     print(json.dumps({k: result[k] for k in ("phase", "videos_requested", "videos_pending",
                                              "videos_finished", "snippets", "seconds",
-                                             "errors")}))
-    if result["errors"]:
-        raise SystemExit(f"{len(result['errors'])} videos failed (left undone; see meta.json)")
+                                             "errors", "worker_failures")}))
+    if result["errors"] or result["worker_failures"]:
+        raise SystemExit(f"{len(result['errors'])} videos failed, worker failures "
+                         f"{result['worker_failures']} (left undone; see meta.json)")
 
 
 def cmd_derive(args) -> None:
@@ -300,7 +311,8 @@ def cmd_check(args) -> None:
                 if args.stage == 2 and args.dataset == "ucf":
                     variants += ["d16r1", "d16r2"]
                 result[e] = gate.check_x5(folder, layout, split, args.dataset, e, variants,
-                                          args.stage)
+                                          args.stage,
+                                          legacy_dir=paths.feature_dir(f"{args.dataset}_{e}"))
     key = args.check + ("" if args.check in ("x3a", "x6") else
                         f"_{args.dataset}_{args.phase or f'stage{args.stage}'}")
     _write_json(args.out, result)
@@ -319,8 +331,10 @@ def parse(argv=None) -> argparse.Namespace:
             p.add_argument("--dataset", required=True, choices=("ucf", "xdv"))
         p.add_argument("--encoders", nargs="+", choices=ENCODERS, default=list(ENCODERS))
 
-    g = sub.add_parser("gate", help="(x0) normalisation record, (x1), (x2), environment")
-    g.add_argument("check", choices=("env", "norm", "x1", "x2"))
+    g = sub.add_parser("gate", help="(x0) unit-test and normalisation records, (x1), (x2), "
+                                    "environment")
+    g.add_argument("check", choices=("env", "tests", "norm", "x1", "x2"))
+    g.add_argument("--junit", help="tests: pytest --junitxml output of the (x0) unit tests")
     g.add_argument("--dataset", choices=("ucf", "xdv"))
     g.add_argument("--encoders", nargs="+", choices=ENCODERS, default=list(ENCODERS))
     g.add_argument("--access_log")
@@ -381,7 +395,7 @@ def parse(argv=None) -> argparse.Namespace:
 def _validate(ap: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     need = {("gate", "x1"): ("dataset", "access_log", "out"),
             ("gate", "x2"): ("dataset", "access_log", "out", "x1"),
-            ("gate", "env"): ("out",),
+            ("gate", "env"): ("out",), ("gate", "tests"): ("junit", "record"),
             ("check", "x3a"): ("headers",), ("check", "x6"): ("server", "local", "access_log"),
             ("check", "x3"): ("dataset", "phase", "headers"),
             ("check", "x4"): ("dataset", "phase", "env", "commit"),

@@ -9,7 +9,8 @@
     legacy      clip positions and the two decode rules of the earlier caches (gates only)
     dense       production extraction into one memory-mapped cache per (dataset, encoder)
     derive      32-unit caches d16c / d16r / d16m / d16m2 (and d16r1 / d16r2) from the snippets
-    gate        extraction gates (x1)-(x6), frame hashes, floors, environment records
+    gate        extraction gates (x1)-(x6), the (x0) unit-test record, frame hashes, floors,
+                environment records
 
 Command line: ``python -m wvad.extract {gate,bench,header,dense,derive,check} ...``. Only
 ``grid`` is imported by the training, scoring and analysis code; the other modules need the

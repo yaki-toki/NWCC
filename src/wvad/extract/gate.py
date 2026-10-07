@@ -13,8 +13,11 @@ relative L2 distance to the cache row; the new feature is first cast to the cach
 SigLIP: float16 values compared). Samples: a fresh default_rng(20261007) per dataset, anomalous
 videos drawn first. Floors: the same clips in the other precision modes.
 (x2) (extraction environment, production decoder, precision and batches): the (x1) videos at
-the XD starts and the UCF s* of each encoder; every clip relative L2 <= 1e-2 and cosine >=
-0.9999; decoded-frame sha256 compared with the (x1) record (mismatch share reported).
+the XD starts and the UCF s* of each encoder, encoded in production batches without padding,
+and again the video's last r clips as one short batch (r = n_v mod batch, the size of the last
+batch production encodes for that video, or batch - 1 when n_v is a multiple of it); every clip
+relative L2 <= 1e-2 and cosine >= 0.9999; decoded-frame sha256 compared with the (x1) record
+(mismatch share reported).
 Status codes: "pass_bit" (every clip bit-equal), "pass_tolerance", "fail".
 """
 
@@ -32,7 +35,7 @@ from wvad.data.features import load_cache
 from wvad.data.manifests import TrainManifest
 from wvad.data.splits import ValSplit, check_labels
 from wvad.extract import grid, legacy
-from wvad.extract.dense import names_sha256
+from wvad.extract.dense import names_sha256, read_progress
 from wvad.extract.derive import (
     INDICES_FILE,
     MEAN_VARIANTS,
@@ -44,6 +47,8 @@ from wvad.extract.derive import (
 from wvad.extract.encoders import (
     LEGACY_BATCH,
     LEGACY_PRECISION,
+    PRODUCTION_BATCH,
+    PRODUCTION_PRECISION,
     Encoder,
     precision,
     same_environment,
@@ -114,16 +119,18 @@ def read_clips(path: str, dataset: str, starts: Sequence[int], total_frames: int
 
 
 def encode_clips(encoder: Encoder, clips: Clips, device: torch.device, mode: str, batch: int,
-                 idx: Sequence[int] | None = None, normalize: str = "lut") -> np.ndarray:
-    """(len(idx), D) features of the clips ``idx`` (default all) in the encoder's output dtype;
-    a short last batch is padded with copies of its last clip, so every forward pass has
-    ``batch`` clips (as the earlier runs: 32 clips in batches of 8, 4 or 32)."""
+                 idx: Sequence[int] | None = None, normalize: str = "lut",
+                 pad_last: bool = True) -> np.ndarray:
+    """(len(idx), D) features of the clips ``idx`` (default all) in the encoder's output dtype.
+    ``pad_last``: a short last batch is padded with copies of its last clip, so every forward
+    pass has ``batch`` clips (as the earlier runs: 32 clips in batches of 8, 4 or 32; (x1));
+    otherwise it is encoded short, as production does at the end of a video ((x2))."""
     norm = make_normalizer(encoder.spec.mean, encoder.spec.std, device, normalize)
     order = list(range(len(clips))) if idx is None else [int(i) for i in idx]
     out = []
     for a in range(0, len(order), batch):
         part = order[a:a + batch]
-        pad = batch - len(part)
+        pad = batch - len(part) if pad_last else 0
         x = clips.stack(encoder.spec.input_size, part + [part[-1]] * pad)
         with precision(mode, device):
             feats = encoder.encode(clips_to_pixels(torch.from_numpy(x).to(device), norm))
@@ -257,10 +264,25 @@ def _dist(values: Sequence[float]) -> dict:
             "max": float(a.max()) if a.size else None}
 
 
+def tail_batch(total_frames: int, batch: int) -> int:
+    """Clips of the short batch (x2) checks for a video: the size of the last batch production
+    encodes (n_v mod batch; chunks are multiples of the batch), or batch - 1 when n_v is a
+    multiple of it (0 for batch 1: no short batch exists)."""
+    return grid.n_snippets(total_frames) % batch or batch - 1
+
+
+def _x2_rows(v, starts, new, ref, idx, partial) -> list[dict]:
+    l2, cos, eq = rel_l2(new, ref[idx]), cosine(new, ref[idx]), bit_equal(new, ref[idx])
+    return [{"video": v, "k": int(k), "start": int(starts[k]), "e": float(l2[i]),
+             "cos": float(cos[i]), "bit_equal": bool(eq[i]), "partial_batch": partial,
+             "ok": bool(l2[i] <= X2_L2 and cos[i] >= X2_COS)} for i, k in enumerate(idx)]
+
+
 def run_x2(paths, dataset: str, manifest: TrainManifest, x1: Mapping,
            encoders: Mapping[str, Encoder], device: torch.device, video_path,
            batch: Mapping[str, int], mode: str = "autocast", normalize: str = "lut") -> dict:
-    """(x2) in this environment, on the (x1) record's videos and positions."""
+    """(x2) in this environment, on the (x1) record's videos and positions: production batches
+    without padding, plus each video's short last batch (``tail_batch``)."""
     cache = _cache_rows(paths, dataset, list(encoders))
     rows = {e: [] for e in encoders}
     hashes, mismatch, compared = {}, 0, 0
@@ -273,12 +295,16 @@ def run_x2(paths, dataset: str, manifest: TrainManifest, x1: Mapping,
                                "production")
             hashes.setdefault(str(v), {}).update(clips.hashes)
             ref = cache[e][v].numpy()
-            new = encode_clips(enc, clips, device, mode, batch[e], normalize=normalize)
-            l2, cos, eq = rel_l2(new, ref), cosine(new, ref), bit_equal(new, ref)
-            rows[e] += [{"video": v, "k": k, "start": int(starts[k]), "e": float(l2[k]),
-                         "cos": float(cos[k]), "bit_equal": bool(eq[k]),
-                         "ok": bool(l2[k] <= X2_L2 and cos[k] >= X2_COS)}
-                        for k in range(len(starts))]
+            every = np.arange(len(starts))
+            new = encode_clips(enc, clips, device, mode, batch[e], normalize=normalize,
+                               pad_last=False)
+            rows[e] += _x2_rows(v, starts, new, ref, every, False)
+            r = tail_batch(t, batch[e])
+            if r:
+                tail = every[-r:]
+                new = encode_clips(enc, clips, device, mode, r, idx=tail, normalize=normalize,
+                                   pad_last=False)
+                rows[e] += _x2_rows(v, starts, new, ref, tail, True)
         local = x1["frame_hashes"].get(str(v), {})
         for f, sha in hashes[str(v)].items():
             if f in local:
@@ -288,7 +314,9 @@ def run_x2(paths, dataset: str, manifest: TrainManifest, x1: Mapping,
     for e in encoders:
         r = rows[e]
         ok = all(x["ok"] for x in r)
-        summary[e] = {"clips": len(r), "max_e": max(x["e"] for x in r),
+        summary[e] = {"clips": sum(not x["partial_batch"] for x in r),
+                      "partial_batch_clips": sum(x["partial_batch"] for x in r),
+                      "max_e": max(x["e"] for x in r),
                       "median_e": float(np.median([x["e"] for x in r])),
                       "min_cos": min(x["cos"] for x in r),
                       "status": _status(ok, all(x["bit_equal"] for x in r))}
@@ -299,6 +327,27 @@ def run_x2(paths, dataset: str, manifest: TrainManifest, x1: Mapping,
             "frame_hashes": hashes,
             "frame_hash_mismatch": {"compared": compared, "different": mismatch,
                                     "share": mismatch / compared if compared else None}}
+
+
+# --- (x0): the unit-test run -----------------------------------------------------------------
+
+X0_TESTS = "test_e021_"
+
+
+def junit_summary(path) -> dict:
+    """The (x0) unit-test run from pytest's JUnit XML (``--junitxml``): counts, the number of
+    E021 test cases and the file's sha256; "pass" only when E021 tests ran and none failed,
+    errored or was skipped (the legacy comparisons fail without the previous project)."""
+    import xml.etree.ElementTree as ET
+
+    root = ET.parse(path).getroot()
+    suites = [root] if root.tag == "testsuite" else root.findall("testsuite")
+    counts = {k: sum(int(x.get(k, 0)) for x in suites)
+              for k in ("tests", "failures", "errors", "skipped")}
+    e021 = sum(X0_TESTS in (c.get("classname") or "") for x in suites for c in x.iter("testcase"))
+    ok = e021 > 0 and counts["failures"] == counts["errors"] == counts["skipped"] == 0
+    return {**counts, "e021_tests": e021, "junit_sha256": sha256_file(path),
+            "status": "pass" if ok else FAIL}
 
 
 # --- (x3a), (x6): headers, sha256 and the access log ----------------------------------------
@@ -354,9 +403,17 @@ def check_x3(folder, manifest: TrainManifest, videos: Sequence[int],
 
 
 def check_x4(folder, manifest: TrainManifest, videos: Sequence[int], encoder: str,
-             commit: str, environment: Mapping) -> dict:
-    """Completeness of one encoder cache for a phase (PLAN.md (x4))."""
+             commit: str, environment: Mapping, mode: str = PRODUCTION_PRECISION,
+             batch: Mapping[str, int] | None = None) -> dict:
+    """Completeness of one encoder cache for a phase (PLAN.md (x4)). The runs checked are those
+    that wrote the phase's finished videos (the run id on each progress.jsonl row), so a run
+    that crashed after finishing some videos is checked too: commit (= ``commit``, also on each
+    row), environment (= ``environment``, env_extract.json), loaded revision, attention,
+    precision (``mode``, production autocast), the encoder's batch (``batch``, production 8 / 8
+    / 4) and the chunk and normalisation of the first of them. The run commits are recorded
+    (freeze descent, checked by the local analysis)."""
     s = encoder_spec(encoder)
+    want_batch = (batch or PRODUCTION_BATCH)[encoder]
     ix, meta = read_index(folder), read_json(store_dir(folder) / "meta.json")
     t = np.asarray(manifest.total_frames)
     problems = []
@@ -378,8 +435,30 @@ def check_x4(folder, manifest: TrainManifest, videos: Sequence[int], encoder: st
         problems.append(f"non-finite rows in videos {nonfinite[:5]}")
     if meta.get("revision") != s.revision:
         problems.append("model revision differs from the pinned one")
-    runs = [r for r in meta["runs"] if r.get("videos_finished")]
+    progress = read_progress(folder)
+    rows = {v: progress.get(v) or {} for v in videos if ix.done[v]}
+    no_id = [v for v, row in rows.items() if not row.get("run")]
+    if no_id:
+        problems.append(f"{len(no_id)} finished videos without a run id (first {no_id[:5]})")
+    other = [v for v, row in rows.items() if row.get("commit") != commit]
+    if other:
+        problems.append(f"{len(other)} finished videos with commit != {commit} (first "
+                        f"{other[:5]})")
+    ids = {row["run"] for row in rows.values() if row.get("run")}
+    known = {r.get("id") for r in meta["runs"]}
+    if ids - known:
+        problems.append(f"runs missing from meta.json: {sorted(ids - known)[:5]}")
+    runs = [r for r in meta["runs"] if r.get("id") in ids]          # meta order: first = earliest
+    first = runs[0] if runs else {}
     for r in runs:
+        if r.get("precision") != mode:
+            problems.append(f"run {r['id']}: precision {r.get('precision')} != {mode}")
+        if (r.get("batch") or {}).get(encoder) != want_batch:
+            problems.append(f"run {r['id']}: batch {(r.get('batch') or {}).get(encoder)} != "
+                            f"{want_batch}")
+        for k in ("chunk", "normalize"):
+            if r.get(k) != first.get(k):
+                problems.append(f"run {r['id']}: {k} {r.get(k)} != {first.get(k)} (first run)")
         enc = r.get("encoder") or {}
         if enc.get("loaded_commit") not in (None, s.revision):
             problems.append(f"run {r['id']}: loaded revision {enc.get('loaded_commit')}")
@@ -392,16 +471,27 @@ def check_x4(folder, manifest: TrainManifest, videos: Sequence[int], encoder: st
         if want_attn is not None and enc.get("attn_implementation") != want_attn:
             problems.append(f"run {r['id']}: attention {enc.get('attn_implementation')} != "
                             f"{want_attn}")
-    return {"videos": len(videos), "runs": len(runs), "problems": problems,
+    commits = list(dict.fromkeys((r.get("commit") or {}).get("commit") for r in runs))
+    return {"videos": len(videos), "runs": len(runs), "run_ids": [r["id"] for r in runs],
+            "commit": commit, "run_commits": commits, "problems": problems,
             "status": FAIL if problems else "pass"}
 
 
 # --- (x5): derived caches -------------------------------------------------------------------
 
+def _same_labels(a: torch.Tensor, b: torch.Tensor) -> bool:
+    """Equal shape and values, NaN (unknown segment label) equal to NaN."""
+    a, b = torch.as_tensor(a), torch.as_tensor(b).float()
+    na, nb = torch.isnan(a), torch.isnan(b)
+    return a.shape == b.shape and torch.equal(na, nb) and torch.equal(a[~na], b[~nb])
+
+
 def check_x5(folder, layout, split: ValSplit, dataset: str, encoder: str, variants: Sequence[str],
-             stage: int, n_random: int = 20) -> dict:
-    """Derived caches of one encoder against the snippets (PLAN.md (x5))."""
+             stage: int, *, legacy_dir, n_random: int = 20) -> dict:
+    """Derived caches of one encoder against the snippets (PLAN.md (x5)); ``legacy_dir``: the
+    earlier cache of the same encoder, whose seg_labels the derived files copy."""
     store = np.load(store_dir(folder) / FEATURES_FILE, mmap_mode="r")
+    earlier = load_cache(legacy_dir, "train")["seg_labels"]
     val, train = sorted(split.val_indices), sorted(split.train_indices)
     rng = np.random.default_rng(SEED)
     sample = sorted(int(i) for i in rng.choice(val if stage == 1 else range(len(layout.names)),
@@ -421,8 +511,14 @@ def check_x5(folder, layout, split: ValSplit, dataset: str, encoder: str, varian
         if len(data.get("total_frames") or []) != len(layout.names) or \
                 list(data["total_frames"]) != [int(x) for x in layout.total_frames]:
             problems.append("total_frames differ from the manifest")
-        if len(data["seg_labels"]) != len(layout.names):
+        seg = data["seg_labels"]
+        if len(seg) != len(layout.names) or len(earlier) != len(layout.names):
             problems.append("seg_labels missing")
+        else:
+            bad = [v for v in range(len(seg)) if not _same_labels(seg[v], earlier[v])]
+            if bad:
+                problems.append(f"seg_labels differ from the earlier cache in {len(bad)} videos "
+                                f"(first {bad[:5]})")
         feats = data["features"]
         want_filled = "val" if (stage == 1 or variant in ("d16r1", "d16r2")) else "all"
         if meta.get("filled") != want_filled:

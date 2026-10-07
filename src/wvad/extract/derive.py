@@ -140,12 +140,25 @@ def _write(vd: Path, features: list[torch.Tensor], labels: Sequence[int],
     return path
 
 
+def _refuse_after_stage2(folder: Path, dataset: str) -> None:
+    """Stage 1 is not derived again once a stage-2 file (filled "all") exists: it would overwrite
+    the stage-2 d16c / d16r files (and rewrite d16r1 / d16r2)."""
+    done = [v for v in STAGE_VARIANTS[2][dataset]
+            if (variant_dir(folder, v) / META_FILE).exists()
+            and read_json(variant_dir(folder, v) / META_FILE).get("filled") == FILLED[2]]
+    if done:
+        raise ValueError(f"{folder}: stage-2 files exist ({', '.join(done)}); stage 1 is not "
+                         "derived again")
+
+
 def derive_variant(folder: Path, layout: Layout, split: ValSplit, dataset: str, encoder: str,
                    variant: str, stage: int, seg_labels: Sequence[torch.Tensor],
                    commit: Mapping | None = None) -> dict:
     """Write one variant of one encoder for stage 1 or 2 (``FILLED``); returns its meta."""
     if variant not in STAGE_VARIANTS[stage][dataset]:
         raise ValueError(f"{variant} is not derived in stage {stage} for {dataset}")
+    if stage == 1:
+        _refuse_after_stage2(folder, dataset)
     filled = FILLED[stage]
     index = read_index(folder)
     rows_of = sorted(split.val_indices) if filled == "val" else list(range(len(layout.names)))
@@ -202,7 +215,9 @@ def legacy_seg_labels(legacy_dir: str | os.PathLike[str], layout: Layout) -> lis
 
 def derive_stage(folder: Path, legacy_dir: Path, layout: Layout, split: ValSplit, dataset: str,
                  encoder: str, stage: int, commit: Mapping | None = None) -> dict[str, dict]:
-    """Every variant of ``stage`` for one encoder."""
+    """Every variant of ``stage`` for one encoder (stage 1 refused after stage 2)."""
+    if stage == 1:
+        _refuse_after_stage2(folder, dataset)
     seg = legacy_seg_labels(legacy_dir, layout)
     return {v: derive_variant(folder, layout, split, dataset, encoder, v, stage, seg, commit)
             for v in STAGE_VARIANTS[stage][dataset]}

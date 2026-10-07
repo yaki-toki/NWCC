@@ -18,7 +18,10 @@ NO-GO (some P: bad and bad^LS of C - R1), hold (re-extraction loss) (some P: bad
 bad(C - R1)), GO (gates passed, no numerical failure, both P: NI and NI^LS of C - R1 and C - R0),
 hold; recomputed with the logit readout (hold and hold (re-extraction loss) count as one coarse
 "hold"): a different coarse category makes the final category hold (readout sensitive). The
-extreme-readout flag recomputes the table with the verdict arm read as G (A0.G, C.G).
+extreme-readout flag has one definition for both stages (``extreme_readout``, PLAN.md "판정"):
+the verdict arm read as G (A0.G, C.G), the same stage table recomputed under the primary readout
+(comparison arms and thresholds unchanged), its coarse category compared with the primary
+readout's.
 """
 
 from __future__ import annotations
@@ -58,7 +61,8 @@ PLAN_NAMES = {GO: "GO", HOLD: "보류", HOLD_LOSS: "보류(재추출 손해)",
               HOLD_READOUT: "보류(판독 민감)", NOGO: "NO-GO", STAGE1_NOGO: "1단계 NO-GO",
               NOT_RUN: "보류(2단계 미실행: {reason})", GATE_FAILED: "관문 실패(판정 없음)",
               CONTINUE: "계속"}
-COARSE = {GO: GO, HOLD: HOLD, HOLD_LOSS: HOLD, NOGO: NOGO}
+COARSE = {GO: GO, HOLD: HOLD, HOLD_LOSS: HOLD, NOGO: NOGO, CONTINUE: CONTINUE,
+          STAGE1_NOGO: STAGE1_NOGO}
 
 Z = Mapping[tuple[str, str, str, str], Mapping[Setting, float | None]]   # (readout, P, contrast,
                                                                          # metric) -> z per setting
@@ -167,13 +171,37 @@ def stage1_category(z: Z, arm: str = "A0",
                                                                 "holds": holds}
 
 
+def stage1_table(z: Z, readout: str, arm: str = "A0",
+                 pipelines: Sequence[str] = PIPELINE_NAMES) -> dict:
+    """The stage-1 table under one readout: 1단계 NO-GO when some P has bad and bad^LS of
+    arm - R1v in that readout, otherwise continue."""
+    nogo = {p: _bad_both(z, readout, p, f"{arm}-R1v") for p in pipelines}
+    return {"category": STAGE1_NOGO if any(nogo.values()) else CONTINUE, "nogo": nogo}
+
+
+def extreme_readout(z: Z, stage: int, pipelines: Sequence[str] = PIPELINE_NAMES,
+                    gates_ok: bool = True, numerical_ok: bool = True) -> dict:
+    """PLAN.md "극값 판독 민감", one definition for both stages: the verdict arm (stage 1 A0,
+    final C) read as G (A0.G, C.G; epoch selection by G, comparison arms and thresholds
+    unchanged), the same table recomputed under the primary readout, and its coarse category
+    (hold (re-extraction loss) = hold) compared with the primary readout's category."""
+    if stage == 1:
+        base, g = (stage1_table(z, PRIMARY, a, pipelines) for a in ("A0", "A0.G"))
+    else:
+        base, g = (final_table(z, PRIMARY, a, pipelines, gates_ok, numerical_ok)
+                   for a in ("C", "C.G"))
+    return {"primary_category": base["category"], "g_category": g["category"], "g_table": g,
+            "sensitive": COARSE[g["category"]] != COARSE[base["category"]]}
+
+
 def stage1_verdict(z: Z, pipelines: Sequence[str] = PIPELINE_NAMES) -> dict:
     """Stage-1 category and its sub-flags (PLAN.md 1단계 판정): harmless (both P: NI and NI^LS of
     A0 - R1v and A0 - R0, primary readout), re-extraction loss (some P: bad(A0 - R0) and not
     bad(A0 - R1v)), readout sensitive (the NO-GO condition in one readout only), extreme readout
-    sensitive (A0 read as G gives another stage-1 category), other (none of them)."""
+    sensitive (``extreme_readout``: A0 read as G gives another primary-readout stage-1
+    category), other (none of them)."""
     category, cond = stage1_category(z, "A0", pipelines)
-    g_category, g_cond = stage1_category(z, "A0.G", pipelines)
+    ext = extreme_readout(z, 1, pipelines)
     flags = {
         "harmless": all(non_inferior(z[(PRIMARY, p, c, m)]) for p in pipelines
                         for c in ("A0-R1v", "A0-R0") for m in VERDICT_METRICS),
@@ -181,12 +209,14 @@ def stage1_verdict(z: Z, pipelines: Sequence[str] = PIPELINE_NAMES) -> dict:
                                  and not bad_type(z[(PRIMARY, p, "A0-R1v", "v_auc")])
                                  for p in pipelines),
         "readout_sensitive": cond["holds"][PRIMARY] != cond["holds"][LOGIT],
-        "extreme_readout_sensitive": g_category != category,
+        "extreme_readout_sensitive": ext["sensitive"],
     }
     flags["other"] = not any(flags.values())
     return {"category": category, "category_plan": plan_name(category),
             "nogo_condition": cond, "flags": flags,
-            "g_readout": {"category": g_category, "nogo_condition": g_cond}}
+            "g_readout": {"category": ext["g_category"],
+                          "primary_category": ext["primary_category"],
+                          "nogo_condition": ext["g_table"]["nogo"]}}
 
 
 def final_table(z: Z, readout: str, arm: str = "C", pipelines: Sequence[str] = PIPELINE_NAMES,
@@ -214,19 +244,20 @@ def final_table(z: Z, readout: str, arm: str = "C", pipelines: Sequence[str] = P
 def final_verdict(z: Z, gates_ok: bool, numerical_ok: bool,
                   pipelines: Sequence[str] = PIPELINE_NAMES) -> dict:
     """Final category from the primary and logit tables (readout sensitivity), the extreme-
-    readout flag (C read as G, primary readout, coarse categories) and the per-pipeline tables
-    (pipeline dependence flag)."""
+    readout flag (``extreme_readout``: C read as G, primary readout, coarse categories) and the
+    per-pipeline tables (pipeline dependence flag)."""
     tables = {r: final_table(z, r, "C", pipelines, gates_ok, numerical_ok) for r in READOUTS}
     p, lg = tables[PRIMARY]["category"], tables[LOGIT]["category"]
     category = HOLD_READOUT if COARSE[p] != COARSE[lg] else p
-    g = final_table(z, PRIMARY, "C.G", pipelines, gates_ok, numerical_ok)
+    ext = extreme_readout(z, 2, pipelines, gates_ok, numerical_ok)
+    g = ext["g_table"]
     per_pipeline = {q: final_table(z, PRIMARY, "C", (q,), gates_ok, numerical_ok)["category"]
                     for q in pipelines}
     return {"category": category, "category_plan": plan_name(category),
             "primary": p, "logit": lg,
             "logit_name": lg if category == p and lg != p else None,
             "tables": tables, "g_readout": g,
-            "extreme_readout_sensitive": COARSE[g["category"]] != COARSE[p],
+            "extreme_readout_sensitive": ext["sensitive"],
             "per_pipeline": per_pipeline,
             "pipeline_dependent": len(set(per_pipeline.values())) > 1}
 
@@ -299,7 +330,8 @@ def _status(raw: str | None) -> str:
 def extraction_gates(record: Mapping, approvals: Mapping, stage: int,
                      names: Mapping[str, Sequence[str]]) -> dict:
     """Status of every extraction gate item the stage needs (results/e021_extract_gate.json,
-    written with ``python -m wvad.extract ... --record``), with the user approvals of
+    written with ``python -m wvad.extract ... --record``; (x0): the normalisation record and the
+    unit-test run), with the user approvals of
     results/e021_approvals.json: (x1) fail -> approximate equivalence (user approved); (x3a) and
     (x3) fail -> pass (user approved exception: video list) when every listed video is approved.
     ``names``: manifest names per dataset (the (x3) index of a short-grab video). Returns the
@@ -314,6 +346,8 @@ def extraction_gates(record: Mapping, approvals: Mapping, stage: int,
     else:
         counts = norm.get("x0_normalization", norm)
         items["x0"] = PASS_BIT if counts.get("normalize_lookup_table") == 0 else FAILED
+    tests = record.get("x0_tests")             # the unit-test run (wvad.extract gate tests)
+    items["x0_tests"] = _status(None if tests is None else tests.get("status"))
     for d in DATASETS:
         for kind in ("x1", "x2"):
             encs = (record.get(f"{kind}_{d}") or {}).get("encoders", {})

@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 
 from wvad.diagnostics import e021_arms as arms
-from wvad.diagnostics.e021_gates import load_run, snippet_rows, val_split
+from wvad.diagnostics.e021_gates import dense_failure, load_run, snippet_rows, val_split
 from wvad.diagnostics.e021_rules import PRIMARY
 from wvad.diagnostics.e021_score import (
     CAL_SEEDS,
@@ -54,7 +54,7 @@ from wvad.diagnostics.glance import (
 )
 from wvad.diagnostics.proxy_eval import support_frame_counts, weighted_ap, weighted_auc
 from wvad.diagnostics.uca import VARIANTS, load_proxy
-from wvad.eval.dense import readout
+from wvad.eval.dense_readout import readout
 from wvad.extract import grid
 from wvad.paths import REPO_ROOT
 
@@ -197,7 +197,8 @@ def _run_inputs(runs_root: Path, scores: Path, key: RunKey):
     run = load_run(runs_root, key)
     with np.load(score_path(scores, key.stage, key)) as z:
         sf = {k: z[k] for k in z.files}
-    dense = arms.dense_readouts(sf) if "dense_z" in sf else None
+    run.failed = run.failed or dense_failure(sf)        # as the verdict's gates (PLAN.md 수치 실패)
+    dense = arms.dense_readouts(sf) if "dense_z" in sf and not run.failed else None
     return run, sf, dense
 
 

@@ -23,9 +23,15 @@ annotation file and neither the glance nor the UCA module is imported.
          |dz| <= 1e-5 max(1, |z|)
     (s3) hb / hbm: z of the scale-matched snippets averaged per window = z of the own cache
     (p) dense score rows = the dense cache index (ceil(T / 16) per video), finite
+    freeze  the (g1) commit, every (x4) run commit, every batch environment record, every scoring
+            call and the analysis commit are the freeze commit or its descendants (PLAN.md
+            "실행 순서" 2, git merge-base --is-ancestor, as E020)
 
 A run with non-finite losses or records failed numerically: it is not re-run, its gate checks
-that need finite values are skipped, and the verdict treats its settings as failed.
+that need finite values are skipped, and the verdict treats its settings as failed. Non-finite
+dense snippet logits (or gamma) in the score file of a run whose losses and records are finite
+are a numerical failure as well (PLAN.md "수치 실패(손실·점수에 NaN·무한대)"), not a gate (p)
+failure: ``score_gates`` marks that run failed (its (s2), (s3) skipped; (p) keeps the shape check).
 """
 
 from __future__ import annotations
@@ -75,8 +81,15 @@ IGNORED_CONFIG = ("seed", "pair", "dataset", "out_dir", "init", "features")
 START_EPOCH = 20
 S_TOL, REF_TOL = 1e-6, 1e-12
 ENV_KEYS = ("torch", "cuda", "gpu", "driver")
+EXTRACT_ENCODERS = ("xcb", "xcl", "siglip")
+# The frozen extraction, training and scoring code (PLAN.md two-stage code rule, gate (f), start
+# condition (5)), without the analysis functions computed from saved logits that the rule lets
+# the analysis fix between the stages: the LS-AUC (eval/crossfit.py) and the readout
+# aggregation W / Wm / G (eval/dense_readout.py). No frozen module imports them (unit test).
+ANALYSIS_EXCLUDED = ("src/wvad/eval/crossfit.py", "src/wvad/eval/dense_readout.py")
 FROZEN_PATHS = ("src/wvad/extract", "src/wvad/train", "src/wvad/models", "src/wvad/data",
-                "src/wvad/eval", "src/wvad/diagnostics/e021_score.py")
+                "src/wvad/eval", "src/wvad/diagnostics/e021_score.py",
+                *(f":(exclude){p}" for p in ANALYSIS_EXCLUDED))
 REFERENCE_CSV = {"l20": REPO_ROOT / "experiments" / "E013_stage1_last_checkpoint" / "results"
                  / "e013_runs.csv",
                  "m10": REPO_ROOT / "experiments" / "E017_offset_scale" / "results"
@@ -330,12 +343,20 @@ def s_row(run: Run, sf: Mapping[str, np.ndarray], val_idx: np.ndarray,
     return row
 
 
+def dense_failure(sf: Mapping[str, np.ndarray]) -> str | None:
+    """The numerical failure of a run's dense scoring (PLAN.md "수치 실패(손실·점수에 NaN·
+    무한대)"): non-finite dense snippet logits or gamma in its score file; None when finite."""
+    bad = [k for k in ("dense_z", "gamma") if k in sf and not np.isfinite(sf[k]).all()]
+    return f"non-finite {' and '.join(bad)} (dense scoring)" if bad else None
+
+
 def s2_row(run: Run, sf: Mapping[str, np.ndarray]) -> dict:
     """Gate (s2): the dense z of every window's d16c snippet = the d16c 32-unit z (30 epochs)."""
     m10 = PIPELINES[run.key.pipeline][0] == "mean"
     head = {"run": f"{run.key.chain}/{run.key.run}"}
-    if run.failed:
-        return head | {"skipped": run.failed, "ok": True}
+    failed = run.failed or dense_failure(sf)
+    if failed:
+        return head | {"skipped": failed, "ok": True}
     rows = centre_rows(sf["total_frames"], sf["dense_counts"])
     r = compare_logits(sf["dense_z"][:, rows], own_z(sf, "d16c", m10))
     return head | r | {"ok": r["pass"]}
@@ -345,15 +366,17 @@ def s3_row(run: Run, sf: Mapping[str, np.ndarray]) -> dict:
     """Gate (s3): z of the scale-matched snippets averaged per window = the own cache's z."""
     m10 = PIPELINES[run.key.pipeline][0] == "mean"
     head = {"run": f"{run.key.chain}/{run.key.run}"}
-    if run.failed:
-        return head | {"skipped": run.failed, "ok": True}
+    failed = run.failed or dense_failure(sf)
+    if failed:
+        return head | {"skipped": failed, "ok": True}
     r = compare_logits(sf["s3_z"], own_z(sf, HEADS[run.key.head], m10))
     return head | r | {"ok": r["pass"]}
 
 
 def p_row(run: Run, sf: Mapping[str, np.ndarray], totals: np.ndarray) -> dict:
-    """Gate (p): dense rows per video = ceil(T / 16) (the dense cache index rule), the score
-    array (30, sum) and finite."""
+    """Gate (p): dense rows per video = ceil(T / 16) (the dense cache index rule) and the score
+    array (30, sum); non-finite values are the run's numerical failure (``dense_failure``),
+    recorded here, not a gate failure."""
     head = {"run": f"{run.key.chain}/{run.key.run}"}
     counts = np.asarray(sf["dense_counts"])
     want = np.array([grid.n_snippets(int(t)) for t in totals])
@@ -362,9 +385,9 @@ def p_row(run: Run, sf: Mapping[str, np.ndarray], totals: np.ndarray) -> dict:
                     and sf["dense_z"].shape == (EPOCHS, int(want.sum())))
     if run.failed:
         return head | {"shape_ok": shape_ok, "skipped": run.failed, "ok": shape_ok}
-    finite = bool(np.isfinite(sf["dense_z"]).all()) and (
-        "gamma" not in sf or bool(np.isfinite(sf["gamma"]).all()))
-    return head | {"shape_ok": shape_ok, "finite": finite, "ok": shape_ok and finite}
+    failed = dense_failure(sf)
+    row = head | {"shape_ok": shape_ok, "finite": failed is None, "ok": shape_ok}
+    return row | ({"numerical_failure": failed} if failed else {})
 
 
 def verify_scores(root: Path, stage: int, keys: Sequence[RunKey]) -> dict:
@@ -389,9 +412,12 @@ def verify_scores(root: Path, stage: int, keys: Sequence[RunKey]) -> dict:
 
 
 def score_gates(runs: Mapping[RunKey, Run], root: Path, stage: int) -> dict:
-    """(s), (s2), (s3), (p) of the stage's runs from their score files."""
+    """(s), (s2), (s3), (p) of the stage's runs from their score files. A run whose dense scores
+    are non-finite (``dense_failure``) while its losses and records are finite failed
+    numerically: ``Run.failed`` is set here (after its (s) row), so the verdict treats its
+    settings as failed (PLAN.md 수치 실패), and it is listed in "numerical_failures"."""
     rows = {g: [] for g in ("s", "s2", "s3", "p")}
-    errors = []
+    errors, numerical = [], {}
     splits = {d: val_split(d) for d in DATASETS}
     totals = {d: val_totals(d) for d in DATASETS}
     for key, run in runs.items():
@@ -407,12 +433,16 @@ def score_gates(runs: Mapping[RunKey, Run], root: Path, stage: int) -> dict:
                 rows["s3"].append(s3_row(run, sf))
             if key.head in ("h0", "h1", "hb", "hbm"):
                 rows["p"].append(p_row(run, sf, totals[key.dataset]))
+            failed = None if run.failed else dense_failure(sf)
+            if failed:
+                run.failed = failed
+                numerical[f"{key.chain}/{key.run}"] = failed
         except GATE_ERRORS as exc:
             errors.append(f"{key.chain}/{key.run}: {exc!r}")
     status = {g: bool(r) and all(x["ok"] for x in r) for g, r in rows.items()}
     if stage == 1:
         status.pop("s3")
-    return {"rows": rows, "status": status, "errors": errors,
+    return {"rows": rows, "status": status, "errors": errors, "numerical_failures": numerical,
             "s_max_abs_diff": max((r.get("max_abs_diff", 0.0) for r in rows["s"]), default=None)}
 
 
@@ -433,12 +463,69 @@ def code_equal(a: str | None, b: str | None) -> bool | None:
 
 
 def frozen_code_unchanged(commit: str | None) -> bool | None:
-    """Start condition (5): the frozen code of the working tree (uncommitted edits included)
-    equals that of ``commit``; None when the commit is unknown."""
+    """Start condition (5): the frozen code of the working tree (uncommitted edits included, and
+    no untracked file under the frozen paths) equals that of ``commit``; None when the commit is
+    unknown."""
     if not commit:
         return None
     res = git("diff", "--quiet", commit, "--", *FROZEN_PATHS)
-    return {0: True, 1: False}.get(res.returncode)
+    same = {0: True, 1: False}.get(res.returncode)
+    if same is not True:
+        return same
+    untracked = git("ls-files", "--others", "--exclude-standard", "--", *FROZEN_PATHS)
+    if untracked.returncode != 0:
+        return None
+    return not untracked.stdout.strip()
+
+
+def is_ancestor(a: str | None, b: str | None) -> bool:
+    """a is b or an ancestor of b (git merge-base --is-ancestor, as E020); False when either is
+    unknown."""
+    return bool(a and b) and git("merge-base", "--is-ancestor", a, b).returncode == 0
+
+
+def freeze_descent(freeze: str | None, identity: Mapping, record: Mapping, runs: Path,
+                   scores: Path, stage: int, analysis: str | None) -> dict:
+    """PLAN.md "실행 순서" 2: the extraction, training and analysis commits are the freeze commit
+    or its descendants. Checked for the (g1) commit, every (x4) run commit of the stage's phases
+    (results/e021_extract_gate.json; an entry without them fails), every batch environment
+    record (env*.json), every scoring call of the stages so far and the analysis commit."""
+    rows = []
+
+    def add(what: str, commit: str | None, reason: str | None = None) -> None:
+        ok = reason is None and is_ancestor(freeze, commit)
+        rows.append({"what": what, "commit": commit, "ok": ok}
+                    | ({"reason": reason} if reason else {}))
+
+    add("g1", ((identity.get("g1") or {}).get("code") or {}).get("commit"))
+    for d in DATASETS:
+        for ph in ("val",) if stage == 1 else ("val", "trainpart"):
+            entry = record.get(f"x4_{d}_{ph}") or {}
+            for e in EXTRACT_ENCODERS:
+                commits = (entry.get(e) or {}).get("run_commits")
+                if not commits:
+                    add(f"x4_{d}_{ph}_{e}", None, "no run commits recorded")
+                for c in commits or ():
+                    add(f"x4_{d}_{ph}_{e}", c)
+    for f in sorted(Path(runs).glob("env*.json")):
+        try:
+            add(f.name, _json(f).get("commit"))
+        except (OSError, ValueError, AttributeError) as exc:
+            add(f.name, None, f"unreadable: {exc!r}")
+    for k in range(1, stage + 1):
+        meta_file = Path(scores) / f"stage{k}" / "meta.json"
+        try:
+            calls = _json(meta_file)["calls"]
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            add(f"scoring stage{k}", None, f"{meta_file}: {exc!r}")
+            continue
+        if not calls:
+            add(f"scoring stage{k}", None, "no scoring call recorded")
+        for c in calls:
+            add(f"scoring stage{k} {c.get('time_utc')}", (c.get("code") or {}).get("commit"))
+    add("analysis", analysis)
+    return {"freeze_commit": freeze, "rows": rows,
+            "ok": bool(freeze) and all(r["ok"] for r in rows)}
 
 
 def same_env(env: Mapping | None, want: Mapping) -> bool:
