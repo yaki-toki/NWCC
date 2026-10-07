@@ -20,3 +20,8 @@ features:
 annotations:
   # UCA (Yuan et al., CVPR 2024) sentence timestamps for UCF-Crime; diagnostics only
   uca: annotations/uca
+
+# Original videos (E021 dense extraction only): the folder holding Anomaly-Detection-Dataset/
+# (UCF-Crime, manifest rel_paths) and XD-Violence/train/<name>.mp4. The dense caches and the
+# caches derived from them go to <feature_root>/<dataset>_<encoder>_d16/.
+raw_video_root: /path/to/raw_videos

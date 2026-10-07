@@ -5,6 +5,12 @@ every selection (best checkpoint = highest validation video AUC, strict >, earli
 wins). The test split is never loaded here. Stage 2 starts from a stage-1 checkpoint of
 the same split. The order of construction and data access follows the earlier trainers,
 so a seed reproduces an earlier run.
+
+E021 options (defaults keep the earlier path): ``features`` picks the training cache variant
+(``legacy`` = the earlier caches of paths.yaml; d16c / d16r / d16m / d16m2 = 32-unit caches
+derived from dense snippets, wvad.data.catalog), the same in both stages; with
+``save_epoch_ckpts`` stage 2 also saves ckpt_epoch_XX.pt after every epoch (no random draws;
+stage 1 only records the flag in its config).
 """
 
 from __future__ import annotations
@@ -19,6 +25,7 @@ import torch
 from torch.amp import GradScaler
 
 from wvad.data import check_labels, feature_dirs, load_feature_set, load_split, split_file
+from wvad.data.catalog import FEATURE_VARIANTS, LEGACY
 from wvad.models import SegmentHead
 from wvad.paths import load_paths
 from wvad.train.loop import (
@@ -50,6 +57,8 @@ class Stage1Config:
     record: bool = False            # save per-epoch validation scores (does not change training)
     global_mode: str = "none"       # per-video offset on the segment logits (E016; none = off)
     offset_lr_mult: float = 1.0     # learning-rate multiplier of the offset parameters (E017)
+    features: str = LEGACY          # training cache variant (E021; legacy = earlier caches)
+    save_epoch_ckpts: bool = False  # E021: recorded only in stage 1 (stage 2 saves per epoch)
 
 
 def stage2_default_weights() -> LossWeights:
@@ -77,6 +86,8 @@ class Stage2Config:
     record: bool = False            # save validation and pseudo-label scores (training unchanged)
     global_mode: str = "none"       # must equal the stage-1 checkpoint's (E016)
     offset_lr_mult: float = 1.0     # learning-rate multiplier of the offset parameters (E017)
+    features: str = LEGACY          # must equal the stage-1 checkpoint's (E021)
+    save_epoch_ckpts: bool = False  # save ckpt_epoch_XX.pt after every epoch (E021)
 
 
 def _device() -> tuple[torch.device, bool]:
@@ -84,11 +95,24 @@ def _device() -> tuple[torch.device, bool]:
     return device, device.type == "cuda"
 
 
-def _train_val(dataset: str, pair: str):
+def _train_val(dataset: str, pair: str, features: str = LEGACY):
     split = load_split(split_file(dataset))
-    fs = load_feature_set(feature_dirs(load_paths(), dataset, pair), "train")
+    fs = load_feature_set(feature_dirs(load_paths(), dataset, pair, features), "train")
     check_labels(split, fs.labels, f"{dataset}/{pair} train cache")
     return fs.subset(split.train_indices), fs.subset(split.val_indices), split, fs.dim
+
+
+def _check_features(cfg) -> None:
+    if cfg.features not in FEATURE_VARIANTS:
+        raise ValueError(f"features {cfg.features!r} not in {FEATURE_VARIANTS}")
+
+
+def _load_train_val(cfg):
+    """The training and validation videos of ``cfg.features``; the default variant makes the
+    earlier call unchanged."""
+    if cfg.features == LEGACY:
+        return _train_val(cfg.dataset, cfg.pair)
+    return _train_val(cfg.dataset, cfg.pair, cfg.features)
 
 
 def _save(path: str, model, cfg, epoch: int, auc: float, split_sha: str) -> None:
@@ -161,10 +185,11 @@ def _pseudo_array(pseudo: list[torch.Tensor | None], n_segments: int) -> np.ndar
 
 def run_stage1(cfg: Stage1Config) -> dict:
     _check_offset_lr_mult(cfg)
+    _check_features(cfg)
     os.makedirs(cfg.out_dir, exist_ok=True)
     device, use_amp = _device()
     seed_everything(cfg.seed)
-    train_fs, val_fs, split, dim = _train_val(cfg.dataset, cfg.pair)
+    train_fs, val_fs, split, dim = _load_train_val(cfg)
     train_loader = make_loader(VideoBags(train_fs), cfg.batch_size, True, device)
     val_loader = make_loader(VideoBags(val_fs), cfg.batch_size, False, device)
     model = SegmentHead(dim, use_input_ln=INPUT_LAYER_NORM[cfg.pair],
@@ -212,6 +237,7 @@ def _pseudo_schedule(cfg: Stage2Config, iteration: int) -> tuple[int, float]:
 
 def run_stage2(cfg: Stage2Config) -> dict:
     _check_offset_lr_mult(cfg)
+    _check_features(cfg)
     os.makedirs(cfg.out_dir, exist_ok=True)
     device, use_amp = _device()
     seed_everything(cfg.seed)
@@ -224,7 +250,11 @@ def run_stage2(cfg: Stage2Config) -> dict:
     if init_mode != cfg.global_mode:
         raise ValueError(f"{cfg.init} has global_mode {init_mode!r}, stage 2 asks for "
                          f"{cfg.global_mode!r}")
-    train_fs, val_fs, _, dim = _train_val(cfg.dataset, cfg.pair)
+    init_features = init.get("config", {}).get("features", LEGACY)
+    if init_features != cfg.features:
+        raise ValueError(f"{cfg.init} was trained on features {init_features!r}, stage 2 asks "
+                         f"for {cfg.features!r}")
+    train_fs, val_fs, _, dim = _load_train_val(cfg)
     model = SegmentHead(dim, use_input_ln=INPUT_LAYER_NORM[cfg.pair],
                         global_mode=cfg.global_mode)
     model.load_state_dict(init["model_state_dict"])
@@ -268,6 +298,9 @@ def run_stage2(cfg: Stage2Config) -> dict:
                 best, best_epoch = auc, epoch
                 _save(os.path.join(cfg.out_dir, "ckpt_best_val.pt"), model, cfg, epoch, auc,
                       split.sha256)
+            if cfg.save_epoch_ckpts:                # E021: weights of every epoch, no draws
+                _save(os.path.join(cfg.out_dir, f"ckpt_epoch_{epoch:02d}.pt"), model, cfg,
+                      epoch, auc, split.sha256)
             print(f"[stage2] iter {iteration} epoch {epoch}: val_video_auc={auc:.6f}",
                   flush=True)
     _save(os.path.join(cfg.out_dir, "ckpt_last.pt"), model, cfg,

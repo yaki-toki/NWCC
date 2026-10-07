@@ -9,6 +9,8 @@ from ``configs/paths.example.yaml``) maps logical names to directories::
       ucf_xcb: features_xclip_base       # relative -> feature_root / entry
     annotations:
       uca: /data/annotations/uca         # anchored -> used as is
+    raw_video_root: /data/videos         # optional: original videos (E021 dense extraction);
+                                         # a relative root is taken like feature_root
 
 "Anchored" means absolute or starting at a root: on Windows ``/data`` has no drive and
 resolves against the current drive when used. Write Windows paths with forward slashes
@@ -34,7 +36,7 @@ IN_SOURCE_CHECKOUT = (REPO_ROOT / "pyproject.toml").is_file()
 DEFAULT_PATHS_FILE: Path | None = (REPO_ROOT / "configs" / "paths.yaml"
                                    if IN_SOURCE_CHECKOUT else None)
 ENV_VAR = "WVAD_PATHS"
-SECTIONS = ("feature_root", "features", "annotations")
+SECTIONS = ("feature_root", "features", "annotations", "raw_video_root")
 
 
 class PathsConfigError(ValueError):
@@ -50,12 +52,19 @@ class Paths:
     feature_root: Path
     features: Mapping[str, Path] = field(default_factory=_empty)
     annotations: Mapping[str, Path] = field(default_factory=_empty)
+    raw_video_root: Path | None = None        # optional (E021); None when not configured
 
     def feature_dir(self, name: str) -> Path:
         return _lookup(self.features, name, "features")
 
     def annotation_dir(self, name: str) -> Path:
         return _lookup(self.annotations, name, "annotations")
+
+    def video_root(self) -> Path:
+        """Root of the original videos (``raw_video_root``); an error when not configured."""
+        if self.raw_video_root is None:
+            raise PathsConfigError("no 'raw_video_root' in the paths file")
+        return self.raw_video_root
 
 
 def _lookup(table: Mapping[str, Path], name: str, section: str) -> Path:
@@ -94,18 +103,26 @@ def parse_paths(raw: Mapping[str, object], base_dir: Path | None = None) -> Path
     unknown = sorted(str(k) for k in raw if k not in SECTIONS)
     if unknown:
         raise PathsConfigError(f"unknown top-level keys {unknown} (allowed: {list(SECTIONS)})")
-    root_value = raw.get("feature_root")
-    if not isinstance(root_value, str) or not root_value:
-        raise PathsConfigError("'feature_root' must be a non-empty string")
-    root = _expand(root_value)
-    if not _anchored(root):
-        if base_dir is None:
-            raise PathsConfigError(f"relative feature_root '{root_value}' needs the config "
-                                   "file's folder; use an absolute path")
-        root = Path(base_dir) / root
+    root = _root(raw.get("feature_root"), "feature_root", base_dir)
+    videos = (None if raw.get("raw_video_root") is None
+              else _root(raw["raw_video_root"], "raw_video_root", base_dir))
     return Paths(feature_root=root,
                  features=_resolve(root, raw.get("features"), "features"),
-                 annotations=_resolve(root, raw.get("annotations"), "annotations"))
+                 annotations=_resolve(root, raw.get("annotations"), "annotations"),
+                 raw_video_root=videos)
+
+
+def _root(value: object, key: str, base_dir: Path | None) -> Path:
+    """A root directory entry: a non-empty string, expanded; relative to the config's folder."""
+    if not isinstance(value, str) or not value:
+        raise PathsConfigError(f"'{key}' must be a non-empty string")
+    root = _expand(value)
+    if not _anchored(root):
+        if base_dir is None:
+            raise PathsConfigError(f"relative {key} '{value}' needs the config "
+                                   "file's folder; use an absolute path")
+        root = Path(base_dir) / root
+    return root
 
 
 def _source(path: str | os.PathLike[str] | None) -> tuple[Path, str]:

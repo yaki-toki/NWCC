@@ -11,6 +11,7 @@ import math
 from dataclasses import replace
 
 from wvad.data import DATASETS, ENCODER_PAIRS
+from wvad.data.catalog import FEATURE_VARIANTS
 from wvad.models.head import GLOBAL_MODES
 from wvad.train.loop import LossWeights
 from wvad.train.stages import (
@@ -68,6 +69,13 @@ def _common(p: argparse.ArgumentParser) -> None:
                    help="learning-rate multiplier of the offset parameters only, which form "
                         "their own optimizer group (E017; needs a global_mode other than none "
                         "unless 1; default 1)")
+    p.add_argument("--features", choices=FEATURE_VARIANTS,
+                   help="training cache variant: legacy (the earlier caches of paths.yaml) or a "
+                        "32-unit cache derived from dense snippets; both stages must use the "
+                        "same (E021; default legacy)")
+    p.add_argument("--save_epoch_ckpts", action="store_true",
+                   help="stage 2: also save ckpt_epoch_XX.pt after every epoch (training "
+                        "unchanged); stage 1 records the flag only (E021)")
 
 
 def parse(argv=None) -> argparse.Namespace:
@@ -98,7 +106,8 @@ def main(argv=None) -> None:
     args = parse(argv)
     base = {"dataset": args.dataset, "pair": args.pair, "seed": args.seed,
             "out_dir": args.out_dir, "record": args.record,
-            **_given(args, "lr", "batch_size", "global_mode", "offset_lr_mult")}
+            "save_epoch_ckpts": args.save_epoch_ckpts,
+            **_given(args, "lr", "batch_size", "global_mode", "offset_lr_mult", "features")}
     extra = {} if args.lambda_normal_seg is None else {"normal_seg": args.lambda_normal_seg}
     if args.video_topk is not None:
         extra["video_topk"] = args.video_topk
