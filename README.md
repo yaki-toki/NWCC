@@ -702,6 +702,238 @@ git add experiments/E020_confirmation_f1/results/e020_test_scores.sha256 && git 
 python -m wvad.diagnostics.e020 analyze $G --scores $S     # after a metric fix: --allow_code_change '<reason>'
 ```
 
+### Stage E — E021 dense-snippet pilot ([plan](experiments/E021_dense_snippet_pilot/PLAN.md))
+Validation only, GO/NO-GO, two stages pre-registered in one plan. The training split is re-extracted as gap-free 16-frame snippets (`python -m wvad.extract`, one cache per dataset and encoder under `<feature_root>/<dataset>_<encoder>_d16/`): stage 1 the validation videos, stage 2 the training part. 32-unit caches derived from the snippets (`d16c`, `d16r`, UCF `d16r1` / `d16r2`, `d16m`, `d16m2`) train the heads `h1` (d16c), `h1r` (d16r), `hb` (d16m) and `hbm` (d16m2) beside `h0` (the earlier caches, `--features legacy`), in both pipelines (`l20`: E013; `m10`: E017 `--global_mode mean --offset_lr_mult 10`); seeds 0-2 (development) and 100-102 (calibration, SD only; h0, h1, hb). Every stage-2 epoch checkpoint is scored on the validation videos (`wvad.diagnostics.e021_score`), and the local analysis (`wvad.diagnostics.e021`) gives the stage-1 verdict (A0), then the final verdict (C, one of eight categories). The extraction, training and scoring code (`src/wvad/{extract,train,models,data,eval}`, `e021_score.py`) is frozen from the stage-1 production to the end of stage 2 (gate (f)): the server keeps the deploy of the no-change gate commit for both stages (no redeploy in between). Results go to `experiments/E021_dense_snippet_pilot/results/` (`E` below); caches, checkpoints, scores and logs stay outside the repository.
+```bash
+E=experiments/E021_dense_snippet_pilot/results      # both machines (repository / deploy root)
+L=<local runs root>/e021_extract                    # local gate outputs
+X=~/wvad_runs/e021_extract; RUNS=~/wvad_runs/e021; S=~/wvad_runs/e021_scores     # server
+```
+`configs/paths.yaml` of both machines needs `raw_video_root` (the folder holding `Anomaly-Detection-Dataset/` and `XD-Violence/train/`); `feature_root` receives the dense caches. Every video is opened only through the training manifest and appended to an access log first.
+
+**1. Implementation gate (x0)** (local; the code review follows): unit tests, then the CUDA normalisation record (the lookup table must equal numpy on all 768 value-channel pairs; the Python-scalar division mismatches are recorded).
+```bash
+pytest tests/test_e021_*.py
+python -m wvad.extract gate norm --record $E/e021_extract_gate.json
+```
+**2. Freeze** (after the pre-freeze probes are recorded in `results/e021_prefreeze_probes.json`): `PLAN.sha256` = sha256 of `PLAN.md` before `## 변경 기록` (as E020). Commit the plan, the reviewed code and this README first; `freeze` refuses unless `PLAN.md` is committed unmodified and the tracked tree is clean. Then commit `PLAN.sha256` alone (the freeze commit; the extraction, training and analysis commits are it or descendants). The analysis commands stop when the plan changed after the freeze.
+```bash
+git add experiments/E021_dense_snippet_pilot src data README.md && git commit
+python -m wvad.diagnostics.e021 freeze
+git add experiments/E021_dense_snippet_pilot/PLAN.sha256 && git commit
+```
+**3. Code equivalence (x1)** (local RTX 4080, `riskdet`, earlier precision and batches; XD 12 training-part videos, UCF 10 validation videos with the per-encoder position recovery):
+```bash
+mkdir -p $L && for ds in xdv ucf; do
+  python -m wvad.extract gate x1 --dataset $ds --access_log $L/access_local.csv --out $L/x1_$ds.json \
+      --record $E/e021_extract_gate.json
+done
+```
+If (x1) fails: PLAN.md "추출 관문" (find the cause, fix and record the fix in the change log; otherwise stop and report; with the user's approval that (dataset, encoder) continues as approximate equivalence). User approvals are written to `$E/e021_approvals.json` before the analysis reads them: `{"x1": [{"dataset": .., "encoder": .., "decision": "<the user's words>", "date": ..}], "x3a": [{"dataset": .., "videos": [<names>], ..}], "x3": [{"dataset": .., "phase": "val"|"trainpart", "videos": [<names>], ..}]}`.
+
+**4. Server extraction environment** (once; a separate conda environment, the training environment is not touched), the pinned model snapshots, then the environment record, the sha256 of all 5,560 training-split videos with their header frame counts, and on the local machine the same sha256:
+```bash
+# local: deploy the freeze commit (server conventions) and copy the three pinned model snapshots
+tar -cf - -C ~/.cache/huggingface/hub models--microsoft--xclip-base-patch16 \
+    models--microsoft--xclip-large-patch14 models--google--siglip-so400m-patch14-384 \
+    | ssh <server> 'mkdir -p ~/.cache/huggingface/hub && tar -x -C ~/.cache/huggingface/hub'
+scp $L/x1_xdv.json $L/x1_ucf.json <server>:wvad_runs/e021_extract/
+# server, once
+conda create -y -n wvad-extract python=3.10 && conda activate wvad-extract
+pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121    # cu124 only if the driver needs it (record it; (x2) decides)
+pip install transformers==5.0.0 opencv-python==4.13.0.90 numpy==2.2.6 pyyaml
+# server, in ~/frozen-vlm-wvad, for every `python -m wvad.extract` command below
+conda activate wvad-extract && export PYTHONPATH=src HF_HUB_OFFLINE=1 KMP_DUPLICATE_LIB_OK=TRUE
+mkdir -p $X && python -m wvad.extract gate env --out $E/env_extract.json   # pip freeze, CUDA, cuDNN, driver, TF32, attention
+for ds in ucf xdv; do
+  python -m wvad.extract header --dataset $ds --access_log $X/access_server.csv --out $X/header_$ds.csv
+done
+# local (the same files, sha256 only)
+for ds in ucf xdv; do
+  python -m wvad.extract header --dataset $ds --sha_only --access_log $L/access_local.csv --out $L/sha_$ds.csv
+done
+scp <server>:wvad_runs/e021_extract/{header_ucf.csv,header_xdv.csv,access_server.csv} $L/
+python -m wvad.extract check x6 --server $L/header_ucf.csv $L/header_xdv.csv --local $L/sha_ucf.csv \
+    $L/sha_xdv.csv --access_log $L/access_server.csv --out $L/x6.json --record $E/e021_extract_gate.json
+python -m wvad.extract check x3a --headers $L/header_ucf.csv $L/header_xdv.csv --out $L/x3a.json \
+    --record $E/e021_extract_gate.json
+```
+(x6) or (x3a) failing (a sha256 mismatch, a path outside the training manifest, |header T - manifest T| > 16): stop and report (PLAN.md). Then, on the server, the environment gate (x2) on the (x1) videos and positions (production decoder, autocast, batches 8 / 8 / 4; frame sha256 against the local record) and the throughput on the fixed 20 validation videos with both stages' projected hours (a stage over 24 h on the H100 is reported first and not started without the user's decision). Server gate summaries go to a server-side record that is merged into the local one:
+```bash
+for ds in xdv ucf; do
+  python -m wvad.extract gate x2 --dataset $ds --x1 $X/x1_$ds.json --access_log $X/access_server.csv \
+      --out $X/x2_$ds.json --record $X/gate_server.json
+done
+python -m wvad.extract bench --out_root $X/bench --access_log $X/access_server.csv --out $X/bench.json \
+    --record $X/gate_server.json
+# local: merge the server record (its keys are server-only) and keep the environment record
+scp <server>:wvad_runs/e021_extract/gate_server.json $L/ && scp <server>:frozen-vlm-wvad/$E/env_extract.json $E/
+python -c "import json, sys; from wvad.extract.__main__ import merge_record; \
+[merge_record(sys.argv[1], k, v) for k, v in json.load(open(sys.argv[2], encoding='utf-8')).items()]" \
+    $E/e021_extract_gate.json $L/gate_server.json
+```
+If (x2) fails and cannot be fixed, the user decides on local production; then (x2) is run locally with the production decoder, precision and batches (`gate x2` as above on the local machine, `--record $E/e021_extract_gate.json`), its environment becomes `env_extract.json`, and (x6) / (x3a) use the local files (PLAN.md R12).
+
+**5. Stage-1 production** (server, extraction environment): the 833 validation videos (completion flags allow resuming with the same command), then (x3) (grabs = T, replaced share <= 1%, the frames past the header count excluded for videos that passed (x3a)) and (x4) (order, labels, n_v, rows, completion, finite, model revision, commit and environment = the frozen commit and `env_extract.json`); a video over 1% is listed and stops the stage after the extraction (PLAN.md).
+```bash
+nvidia-smi --query-gpu=timestamp,memory.used --format=csv -l 60 > $X/gpu_memory_val.csv &   # descriptive 5
+setsid nohup bash -c "python -m wvad.extract dense --dataset ucf --phase val --access_log $X/access_server.csv &&
+  python -m wvad.extract dense --dataset xdv --phase val --access_log $X/access_server.csv" \
+  > $X/dense_val.log 2>&1 < /dev/null &
+pgrep -fc "wvad[.]extract dense"                                # 0 when done (the log ends with a summary), then
+pkill -f "nvidia-smi --query-gpu=timestamp"
+for ds in ucf xdv; do
+  python -m wvad.extract check x3 --dataset $ds --phase val --headers $X/header_ucf.csv $X/header_xdv.csv \
+      --out $X/x3_${ds}_val.json --record $X/gate_server.json
+  python -m wvad.extract check x4 --dataset $ds --phase val --env $E/env_extract.json \
+      --commit $(cat DEPLOYED_COMMIT) --out $X/x4_${ds}_val.json --record $X/gate_server.json
+done
+```
+**6. Stage-1 derived caches** (server): `d16c`, `d16r` (and UCF `d16r1`, `d16r2`) as full-size files with the training-part rows NaN, then (x5); merge the record as in step 4.
+```bash
+for ds in ucf xdv; do
+  python -m wvad.extract derive --dataset $ds --stage 1
+  python -m wvad.extract check x5 --dataset $ds --stage 1 --out $X/x5_${ds}_1.json --record $X/gate_server.json
+done
+```
+**7. No-change gate (g1), h0 chains, (g2)** (server, the training environment; check GPU and host memory first: 24 processes need about 1 GB GPU and 2.5 GB host each). (g1): UCF XCB+XCL seed 0 without the new options against E003 `stage1` / E013 `l20`; it writes `$E/e021_identity.json`, which every batch's environment record is checked against (`record_env`: the environment and commit of (g1), which must have passed). Then the 48 h0 chains (`--features legacy --save_epoch_ckpts` in both stages; E013 `l20` and E017 `m10` commands; seeds 0-2 and 100-102), one dataset per batch of 24, and (g2) on them (development chains against E003 / E013 and E017, M10 calibration chains against E018; 30 epoch checkpoints per stage 2).
+```bash
+GATE=~/wvad_runs/e021_gate_$(head -c 8 DEPLOYED_COMMIT)
+Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record"
+mkdir "$GATE" && c=ucf_xcb_xcl_s0 && T="--dataset ucf --pair xcb_xcl --seed 0" && setsid nohup bash -c "
+  python -m wvad.train stage1 $T --out_dir $GATE/$c/stage1 --record > $GATE/$c.stage1.log 2>&1 &&
+  python -m wvad.train stage2 $T --init $GATE/$c/stage1/ckpt_last.pt --out_dir $GATE/$c/l20 \
+      $Z > $GATE/$c.l20.log 2>&1" < /dev/null > /dev/null 2>&1 &
+pgrep -fc "wvad[.]train"                                        # 0 when done, then
+python tests/equivalence/check_e021_gate.py g1 --e003_runs ~/wvad_runs/e003 --e013_runs ~/wvad_runs/e013 \
+    --gate_runs $GATE                                           # must print g1 all_ok=True
+export RUNS Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record --save_epoch_ckpts"
+mkdir -p $RUNS && nvidia-smi --query-gpu=memory.used,memory.total --format=csv && free -g
+ds=ucf                                   # first batch; when it is done, the same lines with ds=xdv
+python -c "from wvad.diagnostics.e021_gates import record_env; record_env('$RUNS/env_$ds.json')" || exit 1
+for pair in xcb_xcl xcb_siglip; do for seed in 0 1 2 100 101 102; do for p in l20 m10; do
+  echo $p $ds $pair $seed; done; done; done > $RUNS/jobs_h0_$ds.txt
+setsid nohup xargs -P 24 -L 1 bash -c '
+  p=$0; ds=$1; pair=$2; seed=$3; c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+  T="--dataset $ds --pair $pair --seed $seed --features legacy"
+  if [ $p = m10 ]; then T="$T --global_mode mean --offset_lr_mult 10"; fi
+  python -m wvad.train stage1 $T --out_dir $d/h0_${p}_stage1 --record --save_epoch_ckpts > $d.h0_${p}_s1.log 2>&1 &&
+  python -m wvad.train stage2 $T --init $d/h0_${p}_stage1/ckpt_last.pt --out_dir $d/h0_$p $Z > $d.h0_$p.log 2>&1
+' < $RUNS/jobs_h0_$ds.txt > $RUNS/queue_h0_$ds.log 2>&1 &
+ls $RUNS/*/h0_{l20,m10}/selection.json | wc -l                  # 24 per batch, 48 when done, then
+pgrep -fc "wvad[.]train"                                        # 0 before the next batch / (g2)
+python tests/equivalence/check_e021_gate.py g2 --e003_runs ~/wvad_runs/e003 --e013_runs ~/wvad_runs/e013 \
+    --e017_runs ~/wvad_runs/e017 --e018_runs ~/wvad_runs/e018 --runs $RUNS     # g2 all_ok=True
+```
+Copy `$E/e021_identity.json` back and commit it. A numerical failure is not re-run; an infrastructure failure is re-run once with the same command (stage 1 again means stage 2 again).
+
+**8. Stage-1 scoring** (server, training environment): the 48 h0 runs x 30 epoch checkpoints on the earlier validation features, `d16c`, `d16r` (UCF `d16r1`, `d16r2`) and every dense snippet; the inputs of gates (s), (s2), (p). A rerun after an infrastructure failure is the same command (finished files are kept).
+```bash
+setsid nohup python -m wvad.diagnostics.e021_score --runs $RUNS --out $S --stage 1 > $S.stage1.log 2>&1 < /dev/null &
+```
+**9. Stage-1 analysis** (local): gates (a)-(h), (s), (s2), (p), (f), the extraction gates of stage 1 with the approvals and (g1), (g2), then the stage-1 verdict, flags, descriptives and the start conditions ((3) from the stage-1 throughput in the dense caches' `meta.json`). A failed gate stops before any verdict (`results/e021_stage1_gate.json`). The epoch checkpoints stay on the server (the analysis reads the score files).
+```bash
+ssh <server> 'tar -cf - --exclude="ckpt_epoch_*" -C ~/wvad_runs e021 e021_scores' | tar -xf - -C <local runs root>
+scp <server>:wvad_runs/e021_extract/gate_server.json $L/      # (x2), throughput, (x3), (x4), (x5)
+python -c "import json, sys; from wvad.extract.__main__ import merge_record; \
+[merge_record(sys.argv[1], k, v) for k, v in json.load(open(sys.argv[2], encoding='utf-8')).items()]" \
+    $E/e021_extract_gate.json $L/gate_server.json
+for ds in ucf xdv; do scp <server>:<server feature_root>/${ds}_xcb_d16/dense16/train/meta.json $L/meta_$ds.json; done
+python -m wvad.diagnostics.e021 stage1 --runs <local runs root>/e021 --scores <local runs root>/e021_scores \
+    --extract_meta $L/meta_ucf.json $L/meta_xdv.json
+git add $E && git commit                                        # e021_stage1_summary.json and its gate / runs files
+```
+**10. Start conditions** (`start_conditions` of the summary): (1) "continue", (2) every stage-1 gate passed, (3) projected stage-2 extraction <= 24 h (otherwise the user approves or stops), (4) the training-part sha256 recheck (step 11), (5) the frozen code unchanged. Stage 2 not run, or a gate that failed without being fixed, gives the final category directly (then step 17):
+```bash
+python -m wvad.diagnostics.e021 verdict --not_run gate --reason '<the failed gate>'      # 관문 실패(판정 없음)
+python -m wvad.diagnostics.e021 verdict --not_run time|videos|defect --reason '<..>'    # 보류(2단계 미실행: ..)
+python -m wvad.diagnostics.e021 verdict                         # after a stage-1 NO-GO: 1단계 NO-GO
+```
+**11. Before stage 2** (server, extraction environment, the same deploy): the training-part sha256 recheck against (x6) (checked locally: a changed file fails, 보류(2단계 미실행: 영상 불일치)) and the environment against `env_extract.json`.
+```bash
+for ds in ucf xdv; do
+  python -m wvad.extract header --dataset $ds --subset trainpart --sha_only --access_log $X/access_server.csv \
+      --out $X/recheck_$ds.csv
+done
+python -m wvad.extract gate env --out $X/env_extract_stage2.json
+python -c "import json, sys; from wvad.extract.encoders import same_environment as s; \
+assert s(json.load(open(sys.argv[1])), json.load(open(sys.argv[2]))), 'environment changed'" \
+    $E/env_extract.json $X/env_extract_stage2.json
+# local
+scp <server>:wvad_runs/e021_extract/{recheck_ucf.csv,recheck_xdv.csv,access_server.csv} $L/
+python -m wvad.extract check x6 --server $L/header_ucf.csv $L/header_xdv.csv --local $L/sha_ucf.csv \
+    $L/sha_xdv.csv --access_log $L/access_server.csv --recheck $L/recheck_ucf.csv $L/recheck_xdv.csv \
+    --out $L/x6_recheck.json --record $E/e021_extract_gate.json
+```
+**12-13. Stage-2 extraction** (server, extraction environment, same commit, environment and files): the 4,727 training-part videos, (x3) / (x4) over the whole training split, the stage-2 derived caches (`d16c`, `d16r`, `d16m`, `d16m2` with the scale match fitted on the training part; the stage-1 files kept in `stage1_val/`), (x5), the record merge (as in step 4) and the local copies of the caches.
+```bash
+nvidia-smi --query-gpu=timestamp,memory.used --format=csv -l 60 > $X/gpu_memory_trainpart.csv &
+setsid nohup bash -c "python -m wvad.extract dense --dataset ucf --phase trainpart --access_log $X/access_server.csv &&
+  python -m wvad.extract dense --dataset xdv --phase trainpart --access_log $X/access_server.csv" \
+  > $X/dense_trainpart.log 2>&1 < /dev/null &
+pgrep -fc "wvad[.]extract dense"                                # 0 when done, then
+pkill -f "nvidia-smi --query-gpu=timestamp"
+for ds in ucf xdv; do
+  for ph in val trainpart; do
+    python -m wvad.extract check x3 --dataset $ds --phase $ph --headers $X/header_ucf.csv $X/header_xdv.csv \
+        --out $X/x3_${ds}_$ph.json --record $X/gate_server.json
+    python -m wvad.extract check x4 --dataset $ds --phase $ph --env $E/env_extract.json \
+        --commit $(cat DEPLOYED_COMMIT) --out $X/x4_${ds}_$ph.json --record $X/gate_server.json
+  done
+  python -m wvad.extract derive --dataset $ds --stage 2
+  python -m wvad.extract check x5 --dataset $ds --stage 2 --out $X/x5_${ds}_2.json --record $X/gate_server.json
+done
+# local: the record merge and the cache copies
+scp <server>:wvad_runs/e021_extract/gate_server.json $L/
+python -c "import json, sys; from wvad.extract.__main__ import merge_record; \
+[merge_record(sys.argv[1], k, v) for k, v in json.load(open(sys.argv[2], encoding='utf-8')).items()]" \
+    $E/e021_extract_gate.json $L/gate_server.json
+ssh <server> 'tar -cf - -C <server feature_root> ucf_xcb_d16 ucf_xcl_d16 ucf_siglip_d16 xdv_xcb_d16 xdv_xcl_d16 \
+    xdv_siglip_d16' | tar -xf - -C <local dense copy root>
+```
+**14. Stage-2 training** (server, training environment): 144 chains (h1 and hb seeds 0-2 and 100-102, h1r and hbm seeds 0-2; both pipelines; `--features` the head's variant and `--save_epoch_ckpts` in both stages) in 6 batches of 24 (b00-b02 UCF, b03-b05 XD), each after the memory check and its environment record (the (g1) environment and commit, (g1) and (g2) passed; gate (f)).
+```bash
+export RUNS Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record --save_epoch_ckpts"
+for ds in ucf xdv; do for pair in xcb_xcl xcb_siglip; do for p in l20 m10; do
+  for h in h1 hb; do for seed in 0 1 2 100 101 102; do echo $h $p $ds $pair $seed; done; done
+  for h in h1r hbm; do for seed in 0 1 2; do echo $h $p $ds $pair $seed; done; done
+done; done; done > $RUNS/jobs_s2.txt                            # 144 lines, UCF first
+split -l 24 -d $RUNS/jobs_s2.txt $RUNS/jobs_s2_b                # jobs_s2_b00 .. jobs_s2_b05
+b=00; ds=ucf                    # then b=01 ucf, b=02 ucf, b=03 xdv, b=04 xdv, b=05 xdv, one after the other
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv && free -g
+python -c "from wvad.diagnostics.e021_gates import record_env; \
+record_env('$RUNS/env_s2_${ds}_b$b.json', ('g1', 'g2'))" || exit 1
+setsid nohup xargs -P 24 -L 1 bash -c '
+  h=$0; p=$1; ds=$2; pair=$3; seed=$4; c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+  case $h in h1) f=d16c;; h1r) f=d16r;; hb) f=d16m;; hbm) f=d16m2;; esac
+  T="--dataset $ds --pair $pair --seed $seed --features $f"
+  if [ $p = m10 ]; then T="$T --global_mode mean --offset_lr_mult 10"; fi
+  python -m wvad.train stage1 $T --out_dir $d/${h}_${p}_stage1 --record --save_epoch_ckpts > $d.${h}_${p}_s1.log 2>&1 &&
+  python -m wvad.train stage2 $T --init $d/${h}_${p}_stage1/ckpt_last.pt --out_dir $d/${h}_$p $Z > $d.${h}_$p.log 2>&1
+' < $RUNS/jobs_s2_b$b > $RUNS/queue_s2_b$b.log 2>&1 &
+pgrep -fc "wvad[.]train"                                        # 0 before the next batch
+ls $RUNS/*/{h1,h1r,hb,hbm}_{l20,m10}/selection.json | wc -l      # 144 after the last batch
+```
+**15. Stage-2 scoring** (server): the 144 runs on their own 32-unit features and (h1, hb, hbm) every dense snippet (hb, hbm through their scale-match maps, with the (s3) input).
+```bash
+setsid nohup python -m wvad.diagnostics.e021_score --runs $RUNS --out $S --stage 2 > $S.stage2.log 2>&1 < /dev/null &
+```
+**16. Final analysis** (local): the gates of both stages (and (s3)), then the final verdict (C; readout sensitivity, extreme-readout flag, tags of approximate equivalence and approved decoding exceptions), flags and descriptives: `results/e021_gate.json`, `e021_runs.csv`, `e021_verdict.json`.
+```bash
+ssh <server> 'tar -cf - --exclude="ckpt_epoch_*" -C ~/wvad_runs e021 e021_scores' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e021 verdict --runs <local runs root>/e021 --scores <local runs root>/e021_scores
+```
+**17. Verdict file, then the temporal-annotation diagnostics once** (`describe` runs only when `results/e021_verdict.json` is committed unmodified; it records the file's sha256 at its start and end). The access log, the header sha256 lists and the batch environment records are kept with the results. After a hold or no-verdict category, the user's option and whether it came before or after `describe` are appended to the verdict file (`choice`).
+```bash
+scp <server>:wvad_runs/e021_extract/access_server.csv $E/e021_video_access.csv
+scp <server>:wvad_runs/e021_extract/gpu_memory_{val,trainpart}.csv $E/      # extraction memory (descriptive 5)
+scp <server>:wvad_runs/e021/env_*.json $E/ && cp $L/header_ucf.csv $L/header_xdv.csv $E/
+git add $E && git commit                                        # e021_verdict.json first
+python -m wvad.diagnostics.e021 describe --runs <local runs root>/e021 --scores <local runs root>/e021_scores
+git add $E/e021_describe.json && git commit
+python -m wvad.diagnostics.e021 choice --option i|ii|iii|iv --quote '<the user's words>'   # hold / no verdict only
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
