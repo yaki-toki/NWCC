@@ -2382,5 +2382,16 @@
     "status": "pass"
    }
   }
+ },
+ "x6_final": {
+  "server_files": 5560,
+  "sha_mismatch": [],
+  "outside_training_manifest": 0,
+  "opened_without_sha": 0,
+  "status": "pass",
+  "recheck": {
+   "files": 4727,
+   "changed": []
+  }
  }
 }
