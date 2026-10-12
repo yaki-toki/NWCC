@@ -1,0 +1,41 @@
+{
+ "torch": "2.5.1+cu124",
+ "cuda": "12.4",
+ "gpu": "NVIDIA H100 80GB HBM3",
+ "driver": "580.126.20",
+ "commit": "f8b12e2f79c37ea6b698225cf87fb56843283ee7",
+ "code": {
+  "commit": "f8b12e2f79c37ea6b698225cf87fb56843283ee7",
+  "source": "deployed",
+  "dirty": null
+ },
+ "train_inputs": {
+  "ucf_xcb_d16/d16m/mil/train/data.pt": "9aa791a18658c180c0f49774c74e66f35abea4494e09c642baba8866e5386a80",
+  "ucf_xcb_d16/d16c/mil/train/data.pt": "d69e6815fb041582ce005fc5fd4c66362dbb8764a98018f6b419cd4a81a16ce2",
+  "ucf_xcl_d16/d16m/mil/train/data.pt": "5f54a0f2f88e06ad5fb2c1455d759051abce4b808127dd9bee711004a668852c",
+  "ucf_xcl_d16/d16c/mil/train/data.pt": "6d8c29aa6af8ac08b06fb7a92d863a769bd5a3e67d0ecb776cb43e542095bf11",
+  "ucf_siglip_d16/d16m/mil/train/data.pt": "b656c6515a2041cace953da7b5700618f55ceeda291a5bebd18c20304d61724e",
+  "ucf_siglip_d16/d16c/mil/train/data.pt": "889f2b995d868156989f462b5bfe241bc66ec124ca4d0be754e81d2259a670a1",
+  "xdv_xcb_d16/d16m/mil/train/data.pt": "f5707b8aab571a3c51842a7351d420e075da854441e5334e3c3843e6b55da69b",
+  "xdv_xcb_d16/d16c/mil/train/data.pt": "b302a13adf7f5bb349a6e9b3613e31872b4c5232fd54176320c35be21d4d72c5",
+  "xdv_xcl_d16/d16m/mil/train/data.pt": "96a034e66af1b7c05e9a0713aa1aa4c4fe15639d681538f9e338a6fa98b26f21",
+  "xdv_xcl_d16/d16c/mil/train/data.pt": "1cd6baaac06e8a9a0a8bf878e36fdf0076bffc2a01d57c309d6aec03a3b1e2b9",
+  "xdv_siglip_d16/d16m/mil/train/data.pt": "1e829233fad03eed35165a800fa10a037b0b541990f9cd44567ed96f35f22f40",
+  "xdv_siglip_d16/d16c/mil/train/data.pt": "f643e64372a29060afab2f6abe496cf1d2f3e355bed81833d895d736a6843a09"
+ },
+ "inputs_check": {
+  "gate": "f",
+  "checked": 12,
+  "missing": [],
+  "different": [],
+  "ok": true
+ },
+ "want": {
+  "torch": "2.5.1+cu124",
+  "cuda": "12.4",
+  "gpu": "NVIDIA H100 80GB HBM3",
+  "driver": "580.126.20"
+ },
+ "env_differences": [],
+ "utc": "2026-10-12T14:48:50+00:00"
+}
