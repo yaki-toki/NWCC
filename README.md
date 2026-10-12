@@ -938,6 +938,189 @@ git add $E/e021_describe.json && git commit
 python -m wvad.diagnostics.e021 choice --option i|ii|iii|iv --quote '<the user's words>'   # hold / no verdict only
 ```
 
+### Stage F — E022 dense confirmation ([plan](experiments/E022_dense_confirmation/PLAN.md))
+Pre-registered confirmation of E021's dense pipeline C (HB on `d16m`, W-readout checkpoint, snippet logits z + c(v) over the snippet supports) against the M10 baseline R0 (the E020 m10 chains, D2 (a)) on the test set: the second, non-independent test read, approved as an exception to roadmap principle 1 (D1). Decomposition arms R1, B, A1.S and the variants C.W, C.G, C.last, C.o32; the 10 confirmation seeds; UCF frame AUC / XD frame AP, alpha 0.01 with Holm. Code rule 0: no file of `src/` at `7b43cca5` is changed (add-only rule); the fixed server code is `src/wvad/{extract/testsplit,data/dense_test,diagnostics/e022_score,diagnostics/e022_gates}.py`. The test set is read only in the accesses (0), (A), (B), (C), (D), each logged; scores, caches and logs stay outside the repository; `results/` (below `$E`) gets the records.
+```bash
+E=experiments/E022_dense_confirmation/results       # both machines (repository / deploy root)
+L=<local runs root>/e022_local                      # local records outside the repository
+RUNS=~/wvad_runs/e022; S=~/wvad_runs/e022_scores; X=~/wvad_runs/e022_extract   # server
+LOG=~/wvad_runs/e022/test_access.log                # the server's test access log
+EXTRACT_ENV="conda activate wvad-extract && export PYTHONPATH=src HF_HUB_OFFLINE=1 KMP_DUPLICATE_LIB_OK=TRUE"   # E021 step 4
+TRAIN_ENV="conda activate sear && export PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE"   # the server's training conda environment, sear (E021 trained with ~/miniconda3/envs/sear/bin on the PATH)
+FREEZE=<the freeze commit>; SEL=<sha256 of the committed results/e022_selection.json>   # once known
+```
+Every server command below runs in `~/frozen-vlm-wvad` with `export PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE` in the training environment, except the `wvad.extract*` commands that decode video or load an encoder (`$EXTRACT_ENV`). Start a server session with `eval "$TRAIN_ENV"`; the switches `eval "$EXTRACT_ENV"` and `eval "$TRAIN_ENV"` are lines of their own in the current shell, never the head of a `... &&` chain that is sent to the background (a background chain runs in a subshell and the switch is lost for the commands after it). Each switch activates its environment by name, so it does not depend on the environment the shell started in. Unit-test records use the local GPU machine (no skipped CUDA test) and `WVAD_LEGACY_REPO=<previous project>`.
+
+**1-2. Decisions, implementation, review** (local): the user decisions D1-D12 are in PLAN.md "사용자 결정 기록"; the reviewed code passes `pytest tests` and `ruff check .`.
+
+**3. Before the freeze** (3a and 3c are no test access; 3b is test access (0)). Three commits (PLAN.md 고정 규칙): (1) the plan, the code and this README, deployed (its code writes the records); (2) the records commit with the pre-freeze records below; (3) the freeze commit (step 4). Commit and deploy (1) (server conventions), then:
+```bash
+git add experiments/E022_dense_confirmation src README.md && git commit
+git archive --format=tar HEAD | ssh <server> 'mkdir -p ~/frozen-vlm-wvad && tar -x -C ~/frozen-vlm-wvad'
+git rev-parse HEAD | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_COMMIT'
+mkdir -p $L && ssh <server> mkdir -p wvad_runs/e022 wvad_runs/e022_extract
+# 3a (server): sha256 of the 42 E021 training inputs, the 6 scale maps, the gate (c) configs
+python -m wvad.extract.testsplit inputs --out $RUNS/e022_train_inputs.json --e021_runs ~/wvad_runs/e021
+# 3b, access (0) (server): the annotation files must be under the server's raw_video_root (copy them
+# from the local root if missing: bytes only); the local file listing (names only) goes with it
+python -c "from wvad.extract.testsplit import list_files; from wvad.paths import load_paths; \
+r = load_paths().video_root(); print('\n'.join(sorted(list_files(r, 'Anomaly-Detection-Dataset') \
+| list_files(r, 'XD-Violence/test'))))" > $L/listing_local.txt
+scp $L/listing_local.txt <server>:wvad_runs/e022/
+python -m wvad.extract.testsplit check --test_log $LOG --out $RUNS/access0.json \
+    --listing $RUNS/listing_local.txt --e020_runs ~/wvad_runs/e020 --e020_scores ~/wvad_runs/e020_scores
+# 3c (server): the environment records (extraction venv; training environment with its driver)
+eval "$EXTRACT_ENV"
+python -m wvad.extract gate env --out $RUNS/env_extract_prefreeze.json
+eval "$TRAIN_ENV"
+python -c "import json; from wvad.diagnostics.common import gpu_environment, code_version; \
+print(json.dumps({**gpu_environment(), 'commit': code_version()['commit']}))" > $RUNS/env_train_prefreeze.json
+# local: copy the records, the tests/ record and the driver comparison, the access-log copy
+scp <server>:wvad_runs/e022/{e022_train_inputs.json,access0.json,env_extract_prefreeze.json,env_train_prefreeze.json} $L/
+scp <server>:wvad_runs/e022/test_access.log $L/test_access_server.log
+cp $L/e022_train_inputs.json $E/
+pytest tests --junitxml=$L/prefreeze_pytest.xml
+python -m wvad.diagnostics.e022 prefreeze --junit $L/prefreeze_pytest.xml --env_train $L/env_train_prefreeze.json \
+    --env_extract $L/env_extract_prefreeze.json     # a driver other than 580.126.20: tell the user, record it
+python -m wvad.diagnostics.e022 log $L/test_access_server.log      # -> $E/e022_test_access.log
+git add $E/e022_train_inputs.json && git add -f $E/e022_test_access.log && git commit     # (2) records
+```
+The records commit sits on the plan-and-code commit, whose code wrote them; the freeze commit follows it.
+
+**4. Freeze**: `PLAN.sha256` = sha256 of `PLAN.md` before `## 변경 기록`; `freeze` refuses unless `PLAN.md` is committed unmodified and the tracked tree is clean. The commit adding `PLAN.sha256` alone is the freeze commit (every later extraction, training, scoring and analysis commit is it or a descendant); `analyze` checks that it changes `PLAN.sha256` only and that its parent tree holds the plan, the E022 code, this README and the records of step 3.
+```bash
+python -m wvad.diagnostics.e022 freeze
+git add experiments/E022_dense_confirmation/PLAN.sha256 && git commit
+FREEZE=$(git rev-parse HEAD)
+```
+**5. Record notes** (documents only): append the D1 and D12 decisions (their words) and the freeze commit to the change log of `experiments/E021_dense_snippet_pilot/PLAN.md` and commit it; annotate the ROADMAP lines of principle 1, F1 and E3 with "E022: 원칙 1·2 예외, 사용자 결정 D1·D12 원문, 고정 커밋 <FREEZE>" (`docs/` is git-ignored: local only).
+
+**Deploys** (each server step below runs on the freeze commit or a descendant that holds the records it checks; a deployed copy has no git, so its descent travels as the commit objects):
+```bash
+git archive --format=tar HEAD | ssh <server> 'mkdir -p ~/frozen-vlm-wvad && tar -x -C ~/frozen-vlm-wvad'
+git rev-parse HEAD | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_COMMIT'
+python -c "import json; from wvad.data.dense_test import write_lineage; print(json.dumps(write_lineage('$FREEZE')))" \
+    | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_LINEAGE.json'
+```
+**6. Training** (server, after a deploy of the freeze commit; no test data): 80 chains (HB on `d16m`, H1 on `d16c`; M10; `--save_epoch_ckpts` in both stages), 24 at a time after the memory check; each batch starts only if its environment record passes (gate (f): E021's training environment, a different driver alone recorded, the `d16m` / `d16c` training caches equal to the committed record); when gate (f) refuses, the block prints the refusal and starts nothing, and the shell stays open. Watch only the `selection.json` count and the process count. An infrastructure failure is re-run once with the same command (stage 1 again means stage 2 again).
+```bash
+export RUNS Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record --save_epoch_ckpts"
+for ds in ucf xdv; do for pair in xcb_xcl xcb_siglip; do for seed in 42 123 777 1000 2025 7 13 99 555 31337; do
+  for h in hb h1; do echo $h $ds $pair $seed; done; done; done; done > $RUNS/jobs.txt       # 80 lines
+split -l 24 -d $RUNS/jobs.txt $RUNS/jobs_b                      # jobs_b00 .. jobs_b03
+b=00                                                            # then 01, 02, 03, one after the other
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv && free -g
+if python -m wvad.diagnostics.e022_score env --out $RUNS/env_e022_b$b.json     # gate (f)
+then
+  setsid nohup xargs -P 24 -L 1 bash -c '
+    h=$0; ds=$1; pair=$2; seed=$3; c=${ds}_${pair}_s${seed}; d=$RUNS/$c; mkdir -p $d
+    case $h in hb) f=d16m;; h1) f=d16c;; esac
+    T="--dataset $ds --pair $pair --seed $seed --features $f --global_mode mean --offset_lr_mult 10"
+    python -m wvad.train stage1 $T --out_dir $d/${h}_m10_stage1 --record --save_epoch_ckpts > $d.${h}_m10_s1.log 2>&1 &&
+    python -m wvad.train stage2 $T --init $d/${h}_m10_stage1/ckpt_last.pt --out_dir $d/${h}_m10 $Z > $d.${h}_m10.log 2>&1
+  ' < $RUNS/jobs_b$b > $RUNS/queue_b$b.log 2>&1 &
+else
+  echo "batch $b refused by gate (f): not started; fix the cause, then repeat this batch"
+fi
+ls $RUNS/*/{hb,h1}_m10/selection.json | wc -l                   # 80 after the last batch
+pgrep -fc "wvad[.]train"                                        # 0 before the next batch
+```
+**7. Validation dense scoring, selection, gates** (no test video is opened before this commit). The server scores every epoch checkpoint on its own 32-unit validation features and every validation dense snippet (HB through the E021 `d16m` maps, and HB's (s3) input), after checking the E021 training inputs (gate (p)), and records the E020 m10 chain hashes (gate (r0)); a rerun keeps finished files, `--rescore '<reason>'` moves `val/` aside, `--infra_failed <chain>/<head>_m10 ...` names runs whose rerun also failed. Locally, `select` writes `results/e022_selection.json` (W / G full-validation V-AUC, earliest epoch on ties, checkpoint sha256) and `gates --stage train` checks (a)-(g), (f), (r0), (s), (s3), (p), (w), (w2) into `results/e022_gate.json` (written also on a failure); (r0) also checks the local E020 copy the analysis reads (`--e020_runs`: both histories of every m10 chain parse, the chain files have the access (0) sha256), so a wrong path fails there. A chain dropped after a gate failure that cannot be fixed (PLAN.md failure rules) is named with `--gate_failed <chain>/<head>_m10 ...` here, and the same list is given in `gates --stage v3` (step 11) and in `analyze` (step 12): left out of the gates, recorded, its seeds counted as dropped for a reason other than the treatment. Steps 11 and 12 refuse unless that list is exactly the one recorded here (`train.gate_failed` of the committed gate record; a logged "refused" line at step 11), so no run is dropped, or taken back, once test scores exist; for the same reason `gates --stage train` runs only before the first test read: it is refused, the gate record untouched, once `results/e022_gate.json` holds a (v), (v2), (v3) or (s3t) section or the committed `results/e022_test_access.log` (or the local log given with `--test_log`) has an (A)-(D) line (access (0) lines do not count), so the list cannot be rewritten after a (v3) / (s3t) failure. Commit both: the selection is fixed by this commit (a selection defect found before step 8: fix, score again with `--rescore`, select and commit again, (w) and (w2) again; after step 8 began: stop and report).
+```bash
+setsid nohup python -m wvad.diagnostics.e022_score score --split val --runs_root $RUNS --out $S \
+    --e020_runs ~/wvad_runs/e020 > $S.val.log 2>&1 < /dev/null &
+# local
+ssh <server> 'tar -cf - --exclude="ckpt_epoch_*" -C ~/wvad_runs e022 e022_scores/val' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e022_score select --scores <local runs root>/e022_scores
+pytest tests --junitxml=$L/gates_pytest.xml
+python -m wvad.diagnostics.e022 gates --stage train --runs <local runs root>/e022 \
+    --scores <local runs root>/e022_scores --e021_runs <local runs root>/e021 \
+    --e020_runs <local runs root>/e020 --junit $L/gates_pytest.xml
+cp <local runs root>/e022/env_e022_b*.json $E/
+git add $E/e022_selection.json $E/e022_gate.json $E/env_e022_b*.json && git commit
+SEL=$(sha256sum $E/e022_selection.json | cut -d' ' -f1)          # also set on the server
+```
+**8. Test access (A) begins** (deploy this commit). Every `testsplit` command and `extract-gates` checks the access device (descent from `--freeze_commit`, the frozen plan hash, the D1 approval, the test manifests and annotations, the earlier test caches' sha256, the committed selection's sha256; `dense` and `derive` also the E021 training inputs at their start and end) and logs "start" / "end" (or "refused" / "error") lines. (y1) environment, (y3) headers (no decoding; |ΔT| <= 16 or stop), (y2) the E021 throughput sample re-extracted by the production call into a scratch folder (its own access CSV `$X/y2_access.csv`, command `e022-y2`). The production extraction of step 9 refuses (a logged "refused" line, no test video opened) unless `$X/gate_server.json` shows (y2) for every encoder and (y3) passed for each dataset and its own environment passes (y1) (a different driver alone passes; (y2) decides), or the user approved the exception in the committed `results/e022_approvals.json` (a file that exists only for an approved exception: commit it and deploy again before step 9):
+```bash
+A="--test_log $LOG --record $X/gate_server.json --selection_sha256 $SEL --freeze_commit $FREEZE"
+eval "$EXTRACT_ENV"
+python -m wvad.extract gate env --out $X/env_extract_test.json                               # (y1)
+python -m wvad.extract.testsplit header $A --video_log $X/video_access.csv --out $X/header_test.csv
+python -m wvad.extract.testsplit dense $A --video_log $X/video_access.csv --access_log $X/y2_access.csv \
+    --repro $X/y2                                                                          # (y2)
+# local (y7): the local copies' sha256 (bytes only)
+python -m wvad.extract.testsplit header --sha_only --test_log $L/test_access_local.log \
+    --video_log $L/video_access_local.csv --out $L/sha_test.csv --selection_sha256 $SEL
+```
+**9. Production extraction, derived test caches, extraction gates** (server). The 1,090 test videos into `<feature_root>/<dataset>_<encoder>_d16_test/` (phase `sample`, command `e022-test-dense`, the commit mapping with `split: "test"`; finished videos are kept on a resume with the same command), then the derived `d16c` / `d16m` test caches with the E021 `d16m` maps and descriptive 11, then (y4)-(y6) on the stores and descriptive 9 (training environment). Locally the record is merged and (t), (y0)-(y7) are evaluated into `results/e022_extract_gate.json` (key `gates`; user-approved exceptions of (y1)-(y4) are read from `results/e022_approvals.json`, a file that exists only if the user approved one: `{"y4": {"decision": "<the user's words>", "videos": [..], "date": ..}}`); commit it with the access records (`e022_video_access.csv` the opened files, `e022_extract_access.csv` the frozen extraction's CSV, `e022_y2_access.csv` the (y2) re-extraction's CSV, `env_extract_test.json`, and `e022_approvals.json` if any).
+```bash
+eval "$EXTRACT_ENV"                                             # a line of its own: the job below inherits it
+setsid nohup python -m wvad.extract.testsplit dense $A --video_log $X/video_access.csv \
+    --access_log $X/extract_access.csv > $X/dense_test.log 2>&1 < /dev/null &
+pgrep -fc "wvad[.]extract[.]testsplit"                          # 0 when done (the log ends with a summary)
+python -m wvad.extract.testsplit derive $A
+# the training environment (the server gates import the scoring code): (y4)-(y6), descriptive 9
+eval "$TRAIN_ENV"
+python -m wvad.diagnostics.e022_score extract-gates --test_log $LOG --record $X/gate_server.json \
+    --headers $X/header_test.csv --env $X/env_extract_test.json --selection_sha256 $SEL --freeze_commit $FREEZE
+# local
+scp <server>:wvad_runs/e022_extract/{gate_server.json,header_test.csv,video_access.csv,extract_access.csv,y2_access.csv,env_extract_test.json} $L/
+python -c "import json, sys; from wvad.extract.testsplit import merge_record; \
+[merge_record(sys.argv[1], k, v) for k, v in json.load(open(sys.argv[2], encoding='utf-8')).items()]" \
+    $E/e022_extract_gate.json $L/gate_server.json
+cp $L/video_access.csv $E/e022_video_access.csv && cp $L/extract_access.csv $E/e022_extract_access.csv
+cp $L/y2_access.csv $E/e022_y2_access.csv && cp $L/env_extract_test.json $E/
+pytest tests --junitxml=$L/y0_pytest.xml
+python -m wvad.diagnostics.e022 gates --stage extract --headers $L/header_test.csv \
+    --video_access $E/e022_video_access.csv --extract_access $E/e022_extract_access.csv \
+    --local_sha $L/sha_test.csv --junit $L/y0_pytest.xml --env_extract $E/env_extract_test.json
+scp <server>:wvad_runs/e022/test_access.log $L/test_access_server.log
+python -m wvad.diagnostics.e022 log $L/test_access_local.log $L/test_access_server.log
+git add $E/e022_extract_gate.json $E/e022_video_access.csv $E/e022_extract_access.csv $E/e022_y2_access.csv \
+    $E/env_extract_test.json
+[ -f $E/e022_approvals.json ] && git add $E/e022_approvals.json    # only if the user approved an exception
+git add -f $E/e022_test_access.log && git commit
+```
+A failed (y2), (y3) or (y4), or a video that cannot be opened: stop and report (PLAN.md); with the user's approval written to `results/e022_approvals.json`, `gates --stage extract` again.
+
+**10. Scoring 1, access (B)** (deploy this commit; R0 only): the E020 m10 checkpoints (best, last; their sha256 those of the committed selection) on the earlier test caches by path (i) (GPU, fp32, batch 32), then locally gates (v) (against the E020 m10 score files, sha256-checked, and `e020_runs.csv`: bit-equal "pass_bit", else within the tolerances "pass_tolerance"; each R0 file bound to the call that wrote it) and (v2) into `results/e022_gate.json`; they read test scores and intervals, so they are part of access (B): they run from a clean working tree (an unclean one is refused with a logged "refused" line) and log "start" / "end" lines in the local access log; commit it, passed or failed. If (v) fails, scoring 2 is not run (PLAN.md): a metric fix is local (score files unchanged); a forward-path fix of `e022_score.py` (exception 1) is deployed and R0 scored once more with `--rescore '<reason>'`, then (v) again. `analyze` accepts that changed code only if the last gates (v) call before the re-read ended with (v) failed.
+```bash
+setsid nohup python -m wvad.diagnostics.e022_score score --split test --cells r0 --runs_root $RUNS --out $S \
+    --e020_runs ~/wvad_runs/e020 --test_log $LOG --selection_sha256 $SEL --freeze_commit $FREEZE \
+    > $S.r0.log 2>&1 < /dev/null &
+# local
+ssh <server> 'tar -cf - -C ~/wvad_runs e022_scores/test' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e022 gates --stage v --scores <local runs root>/e022_scores \
+    --e020_scores <local runs root>/e020_scores --test_log $L/test_access_local.log
+scp <server>:wvad_runs/e022/test_access.log $L/test_access_server.log
+python -m wvad.diagnostics.e022 log $L/test_access_local.log $L/test_access_server.log
+git add $E/e022_gate.json && git add -f $E/e022_test_access.log && git commit
+```
+**11. Scoring 2, access (C)** (deploy this commit), once: C, C.G, C.last, B, R1 (best, last), A1.S, with C's test `d16m` 32-unit logits and the (s3t) input; refused unless the committed gate record shows (v) passed and the committed extraction record's test-cache sha256 equal the live files (access device 7), and the E021 training inputs are checked at its start and end (8). Before any metric, locally gates (v3) (structure, names and order; non-finite values counted only: numerical failure; each score file bound to the call that wrote it, its meta records every file's sha256 right after writing it) and (s3t), part of access (C) with its own log lines, from a clean working tree (an unclean one is refused); the files of `--gate_failed <chain>/<head>_m10 ...` chains (exactly step 7's list, else a logged "refused" line; scored too, then dropped) are left out of both gates and recorded, so a failure confined to a dropped chain does not stop E022; commit the gate record, the score sha256 list and the access log. An infrastructure failure: `--rescore '<reason>' --missing_only` (absent, unreadable or unrecorded files only). (v3) / (s3t) failing for a writing or indexing reason of `e022_score.py` (exception 2): fix, deploy, `--rescore '<reason>' --runs <chain>/<arm> ...` (the affected runs, the same checkpoints), then the unit tests and (v3), (s3t) again; any other cause: stop and report. A re-read on another deployed commit is surfaced by (v3) (`commit_changed`); `analyze` accepts changed fixed code only as exception 1 or 2 (e022_score.py alone, from that re-read on; exception 2 only if the last gates (v3) call before the re-read ended with (v3) or (s3t) failed) with `--allow_code_change '<reason>'`.
+```bash
+setsid nohup python -m wvad.diagnostics.e022_score score --split test --cells c r1 b a1s --runs_root $RUNS \
+    --out $S --e020_runs ~/wvad_runs/e020 --test_log $LOG --selection_sha256 $SEL --freeze_commit $FREEZE \
+    > $S.scoring2.log 2>&1 < /dev/null &
+# local
+ssh <server> 'tar -cf - -C ~/wvad_runs e022_scores/test' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e022 gates --stage v3 --scores <local runs root>/e022_scores \
+    --test_log $L/test_access_local.log          # + --gate_failed <chain>/<head>_m10 ... = step 7's list, if it dropped chains
+cp <local runs root>/e022_scores/test/scores.sha256 $E/e022_test_scores.sha256
+scp <server>:wvad_runs/e022/test_access.log $L/test_access_server.log
+python -m wvad.diagnostics.e022 log $L/test_access_local.log $L/test_access_server.log
+git add $E/e022_gate.json $E/e022_test_scores.sha256 && git add -f $E/e022_test_access.log && git commit
+```
+**12. Analysis, access (D)** (local, clean working tree, once): the seal history and `--gate_failed` (exactly step 7's list, else the command is refused before anything is read and the once-only analysis stays unused), then the (D) start line before any test score or interval is read, the committed records ((v3) / (s3t) passed, the score sha256 list equal to the copy's), every gate again with the access log ((v3) / (s3t) without the `--gate_failed` chains; each test call from committed code (no logged unclean tree) on the freeze commit or a descendant, the frozen plan hash and fixed code, extraction before scoring 1, R0 in full at most twice, scoring 2 once, (v) and (v3) logged, every (A)-(C) read before the first (D)), then the verdict, flags, condition (2), decomposition and descriptives: `results/e022_summary.json` (verdict first), `results/e022_runs.csv`. A run left out of its rule (numerical, infrastructure or `--gate_failed` gate failure) enters no metric, and the score files of the `--gate_failed` runs are not opened (a wrong video order or an absent file there, which (v3) left out too, does not stop the analysis). The E020 l20 / base score files (D7 (a)) are sha256-checked before they are read. Files under `src/` or `data/manifests/` changed since the freeze stop it unless `--allow_code_change '<reason>'` (the reason also in the plan's change log); a second run (a summary, complete or not, or an earlier (D) start line) needs `--recompute '<reason>'` (PLAN.md code rules).
+```bash
+pytest tests --junitxml=$L/analysis_pytest.xml
+python -m wvad.diagnostics.e022 analyze --runs <local runs root>/e022 --scores <local runs root>/e022_scores \
+    --e021_runs <local runs root>/e021 --e020_runs <local runs root>/e020 --e020_scores <local runs root>/e020_scores \
+    --junit $L/analysis_pytest.xml --test_log $L/test_access_local.log      # + --gate_failed ... as in step 11
+python -m wvad.diagnostics.e022 log $L/test_access_local.log $L/test_access_server.log
+git add $E/e022_summary.json $E/e022_runs.csv $E/e022_gate.json && git add -f $E/e022_test_access.log && git commit
+```
+Then `REPORT.md` (whatever the result; the second read, the post-hoc direction and every raised flag are reported).
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
