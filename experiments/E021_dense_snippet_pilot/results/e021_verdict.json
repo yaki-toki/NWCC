@@ -39248,5 +39248,14 @@
     }
    }
   }
- }
+ },
+ "user_choices": [
+  {
+   "option": "i",
+   "user_words": "(i) \ud655\uc778 \uacc4\ud68d \uc791\uc131 (\ucd94\ucc9c, Jev 0.92)",
+   "time_utc": "2026-10-12T04:27:00+00:00",
+   "after_describe": true,
+   "verdict_sha256_before_this_entry": "7d9d849e6ca5d649d9d053a374c16928cab970fbe17502f9d0ec083fc86d5b51"
+  }
+ ]
 }
