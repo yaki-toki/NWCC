@@ -1,0 +1,68 @@
+{
+ "check": "E023 (3a) licences",
+ "utc": "2026-10-19T08:16:35+00:00",
+ "local_clone_root": "outside the repository (not recorded as a path)",
+ "repos": {
+  "mil": {
+   "url": "https://github.com/WaqasSultani/AnomalyDetectionCVPR2018",
+   "role": "main family",
+   "commit": "8aa957cdaa7eac821e07115fe63920c3b07da59d",
+   "commit_date": "2023-01-12",
+   "licence_file": null,
+   "licence_sha256": null,
+   "licence_type": "none detected (no LICENSE file in the repository)",
+   "port": "re-implementation; official code used only outside the repository for equivalence checks"
+  },
+  "rtfm": {
+   "url": "https://github.com/tianyu0207/RTFM",
+   "role": "main family",
+   "commit": "cf938f4c38c908ba19936ecfc60d54de7da0d8b9",
+   "commit_date": "2025-10-28",
+   "licence_file": null,
+   "licence_sha256": null,
+   "licence_type": "none detected (no LICENSE file in the repository)",
+   "port": "re-implementation; official code used only outside the repository for equivalence checks"
+  },
+  "urdmu": {
+   "url": "https://github.com/henrryzh1/UR-DMU",
+   "role": "main family",
+   "commit": "40cfdf5f8bebbc3b59373935f9d6ca00e2f32bbc",
+   "commit_date": "2025-01-06",
+   "licence_file": "LICENSE",
+   "licence_sha256": "c658ad8c9781a8e1c7dd0e149a0ecf886ca888e7322cf302d1ce8a0c6aceab99",
+   "licence_type": "MIT",
+   "port": "copy with attribution (permissive licence)"
+  },
+  "vcv": {
+   "url": "https://github.com/nwpu-zxr/VadCLIP",
+   "role": "main family (visual branch only)",
+   "commit": "c41067f07d252efcda18008bea367886070c33b0",
+   "commit_date": "2024-03-10",
+   "licence_file": "LICENSE",
+   "licence_sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6",
+   "licence_type": "Apache-2.0",
+   "port": "copy with attribution (permissive licence)"
+  },
+  "mgfn": {
+   "url": "https://github.com/carolchenyx/MGFN.",
+   "role": "replacement for RTFM",
+   "commit": "98e9389e7f7f52aad401c81457fc286653de9990",
+   "commit_date": "2023-04-19",
+   "licence_file": null,
+   "licence_sha256": null,
+   "licence_type": "none detected (no LICENSE file in the repository)",
+   "port": "re-implementation; official code used only outside the repository for equivalence checks"
+  },
+  "clip_tsa": {
+   "url": "https://github.com/joos2010kj/CLIP-TSA",
+   "role": "replacement for VCV",
+   "commit": "a58353c48c22ba8973e5c180ac799efa3af2e8ea",
+   "commit_date": "2024-07-13",
+   "licence_file": null,
+   "licence_sha256": null,
+   "licence_type": "none detected (no LICENSE file in the repository)",
+   "port": "re-implementation; official code used only outside the repository for equivalence checks"
+  }
+ },
+ "note": "D3 was answered on 2026-10-19 without this licence result (plan record E5-1); the D3 answer stands."
+}
