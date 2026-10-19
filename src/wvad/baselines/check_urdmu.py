@@ -44,7 +44,8 @@ audit hook lists every file the official and port runs open ("blocked" patterns 
       sampler from the same seed: the video positions, labels and the generator state afterwards,
       bit for bit; the official window boundaries (UCF get_data, XD random_perturb) equal
       derive_n.linspace_bounds (exact means, or for long videos the boundaries recovered from
-      the float32-rounded means); the official float32 window means against derive_n (reported).
+      the float32-rounded means); the official float32 window means equal derive_n's stored
+      rows bit for bit (part of the pass since PLAN.md 기록 2026-10-20, choice A).
 (q1e) ``q1e(device)``: the official test functions (ucf_test.py / xd_test.py ``test``, their own
       crop loop: UCF 10 items, XD batches of 5, one crop here) on the same weights, eval mode,
       fp32, against common.score_video (lengths below and above the unit and N_chunk, the last
@@ -61,9 +62,10 @@ audit hook lists every file the official and port runs open ("blocked" patterns 
       test block -> the harness's validation at the 30 evaluation points, isolated generators),
       harness_io (the hook import, the final weights). Inputs (``mode``): "snippets" (default,
       the gate of record, PLAN.md 기록 2026-10-19) - the processed snippets (the variant's scale
-      map per snippet), the official code makes the windows (float32 means: ULP differences, so
-      the numeric rule of R3-6 decides when bits differ; a failure is reported, never answered
-      by switching the mode); "port_rows" (extra evidence) - the port's own 200-row training
+      map per snippet), the official code makes the windows (float32 means; derive_n stores
+      those windows bit for bit, PLAN.md 기록 2026-10-20 choice A, so bit equality is expected;
+      otherwise the numeric rule of R3-6 decides, a failure is reported, never answered by
+      switching the mode); "port_rows" (extra evidence) - the port's own 200-row training
       inputs as the official files (the official 200-window mean of 200 rows is the identity,
       checked), the bit path. The record (<work>/record.json) has the plan sha256, the commit,
       the official file hashes, the edits and diff sha256, the stand-ins (einops real
@@ -899,7 +901,8 @@ def _window_check(official: types.ModuleType, tree: Tree, dataset: str, wl: Sequ
 
 def _means_check(official: types.ModuleType, tree: Tree, dataset: str,
                  mrows: Sequence[np.ndarray], unit: int) -> dict:
-    """Official float32 window means against derive_n's (float64 means -> float32)."""
+    """Official float32 window means against derive_n's stored training rows (the official
+    float32 numpy mean, derive_n.training_rows; bit equality expected)."""
     from wvad.extract import derive_n
 
     spec = derive_n.variant_spec(f"d16m{unit}r")
@@ -908,7 +911,7 @@ def _means_check(official: types.ModuleType, tree: Tree, dataset: str,
         with _cwd(tree.root):
             mds = _official_dataset(off, dataset, is_normal=False, dim=mrows[0].shape[1])
         for i, p in enumerate(tree.order):
-            want = derive_n.variant_rows(mrows[p], 16 * len(mrows[p]), spec)
+            want = derive_n.training_rows(mrows[p], 16 * len(mrows[p]), spec, None)
             out[str(len(mrows[p]))] = compare(mds.get_data(i)[0], want)
     return out
 
@@ -950,7 +953,9 @@ def q1c(official: types.ModuleType, dataset: str, labels: Sequence[int],
                                                             strict=True)) if a != b), None)
     bounds_ok = all(windows["rows"].values())
     perturb_ok = all(windows["perturb"].values()) if windows["perturb"] else None
-    ok = first_bad is None and state_equal and bounds_ok and (dataset == "ucf" or perturb_ok)
+    means_ok = all(c["bit_equal"] for c in means.values())     # derive_n = official windows
+    ok = first_bad is None and state_equal and bounds_ok and (dataset == "ucf" or perturb_ok) \
+        and means_ok
     return {"check": "E023 (q1c) UR-DMU sampler", "dataset": dataset, "seed": seed,
             "steps": off_loop["steps"], "batch": [bn, ba],
             "pools": [len(pools.normal), len(pools.abnormal)],
@@ -961,7 +966,8 @@ def q1c(official: types.ModuleType, dataset: str, labels: Sequence[int],
             "window_bounds_failed": sorted(n for n, v in windows["rows"].items() if not v),
             "window_bounds_recovered": windows["recovered"],
             "window_lengths_checked": len(wl), "random_perturb_equal": perturb_ok,
-            "window_means_vs_derive_n": means, "edits": list(tree.edits),
+            "window_means_vs_derive_n": means, "window_means_bit_equal": means_ok,
+            "edits": list(tree.edits),
             "diff_sha256": hashlib.sha256(tree.diff.encode("utf-8")).hexdigest(),
             "pass": bool(ok)}
 

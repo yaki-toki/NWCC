@@ -58,8 +58,9 @@ Adaptations: (every change against the official code)
        encode_video's position ids on the input's device (official: self.device)
     5. input LayerNorm (XCB+SigLIP only, PLAN.md "입력 처리 표"): nn.LayerNorm(D) applied first to
        the valid rows (padded rows stay zero, as the official zero padding); identity otherwise
-    6. training input: the derived d16p256 cache (process_feat without random extraction, then
-       the plan's scale match) from single-crop dense snippets (official: 10 CLIP crops per video,
+    6. training input: the derived d16p256 cache (the plan's scale match on the snippets, then
+       process_feat without random extraction, its float32 windows bit for bit; PLAN.md 기록
+       2026-10-20) from single-crop dense snippets (official: 10 CLIP crops per video,
        each a separate list row). The schedule is kept in official optimizer steps: the loaders
        run over every training video repeated ``crops`` = 10 times in a row (the official list
        order), so an epoch is one pass over a 10-row-per-video list (UCF min(floor(10 N_n / 64),

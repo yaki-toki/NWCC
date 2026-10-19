@@ -53,8 +53,9 @@ snippets) is scored where the official forward would raise in torch.topk of its 
 selection, which does not feed the scores; videos with n_v > N_chunk are cut by the plan's
 N_chunk rule (``common.score_video``), otherwise the whole video is one sequence as officially.
 (6) Training input: the official per-item ``process_feat`` 32-window mean is precomputed by
-wvad.extract.derive_n variant d16m32 (the same windows, means in float64 -> float32 instead of
-numpy float32 means) and scale-matched (PLAN.md "검증·시험 입력"). (7) Checkpoint selection on the
+wvad.extract.derive_n variant d16m32 (the official float32 numpy windows of the scale-matched
+snippets, bit for bit; the scale map fitted on float64 window means; PLAN.md "검증·시험 입력",
+기록 2026-10-20). (7) Checkpoint selection on the
 validation V-AUC at 30 evaluation points (common, PLAN.md "체크포인트 선택") instead of the test AUC
 every 5 steps after step 200; no test call before training; the generators are seeded before
 construction (the official code seeds nothing). (8) XD-Violence uses the official settings

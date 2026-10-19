@@ -27,7 +27,13 @@ Variants ``d16<kind><N>[l2][r]``
                 Sultani-style clip normalisation, PLAN.md "입력 처리 표"), at training, validation
                 and test alike (``l2_rows``)
     r           raw: no scale match (identity input layer); otherwise scale-matched
-Means: rows float32 -> mean in float64 -> float32 (``derive.window_means``).
+Means. The scale map is fitted on float64 window means (float32 rows -> mean in float64 ->
+float32, ``derive.window_means``). The stored training rows of kind m and p without l2 follow
+the official numpy pipelines bit for bit (``official_rows``; PLAN.md 기록, (q1b) user choice A):
+the float32 window mean (np.mean(x[r_i:r_{i+1}], 0)) of the scale-matched float32 snippets, which
+is what RTFM / UR-DMU process_feat and VadCLIP uniform_extract compute from the processed
+snippets. l2 variants (Sultani's MATLAB pipeline, double precision) and kind g (E021) keep the
+float64 mean, scale-matched afterwards (``training_rows``).
 
 Scale match (E021 definition, refitted per variant on the training part): per encoder and
 dimension, x' = mu_c + (sigma_c / sigma_V)(x - mu_V), ratio 1 where sigma_V = 0; mu_c, sigma_c of
@@ -81,7 +87,9 @@ FIT_BLOCK = 128                             # columns per ScaleMap.fit call
 SCALE_FIELDS = ("mu_c", "sigma_c", "mu_v", "sigma_v")
 VARIANT_RE = re.compile(r"^d16(?P<kind>[mpg])(?P<unit>[1-9][0-9]*)(?P<l2>l2)?(?P<raw>r)?$")
 RULES = {"m": "official window mean: r = np.linspace(0, n_v, N + 1, dtype=int64), window i = "
-              "mean of snippets r[i]..r[i+1]-1 (float64 -> float32), empty window: snippet r[i]",
+              "mean of snippets r[i]..r[i+1]-1, empty window: snippet r[i]; stored rows: the "
+              "float32 numpy mean of the scale-matched snippets (no l2), else float64 -> float32 "
+              "then the scale map",
          "p": "VadCLIP process_feat: n_v > N the window mean of kind m, n_v <= N the raw "
               "snippets (unpadded)",
          "g": "E021 window_members (centre assignment, empty window: d16c snippet), N = 32"}
@@ -99,9 +107,16 @@ class VariantSpec:
     l2: bool
     scaled: bool
 
+    @property
+    def official_f32(self) -> bool:
+        """Stored rows by the official numpy float32 window mean (kind m / p, no l2)."""
+        return self.kind in ("m", "p") and not self.l2
+
     def to_json(self) -> dict:
         return {"name": self.name, "kind": self.kind, "unit": self.unit, "l2": self.l2,
-                "scaled": self.scaled, "rule": RULES[self.kind]}
+                "scaled": self.scaled, "rule": RULES[self.kind],
+                "training_rows": "official float32 numpy mean of the scale-matched snippets"
+                if self.official_f32 else "float64 window mean -> float32, then the scale map"}
 
 
 def variant_spec(name: str) -> VariantSpec:
@@ -155,6 +170,54 @@ def variant_rows(rows: np.ndarray, total_frames: int, spec: VariantSpec) -> np.n
     if spec.kind == "p" and n <= spec.unit:
         return x.copy()
     return derive.window_means(x, linspace_members(n, spec.unit))
+
+
+def official_window_means(x: np.ndarray, unit: int, rowmap=None) -> np.ndarray:
+    """(N, D) float32: the official numpy windows bit for bit (RTFM / UR-DMU process_feat,
+    VadCLIP uniform_extract): boundaries linspace_bounds, window i = np.mean(x[r_i:r_{i+1}], 0)
+    on float32 rows (numpy's float32 reduction), an empty window row r_i. ``rowmap``: an
+    element-wise row map (the scale map) applied to each window's rows first - equal to mapping
+    the whole video first, without holding the mapped video. D >= 2: numpy's axis-0 float32 sum
+    is then sequential per column (each encoder's columns equal those of the official mean over
+    the concatenated encoders); a single column is summed pairwise, so it is refused."""
+    x = np.asarray(x)
+    if x.ndim != 2 or x.shape[1] < 2:
+        raise ValueError(f"rows of shape {x.shape}: need (n, D) with D >= 2")
+    f = rowmap if rowmap is not None else (lambda a: np.asarray(a, dtype=np.float32))
+    r = linspace_bounds(len(x), unit)
+    out = np.zeros((int(unit), x.shape[1]), dtype=np.float32)
+    for i in range(int(unit)):
+        if r[i] != r[i + 1]:
+            out[i] = np.mean(f(x[r[i]:r[i + 1]]), 0)
+        else:
+            out[i] = f(x[r[i]:r[i] + 1])[0]
+    return out
+
+
+def official_rows(rows: np.ndarray, total_frames: int, spec: VariantSpec,
+                  scale: ScaleMap | None) -> np.ndarray:
+    """Stored rows of an official_f32 variant: the scale map on the float32 snippets first (as
+    the pipeline gives them to the official code), then the official window mean; kind p with
+    n_v <= N the scale-matched snippets."""
+    if not spec.official_f32:
+        raise ValueError(f"variant {spec.name}: not an official float32 variant")
+    x = np.asarray(rows, dtype=np.float32)
+    if len(x) != grid.n_snippets(total_frames):
+        raise ValueError(f"{len(x)} snippet rows for T = {total_frames}")
+    rowmap = scale.apply if scale is not None else None
+    if spec.kind == "p" and len(x) <= spec.unit:
+        return np.array(rowmap(x) if rowmap else x, dtype=np.float32)
+    return official_window_means(x, spec.unit, rowmap)
+
+
+def training_rows(rows: np.ndarray, total_frames: int, spec: VariantSpec,
+                  scale: ScaleMap | None) -> np.ndarray:
+    """The stored training rows of one video (after l2 for an l2 variant): official_rows for an
+    official_f32 variant, else variant_rows then the scale map."""
+    if spec.official_f32:
+        return official_rows(rows, total_frames, spec, scale)
+    x = variant_rows(rows, total_frames, spec)
+    return scale.apply(x) if scale is not None else x
 
 
 def centre_rows(rows: np.ndarray, total_frames: int) -> np.ndarray:
@@ -301,8 +364,14 @@ def derive_encoder(source: str | os.PathLike[str], target: str | os.PathLike[str
     features = []
     for i in range(len(unscaled)):              # each unscaled array freed once converted
         x, unscaled[i] = unscaled[i], None
-        features.append(torch.from_numpy(np.ascontiguousarray(
-            scale.apply(x) if scale is not None else x)))
+        if spec.official_f32:                   # second pass: the official float32 windows
+            a, n, t = int(index.start[i]), int(index.n[i]), int(index.total_frames[i])
+            x = training_rows(np.asarray(store[a:a + n]).astype(np.float32), t, spec, scale)
+        elif scale is not None:
+            x = scale.apply(x)
+        if len(x) != rows[i]:
+            raise RuntimeError(f"video {i}: {len(x)} stored rows, {rows[i]} in the first pass")
+        features.append(torch.from_numpy(np.ascontiguousarray(x)))
     labels = [int(y) for y in index.labels]
     totals = [int(t) for t in index.total_frames]
     seg = [torch.full((n,), float("nan")) for n in rows]
@@ -322,6 +391,7 @@ def derive_encoder(source: str | os.PathLike[str], target: str | os.PathLike[str
                 "block": FIT_BLOCK},
             "scale_array_sha256": None if scale is None else scale_array_sha256(scale),
             "created_utc": utc_now(), "commit": dict(commit) if commit else None,
+            "numpy": np.__version__,             # the official windows rest on its reduction
             "data_sha256": sha256_file(data_path)}
     _write_atomic_json(out / META_FILE, meta)
     return meta

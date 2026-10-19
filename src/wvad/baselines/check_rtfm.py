@@ -53,9 +53,10 @@ Gates (each returns a JSON-able dict with "pass")
                  refuses test lists, ground truth and test stores; ``write_q1b_record`` merges
                  the compact entry into results/e023_q1b.json (key methods.rtfm; under a lock).
                  Inputs: "snippets" (default; the gate of record, PLAN.md 기록 2026-10-19: the
-                 official process_feat windows the processed snippets itself, float32 means
-                 against derive_n's float64, so the numeric rule of R3-6 decides when bits
-                 differ; a failure is reported, the mode is never switched) and "rows" (extra
+                 official process_feat windows the processed snippets itself; derive_n stores
+                 those official float32 windows bit for bit (PLAN.md 기록 2026-10-20, choice A),
+                 so the rows and the run are expected bit-equal; otherwise the numeric rule of
+                 R3-6 decides, a failure is reported, the mode is never switched) and "rows" (extra
                  evidence: the official Dataset reads the port's d16m32 rows, its windowing an
                  identity)
 
@@ -1092,7 +1093,7 @@ def _entry(official: ModuleType, cfg: Q1BConfig, off: Mapping, diff: str, *,
 
 def _row_check(official: ModuleType, data: DataPatch, inputs) -> dict:
     """Snippets mode: the official process_feat windows of the stored snippets against the
-    port's d16m32 rows (the expected cause of non-bit-equal runs: float32 vs float64 means)."""
+    port's d16m32 rows (derive_n's official float32 windows: bit equality expected)."""
     lines = Path(data.list_file).read_text(encoding="utf-8").split()
     order = sorted(range(len(inputs.train.labels)), key=lambda i: (inputs.train.labels[i] == 0, i))
     n_diff, max_abs = 0, 0.0
@@ -1103,8 +1104,8 @@ def _row_check(official: ModuleType, data: DataPatch, inputs) -> dict:
             n_diff += int((d > 0).any(axis=1).sum())
             max_abs = max(max_abs, float(d.max()))
     return {"rows_differing": n_diff, "rows_total": RECIPE.official_unit * len(lines),
-            "max_abs": max_abs, "note": "numpy float32 window means (official process_feat) vs "
-                                        "derive_n float64 -> float32"}
+            "max_abs": max_abs, "note": "official process_feat float32 windows vs derive_n "
+                                        "official_rows (bit equality expected)"}
 
 
 def _compact(cmp: Mapping) -> dict:

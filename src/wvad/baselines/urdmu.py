@@ -71,7 +71,8 @@ the D4 check; x1 = 100); (8) the Test branch also returns the pre-sigmoid snippe
 ("logit": the input of cls_head's final nn.Sigmoid, ``frame`` unchanged) and sequence_logits
 returns them; (9) AD_Loss's terms go to the shared loop (``parts``; plus "distance", which the
 official dict omits) instead of visdom; (10) training inputs: the d16m200 cache (training-part
-scale match, float64 window means; official float32 means of raw I3D crops); (11) checkpoint
+scale match; the official float32 window means of the scale-matched snippets, bit for bit;
+official: of raw I3D crops); (11) checkpoint
 selection on validation by the shared loop (30 points) instead of the official test-set AUC / AP
 every 10 steps after step 10, and no test pass at step 0 (it also draws from the global
 generator); (12) test pieces: the whole video, cut only by the plan's N_chunk rule (score_video,
