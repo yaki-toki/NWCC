@@ -767,23 +767,27 @@ DATA_SUFFIXES = (".npy", ".npz", ".csv", ".pt", ".pth", ".json", ".txt", ".pkl",
                  ".zip", ".mp4", ".avi")
 
 
-def audit(opened: Sequence[str], portable: Portable) -> dict:
+def audit(opened: Sequence[str], portable: Portable, site: Sequence[str] = ()) -> dict:
     """Opened-file audit: no official list / ground-truth file and no data-like file outside
-    <work>, the clone's src, the Python installation and ~/.cache/clip (PLAN.md 실행 순서 2)."""
+    <work>, the clone's src, the Python installation and ~/.cache/clip (PLAN.md 실행 순서 2).
+    ``site``: the subprocess's PYTHONPATH additions outside the repository (official_env; the
+    folder of the official code's extra packages), counted as part of the Python installation
+    (their package metadata, e.g. dist-info/entry_points.txt)."""
     names = sorted({portable(p) for p in opened})
     clone_list = [n for n in names if n.lower().startswith("$wvad_official_root/vadclip/list")]
-    python = ("<python>/", "<python-base>/")
+    python = ("<python>/", "<python-base>/",                      # lower case, as compared
+              *(portable(s).rstrip("/").lower() + "/" for s in site))
     allowed = ("<work>/", "$wvad_official_root/vadclip/src/", "~/.cache/clip/") + python
     data = [n for n in names if n.lower().endswith(DATA_SUFFIXES)]
     outside = [n for n in data if not n.lower().startswith(allowed)]
-    test_like = [n for n in data if not n.startswith(python)
+    test_like = [n for n in data if not n.lower().startswith(python)
                  and ("test" in Path(n).name.lower() or Path(n).name.lower().startswith("gt"))]
     return {"n_opened": len(opened), "n_unique": len(names),
             "work_files": sum(n.startswith("<work>/") for n in names),
             "clone_files": [n for n in names if n.startswith("$WVAD_OFFICIAL_ROOT/")],
             "clone_list_files": clone_list, "data_files_outside": outside,
             "test_like": test_like, "unique_sha256": _sha_text("\n".join(names)),
-            "ok": not (clone_list or outside or test_like)}
+            "site": [portable(s) for s in site], "ok": not (clone_list or outside or test_like)}
 
 
 class Recorder(vcv.VadCLIPVisualMethod):
@@ -949,7 +953,8 @@ def run_q1b(official: ModuleType, run: Q1bRun, *, paths=None, split=None, log=pr
                      "edits": applied, "deterministic": off_rec["deterministic"],
                      "torch": off_rec["torch"], "seconds": round(t_off, 3),
                      "iterations": len(lo), "losses_sha256": _sha_floats(lo),
-                     "audit": audit(off_rec["opened"], portable)},
+                     "audit": audit(off_rec["opened"], portable,
+                                    env["PYTHONPATH"].split(os.pathsep)[1:])},
         "port": {"out_dir": portable(port_dir), "iterations": len(lp),
                  "losses_sha256": _sha_floats(lp), "seconds": round(t_port, 3),
                  "selection_failed": port_rec["failed"],
