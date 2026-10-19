@@ -1121,11 +1121,224 @@ git add $E/e022_summary.json $E/e022_runs.csv $E/e022_gate.json && git add -f $E
 ```
 Then `REPORT.md` (whatever the result; the second read, the post-hoc direction and every raised flag are reported).
 
+### Stage F — E023 localisation baselines ([plan](experiments/E023_localisation_baselines/PLAN.md))
+Pre-registered comparison of E022's dense pipeline C (its 40 chains and score files reused, never re-scored) with four same-feature comparison methods (MIL, RTFM, UR-DMU, the VadCLIP visual branch; replacements MGFN, CLIP-TSA) on within-anomalous-video localisation L: the third, non-independent test read, approved as an exception to roadmap principle 1 (D1). Code rule 0: no file of `src/` at `efa10fdc` is changed. The E023 code is `src/wvad/baselines/` (interface and porting contract in `common.py`, one file per method), `src/wvad/extract/derive_n.py` (derived training inputs), `src/wvad/eval/decompose.py` and `src/wvad/diagnostics/e023_access.py`. The official repositories are cloned outside the repository at the commits of `results/e023_licences.json`, under `WVAD_OFFICIAL_ROOT` (one folder per repository: AnomalyDetectionCVPR2018, RTFM, UR-DMU, VadCLIP, MGFN, CLIP-TSA); only the equivalence checks load them (`wvad.baselines.official`), never the training or scoring code.
+```bash
+E=experiments/E023_localisation_baselines/results   # both machines
+L=<local runs root>/e023_local                      # local records outside the repository
+RUNS=~/wvad_runs/e023; LOG=~/wvad_runs/e023/test_access.log   # server
+```
+**Before porting (D1 approved): access (0) and the blocked-checkpoint list** (server, training environment, after a deploy of the plan-and-code commit). Access (0) is refused unless the E023 `PLAN.md` records D1 as (a) 승인; it reads the test manifests only through the restricted reader (names, categories, total_frames), hashes the manifests, the annotation files, the dense test stores (against `e022_extract_gate.json`), the 80 E022 C / C.last score files (against `e022_test_scores.sha256`) and `e022_selection.json` (bytes only, nothing deserialised), and records the maximum `total_frames` and the videos each candidate N_chunk would cut (PLAN.md (3j)); "start" / "end" lines go to the log outside the repository; exit 1 if a check fails.
+```bash
+python -m wvad.diagnostics.e023_access check --test_log $LOG --e022_scores ~/wvad_runs/e022_scores \
+    --out $RUNS/access0.json
+python -m wvad.diagnostics.e023_access blocked --runs e021=~/wvad_runs/e021 --runs e022=~/wvad_runs/e022 \
+    --out $RUNS/e023_blocked_ckpts.json
+# local
+scp <server>:wvad_runs/e023/{access0.json,e023_blocked_ckpts.json,test_access.log} $L/
+cp $L/e023_blocked_ckpts.json $E/
+python -m wvad.diagnostics.e023_access log $L/test_access.log      # -> $E/e023_test_access.log (git add -f)
+```
+**Derived training inputs** (server; training split only, new folders `<feature_root>/<dataset>_<encoder>_d16_e023/<variant>/`, the scale match refitted on the training part): every variant of the ported recipes - `d16m32l2` for MIL (per-snippet l2, then the 32-window mean), `d16m32` for RTFM (the 32-window mean), `d16m200` for UR-DMU, `d16p256` for the VadCLIP visual branch; X.32 uses E021's `d16m`. A later call merges its variants into the same `derived_<dataset>` record (the earlier ones stay checked), then the recipe record (both datasets' recipes per method: VCV has one official configuration per dataset):
+```bash
+for ds in ucf xdv; do
+  python -m wvad.extract.derive_n --dataset $ds --variants d16m32l2 d16m32 d16m200 d16p256 \
+      --record $RUNS/e023_train_inputs.json
+done
+python -m wvad.baselines.recipes --out $E/e023_recipes.json        # local, after the ports
+```
+**Equivalence harnesses** (before the freeze, PLAN.md (q1), (q1c), (q1e), (q1b), (q1d), (q7); training split and synthetic data only, no test file). The official clones lie outside the repository under `WVAD_OFFICIAL_ROOT`; every harness takes the loader `wvad.baselines.official` as an argument, so its command line passes it in (`H` below). UR-DMU's official attention imports `einops`: install the real package (or point `WVAD_EINOPS_DIR` at a folder holding it) - a run on the harness's stand-in does not pass. VadCLIP's official forward needs CUDA (its (q1) and (q1e) run on the GPU, a recorded deviation); the CUDA runs are deterministic (`CUBLAS_WORKSPACE_CONFIG=:4096:8`). (q1e) runs on synthetic lengths (`q1e`) and on the processed validation videos (`q1e_val`, both pairs: the chain's input pipeline, the input LayerNorm for XCB+SigLIP); after (3j) fixes N_chunk, the N_chunk cases run again with `--n_chunk $NC`. (q1b) merges each run into `results/e023_q1b.json` under a lock (runs may share the file); RTFM and UR-DMU run in `snippets` mode (the gate of record: the official code makes the windows), `rows` / `port_rows` once more as extra evidence. MIL's (q1) and (q1e) are judged in float64 with the fp32 errors reported, its (q1b) against the numpy reference for 200 iterations.
+```bash
+export WVAD_OFFICIAL_ROOT=<folder of the official clones> CUBLAS_WORKSPACE_CONFIG=:4096:8
+pip install einops==0.8.2                      # or: export WVAD_EINOPS_DIR=<folder holding einops>
+H() { python -c "import sys, importlib; from wvad.baselines import official; \
+importlib.import_module('wvad.baselines.check_' + sys.argv[1]).main(sys.argv[2:], official=official)" "$@"; }
+W=<work folder outside the repository>; Q=$E/e023_q1b.json
+H mil q1 --out $L/q1_mil.json && H mil q1e --out $L/q1e_mil.json
+H rtfm q1 --out $L/q1_rtfm.json && H rtfm q1e --device cuda --out $L/q1e_rtfm.json
+H urdmu q1 --out $L/q1_urdmu.json && H urdmu q1e --device cuda --out $L/q1e_urdmu.json
+for ds in ucf xdv; do
+  H mil q1c --dataset $ds --out $L/q1c_mil_$ds.json
+  H rtfm q1c --dataset $ds --work_dir $W/q1c_rtfm_$ds --out $L/q1c_rtfm_$ds.json
+  H urdmu q1c --dataset $ds --work $W/q1c_urdmu_$ds --out $L/q1c_urdmu_$ds.json
+  H vadclip_v q1 --dataset $ds --out $L/q1_vcv_$ds.json
+  H vadclip_v q1c --dataset $ds --work $W/q1c_vcv_$ds --out $L/q1c_vcv_$ds.json
+  H vadclip_v q1e --dataset $ds --work $W/q1e_vcv_$ds --out $L/q1e_vcv_$ds.json
+  for pair in xcb_xcl xcb_siglip; do
+    H mil q1e_val --dataset $ds --pair $pair --out $L/q1e_val_mil_${ds}_$pair.json
+    H rtfm q1e_val --dataset $ds --pair $pair --device cuda --out $L/q1e_val_rtfm_${ds}_$pair.json
+    H urdmu q1e_val --dataset $ds --pair $pair --device cuda --out $L/q1e_val_urdmu_${ds}_$pair.json
+    H vadclip_v q1e_val --dataset $ds --pair $pair --out $L/q1e_val_vcv_${ds}_$pair.json
+  done
+  for seed in 0 1 2; do                        # (q1b): XCB+XCL, development seeds
+    H mil q1b --dataset $ds --pair xcb_xcl --seed $seed --out_dir $W/q1b_mil_${ds}_s$seed --record $Q
+    H rtfm q1b --dataset $ds --pair xcb_xcl --seed $seed --work_dir $W/q1b_rtfm --input snippets --record $Q
+    H rtfm q1b --dataset $ds --pair xcb_xcl --seed $seed --work_dir $W/q1b_rtfm --input rows --record $Q
+    H urdmu q1b --dataset $ds --pair xcb_xcl --seed $seed --work $W/q1b_urdmu_${ds}_s$seed --mode snippets --device cuda --record $Q
+    H urdmu q1b --dataset $ds --pair xcb_xcl --seed $seed --work $W/q1b_urdmu_rows_${ds}_s$seed --mode port_rows --device cuda --record $Q
+    H vadclip_v q1b --dataset $ds --pair xcb_xcl --seed $seed --work $W/q1b_vcv_${ds}_s$seed --record $Q
+  done
+done
+```
+(q1d), the sanity floor, uses the development chains at the official recipe (`lr x1`, `scale x1`; XCB+XCL, seeds 0-2; the same chains serve (3f), the timing (3h) and later D4): each method's mean selected V-AUC against the MIL port's mean - 2.0 points per dataset, merged into `results/e023_q1b.json` under `q1d` (refused while a chain is missing; a method below the floor is kept and flagged "적응 하의 약함"; the analysis refuses a missing record). (q7), one code review per port: the review file (outside the repository; its name and sha256 are recorded) and its Jev judgement go into `results/e023_q1b.json` under `q7` with the `e023 q7` command; the pre-freeze gates require both records.
+```bash
+NC=4096; FAMILY="mil rtfm urdmu vadclip_v"     # server; the default N_chunk until (3j)
+for m in "mil 32" "rtfm 32" "urdmu 200" "vadclip_v 256"; do set -- $m
+  for ds in ucf xdv; do for seed in 0 1 2; do
+    out=$RUNS/dev/${ds}_xcb_xcl_s$seed/$1_u$2_lr1_sc1; mkdir -p $(dirname $out)
+    python -m wvad.baselines.train --method $1 --unit $2 --dataset $ds --pair xcb_xcl --seed $seed \
+        --out_dir $out --n_chunk $NC > $out.log 2>&1
+  done; done
+done
+python -m wvad.diagnostics.e023_score q1d --runs_root $RUNS --record $RUNS/e023_q1b_q1d.json --family $FAMILY
+# local: merge the server's q1d into the committed record, then one (q7) line per port
+scp <server>:wvad_runs/e023/e023_q1b_q1d.json $L/
+python -c "import json, sys; from wvad.baselines.common import update_json; q=json.load(open(sys.argv[1]))['q1d']; \
+update_json(sys.argv[2], lambda r: r.__setitem__('q1d', q))" $L/e023_q1b_q1d.json $E/e023_q1b.json
+python -m wvad.diagnostics.e023 q7 --method mil --review <review file> --jev <P> --verdict "<verdict>" --findings <ids>
+```
+**One chain** (development seeds 0-2 for (q1b), the D4 check and the measurements; the confirmation chains after the freeze): the official recipe in fp32, 30 evaluation points with isolated generators, `selection.json` (written last), `val_scores.npz`, `history.json` and the three checkpoints `ckpt_{sigma_best,logit_best,last}.pt` (weights only; `--save_eval_ckpts` keeps the 30 evaluation-point checkpoints until access (A), D14). D4: `--lr_mult 1/3|1|3` (then `1/9` or `9` once if an end value wins), `--scale_mult 1/10|1|10` at the chosen lr. `--no_eval` (gate (q5)) gives the same loss record and last weights without evaluating.
+```bash
+python -m wvad.baselines.train --method urdmu --unit 200 --dataset ucf --pair xcb_xcl --seed 0 \
+    --out_dir $RUNS/dev/ucf_xcb_xcl_s0/urdmu_u200
+```
+The steps below use the E023 experiment modules: `wvad.diagnostics.e023_score` (server, fixed numeric code: the (3c) record, the batch environment, D4, validation re-scoring and C.L20 post-hoc scoring, selection, access (A)), `e023_gates` (the gates), `e023_stats` and `e023` (the judgement, local), `e023_desc` (descriptives) and `e023_prefreeze` ((3f), (3g), (3j); validation and synthetic data only). Server commands run in `~/frozen-vlm-wvad` in the training environment of E022 (`sear`, `export PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE`); `NC` is the N_chunk of (3j) (default 4096) and `FAMILY` the final main family (D3; `mil rtfm urdmu vadclip_v` unless a replacement was recorded before the freeze).
+```bash
+NC=4096; FAMILY="mil rtfm urdmu vadclip_v"; S=~/wvad_runs/e023_scores      # server
+FREEZE=<the freeze commit>; SEL=<sha256 of results/e023_selection.json>; ALL=<sha256 of results/e023_all_ckpts.json>
+```
+**Pre-freeze records** (no test access; after the ports pass (q1)-(q1e), (q7)). (3c): the 42 E021 training inputs and 6 scale maps with the C.L20 reference configs, merged into the file `derive_n` wrote; (3f) on the development chains (seeds 0-2, XCB+XCL; the C type from the E021 score files), (3j) on the server GPU after access (0); (3g) and (3e) locally; the pre-freeze gates (q2), (q3), (q5), (q6), (q7) (`--q5 METHOD=<chain>,<its --no_eval twin>`).
+```bash
+python -m wvad.diagnostics.e023_score inputs --out $RUNS/e023_train_inputs.json --e021_runs ~/wvad_runs/e021
+python -m wvad.diagnostics.e023_prefreeze --out $RUNS/e023_prefreeze.json spread --e021_scores ~/wvad_runs/e021_scores \
+    --chains mil=$RUNS/dev/ucf_xcb_xcl_s0/mil_u32_lr1_sc1,$RUNS/dev/ucf_xcb_xcl_s1/mil_u32_lr1_sc1,$RUNS/dev/ucf_xcb_xcl_s2/mil_u32_lr1_sc1   # and the other ports
+python -m wvad.diagnostics.e023_prefreeze --out $RUNS/e023_prefreeze.json memory --access0 $RUNS/access0.json --methods $FAMILY
+python -c "import json; from wvad.diagnostics.common import gpu_environment, code_version; \
+print(json.dumps({**gpu_environment(), 'commit': code_version()['commit']}))" > $RUNS/env_train_prefreeze.json
+# local
+scp <server>:wvad_runs/e023/{e023_train_inputs.json,e023_prefreeze.json,env_train_prefreeze.json} $L/
+cp $L/e023_train_inputs.json $L/e023_prefreeze.json $E/
+python -m wvad.diagnostics.e023_prefreeze power --n_sim 3000          # (3g) into $E/e023_prefreeze.json
+pytest tests --junitxml=$L/prefreeze_pytest.xml
+python -m wvad.diagnostics.e023 prefreeze --junit $L/prefreeze_pytest.xml --env_train $L/env_train_prefreeze.json
+python -m wvad.diagnostics.e023 gates --stage prefreeze --access0 $L/access0.json --n_chunk $NC --methods $FAMILY
+# (q1)-(q1e) with the final N_chunk: rerun the harnesses' N_chunk cases with --n_chunk $NC (above)
+git add $E/e023_train_inputs.json $E/e023_prefreeze.json $E/e023_recipes.json $E/e023_blocked_ckpts.json \
+    $E/e023_q1b.json $E/e023_gate.json && git add -f $E/e023_test_access.log && git commit      # (2) records
+```
+D5, D6 and the D7 re-question are asked with (3f) / (3g) (spreads, half-widths and required advantages only) and recorded in PLAN.md "사용자 결정 기록" and in `e023_stats.RECORDED` before the freeze: `freeze` and `analyze` refuse while either says D5 / D6 are undecided.
+
+**Freeze**: `PLAN.sha256` = sha256 of `PLAN.md` before `## 변경 기록`; refused unless `PLAN.md` is committed unmodified and the tracked tree is clean; the commit adding `PLAN.sha256` alone is the freeze commit (`analyze` checks it and its parent tree: plan, code, README, pre-freeze records). Every later deploy carries the lineage (the E022 deploy commands with this `FREEZE`).
+```bash
+python -m wvad.diagnostics.e023 freeze
+git add experiments/E023_localisation_baselines/PLAN.sha256 && git commit
+FREEZE=$(git rev-parse HEAD)
+git archive --format=tar HEAD | ssh <server> 'mkdir -p ~/frozen-vlm-wvad && tar -x -C ~/frozen-vlm-wvad'
+git rev-parse HEAD | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_COMMIT'
+python -c "import json; from wvad.data.dense_test import write_lineage; print(json.dumps(write_lineage('$FREEZE')))" \
+    | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_LINEAGE.json'
+```
+**D4 validation check** (server, development seeds 0-2, the full official schedule; validation only): `jobs --stage d4` prints the development chains D4 still needs (the lr values x1/3, 1, 3; then the one widened value if an end value won; then the scale constants x1/10, 10 at the chosen lr); run them, print again, until nothing is left; `devlr` writes the choices. Each line: method, unit, dataset, pair, seed, lr multiplier, scale multiplier, output folder, D14 flag.
+```bash
+python -m wvad.diagnostics.e023_score jobs --stage d4 --runs_root $RUNS --family $FAMILY > $RUNS/jobs_d4.txt
+export NC; setsid nohup xargs -P 24 -L 1 bash -c '
+  E14=""; if [ $8 = 1 ]; then E14="--save_eval_ckpts"; fi
+  mkdir -p $(dirname $7)
+  python -m wvad.baselines.train --method $0 --unit $1 --dataset $2 --pair $3 --seed $4 --lr_mult $5 \
+      --scale_mult $6 --out_dir $7 --n_chunk $NC $E14 > $7.log 2>&1
+' < $RUNS/jobs_d4.txt > $RUNS/queue_d4.log 2>&1 &
+python -m wvad.diagnostics.e023_score devlr --runs_root $RUNS --family $FAMILY --out $RUNS/e023_devlr.json
+# local, once "complete" is true
+scp <server>:wvad_runs/e023/e023_devlr.json $E/ && git add $E/e023_devlr.json && git commit
+```
+**Confirmation training** (server, after a deploy of the D4 commit): the main family at its official unit (`--save_eval_ckpts`, D14), X.32 at 32, and C.L20 (E021's HB L20 command, seed and output folder changed), 24 at a time after the memory check; a batch starts only when its environment record passes (gate (f): E022's training environment, a different driver alone recorded; the (3c) training inputs). A refused batch starts nothing and the shell stays open. The comparison-method chains run in deterministic mode (`--deterministic`, `CUBLAS_WORKSPACE_CONFIG=:4096:8`; gate (a) requires it), so the repeat of gate (b) - per main-family method and dataset one chain again (XCB+XCL, seed 42) into `$RUNS/repeat/<chain>/<run>`, the same command - can equal the first run. An infrastructure failure is re-run once with the same command.
+```bash
+export CUBLAS_WORKSPACE_CONFIG=:4096:8                          # deterministic chains (gate (a))
+python -m wvad.diagnostics.e023_score jobs --stage confirm --runs_root $RUNS --family $FAMILY > $RUNS/jobs.txt
+awk '$4 == "xcb_xcl" && $5 == 42 && $9 == 1' $RUNS/jobs.txt | sed "s#$RUNS/#$RUNS/repeat/#" > $RUNS/jobs_repeat.txt
+for ds in ucf xdv; do for pair in xcb_xcl xcb_siglip; do for seed in 42 123 777 1000 2025 7 13 99 555 31337; do
+  echo $ds $pair $seed; done; done; done > $RUNS/jobs_cl20.txt                                  # 40 lines
+split -l 24 -d $RUNS/jobs.txt $RUNS/jobs_b                      # then one batch after the other
+b=00
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv && free -g
+if python -m wvad.diagnostics.e023_score env --out $RUNS/env_e023_b$b.json      # gate (f)
+then
+  setsid nohup xargs -P 24 -L 1 bash -c '
+    E14=""; if [ $8 = 1 ]; then E14="--save_eval_ckpts"; fi
+    mkdir -p $(dirname $7)
+    python -m wvad.baselines.train --method $0 --unit $1 --dataset $2 --pair $3 --seed $4 --lr_mult $5 \
+        --scale_mult $6 --out_dir $7 --n_chunk $NC --deterministic $E14 > $7.log 2>&1
+  ' < $RUNS/jobs_b$b > $RUNS/queue_b$b.log 2>&1 &
+else
+  echo "batch $b refused by gate (f): not started; fix the cause, then repeat this batch"
+fi
+if python -m wvad.diagnostics.e023_score env --out $RUNS/env_e023_bcl20.json   # gate (f), C.L20
+then
+  export RUNS Z="--lambda_dense 0 --lambda_pseudo 0 --lambda_neg_pseudo 0 --record --save_epoch_ckpts"
+  setsid nohup xargs -P 24 -L 1 bash -c '
+    ds=$0; pair=$1; seed=$2; d=$RUNS/${ds}_${pair}_s${seed}; mkdir -p $d
+    T="--dataset $ds --pair $pair --seed $seed --features d16m"
+    python -m wvad.train stage1 $T --out_dir $d/hb_l20_stage1 --record --save_epoch_ckpts > $d.hb_l20_s1.log 2>&1 &&
+    python -m wvad.train stage2 $T --init $d/hb_l20_stage1/ckpt_last.pt --out_dir $d/hb_l20 $Z > $d.hb_l20.log 2>&1
+  ' < $RUNS/jobs_cl20.txt > $RUNS/queue_cl20.log 2>&1 &
+else
+  echo "C.L20 batch refused by gate (f): not started"
+fi
+ls $RUNS/*/*/selection.json | wc -l                             # 280 (240 without VCV) after the last batch
+setsid nohup xargs -P 8 -L 1 bash -c '                          # gate (b): the repeat chains
+  E14=""; if [ $8 = 1 ]; then E14="--save_eval_ckpts"; fi
+  mkdir -p $(dirname $7)
+  python -m wvad.baselines.train --method $0 --unit $1 --dataset $2 --pair $3 --seed $4 --lr_mult $5 \
+      --scale_mult $6 --out_dir $7 --n_chunk $NC --deterministic $E14 > $7.log 2>&1
+' < $RUNS/jobs_repeat.txt > $RUNS/queue_repeat.log 2>&1 &
+pgrep -fc "wvad[.](baselines[.])?train"                         # 0 before the next batch
+```
+**Validation scoring, selection, training gates** (no test file is opened before this commit). The server re-scores every comparison-method chain's kept checkpoints on the validation videos (gate (s)) and scores C.L20's 30 stage-2 epoch checkpoints and `ckpt_last.pt` by E022 C's path; locally `select` writes `results/e023_selection.json` (W readout, sigma and logit, strict >, earliest point on ties; checkpoint sha256) and `results/e023_all_ckpts.json` (D14: the 30 evaluation-point checkpoints of the main family), and `gates --stage train` checks (a), (b), (d), (f), (g), (p), (s), (w), (w2), (n) into `results/e023_gate.json` (only before the first test read). A chain dropped after an unfixable gate failure is named with `--gate_failed <chain>/<run>` here and in the two later steps. Commit: the selection is fixed by this commit.
+```bash
+setsid nohup python -m wvad.diagnostics.e023_score score --split val --runs_root $RUNS --out $S \
+    --family $FAMILY > $S.val.log 2>&1 < /dev/null &
+# local
+ssh <server> 'tar -cf - --exclude="ckpt_*" -C ~/wvad_runs e023 e023_scores/val' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e023_score select --runs_root <local runs root>/e023 --scores <local runs root>/e023_scores \
+    --family $FAMILY
+pytest tests --junitxml=$L/gates_pytest.xml
+python -m wvad.diagnostics.e023 gates --stage train --runs <local runs root>/e023 --scores <local runs root>/e023_scores \
+    --e021_runs <local runs root>/e021 --junit $L/gates_pytest.xml --n_chunk $NC
+cp <local runs root>/e023/env_e023_b*.json $E/
+git add $E/e023_selection.json $E/e023_all_ckpts.json $E/e023_gate.json $E/env_e023_b*.json && git commit
+SEL=$(sha256sum $E/e023_selection.json | cut -d' ' -f1); ALL=$(sha256sum $E/e023_all_ckpts.json | cut -d' ' -f1)
+```
+**Access (A), once** (deploy this commit). Gate (m) first (free GPU memory >= (3j) x 1.2; a "refused" line otherwise: wait and call again), then the access device (descent from `--freeze_commit`, the frozen plan, the D1 approval, gate (t), the committed selection files and every checkpoint's sha256, the blocked-checkpoint guard at every load, the training inputs at the start and the end); every new arm's sigma-best, logit-best and last checkpoint and the D14 evaluation points are scored in one call. Then locally, before any metric, gates (v3) (structure, names and order, the chunked videos against access (0); non-finite values counted only) and (k) (no blocked checkpoint loaded), a logged part of access (A) from a clean working tree. An infrastructure failure: `--rescore '<reason>' --missing_only`; (v3) failing for a writing / indexing reason of `e023_score.py`: fix, deploy, `--rescore '<reason>' --runs <chain>/<run>`, the unit tests and (v3) again; any other cause: stop and report.
+```bash
+setsid nohup python -m wvad.diagnostics.e023_score score --split test --runs_root $RUNS --out $S --test_log $LOG \
+    --selection_sha256 $SEL --all_ckpts_sha256 $ALL --memory_need_gb <(3j) gate_m_need_gb> --n_chunk $NC \
+    --freeze_commit $FREEZE > $S.test.log 2>&1 < /dev/null &
+# local
+ssh <server> 'tar -cf - -C ~/wvad_runs e023_scores/test' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e023 gates --stage v3 --scores <local runs root>/e023_scores --test_log $L/test_access_local.log \
+    --access0 $L/access0.json --n_chunk $NC
+cp <local runs root>/e023_scores/test/scores.sha256 $E/e023_test_scores.sha256
+scp <server>:wvad_runs/e023/test_access.log $L/test_access_server.log
+python -m wvad.diagnostics.e023_access log $L/test_access_local.log $L/test_access_server.log
+git add $E/e023_gate.json $E/e023_test_scores.sha256 && git add -f $E/e023_test_access.log && git commit
+```
+**Analysis, access (D), once** (local, clean working tree): the seal history and `--gate_failed` (else refused before anything is read), the (D) start line, the committed records, gate (h) (the 80 E022 C / C.last score files against `e022_test_scores.sha256` before they are read, and C's selected checkpoints), gate (h2) (C / C.last L and pooled main metric per setting and seed equal to E022's `descriptives.1_cells`), gate (d1) (decomposition identity), then condition (2) (D5 / D6 as recorded; every option while undecided), condition (3), the mechanism, the flags, the problem description and the descriptives (D14 included): `results/e023_summary.json` (verdict first, `claims.secondary_improvements_allowed` false) and `results/e023_runs.csv`. A second run needs `--recompute '<reason>'`; code changed under `src/` since the freeze needs `--allow_code_change '<reason>'` (PLAN.md code rules). After the verdict commit, the D14 temporary checkpoints are deleted (the three kept per chain stay).
+```bash
+pytest tests --junitxml=$L/analysis_pytest.xml
+python -m wvad.diagnostics.e023 analyze --runs <local runs root>/e023 --scores <local runs root>/e023_scores \
+    --e022_scores <local runs root>/e022_scores --test_log $L/test_access_local.log
+python -m wvad.diagnostics.e023_access log $L/test_access_local.log $L/test_access_server.log
+git add $E/e023_summary.json $E/e023_runs.csv $E/e023_gate.json && git add -f $E/e023_test_access.log && git commit
+ssh <server> 'rm -f ~/wvad_runs/e023/*/*/ckpt_eval_*.pt'       # D14 checkpoints, after the verdict commit
+```
+Then `REPORT.md` (whatever the result; the third read, the post-hoc choice of the problem and every raised flag are reported).
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
 ruff check .
 ```
+The UR-DMU tests (`tests/test_e023_urdmu*.py`) run the official attention, which imports the real `einops`: install it, or set `WVAD_EINOPS_DIR` to a folder holding a copy of it outside the repository; without either they are skipped (with that reason).
 
 ## Data
 Features are pre-extracted per video (32 segments × encoder dimension) for UCF-Crime and XD-Violence with X-CLIP (base, large) and SigLIP-so400m encoders. They are not distributed with this repository; `configs/paths.yaml` maps logical names to local directories. See [`data/README.md`](data/README.md).
