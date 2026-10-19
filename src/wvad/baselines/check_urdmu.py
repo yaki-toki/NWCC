@@ -43,7 +43,8 @@ audit hook lists every file the official and port runs open ("blocked" patterns 
       re-creation loop (ucf_main.py L32-L41, L67-L72; train.py L58-L59) vs the "window_mean"
       sampler from the same seed: the video positions, labels and the generator state afterwards,
       bit for bit; the official window boundaries (UCF get_data, XD random_perturb) equal
-      derive_n.linspace_bounds; the official float32 window means against derive_n (reported).
+      derive_n.linspace_bounds (exact means, or for long videos the boundaries recovered from
+      the float32-rounded means); the official float32 window means against derive_n (reported).
 (q1e) ``q1e(device)``: the official test functions (ucf_test.py / xd_test.py ``test``, their own
       crop loop: UCF 10 items, XD batches of 5, one crop here) on the same weights, eval mode,
       fp32, against common.score_video (lengths below and above the unit and N_chunk, the last
@@ -823,6 +824,22 @@ def _window_values(bounds: np.ndarray) -> np.ndarray:
     return np.where(a == b, a, (a + b - 1) / 2).astype(np.float32)
 
 
+def _recovered_bounds(means: np.ndarray) -> np.ndarray | None:
+    """Window boundaries from official window means of rows j -> j when no window is empty
+    (n >= unit): mean_i = (r_i + r_{i+1} - 1) / 2, so with r_0 = 0 the sums
+    s_i = 2 mean_i + 1 fix every boundary. The official float32 mean of large row values is
+    rounded (one float32 ulp, 2^-8 near n = 61000), far below the 0.5 a shifted boundary
+    moves a mean; None unless every s_i is within 0.1 of an integer."""
+    s = 2.0 * np.asarray(means, np.float64) + 1.0
+    si = np.rint(s)
+    if np.max(np.abs(s - si)) > 0.1:
+        return None
+    r = np.zeros(len(si) + 1, np.int64)
+    for i, v in enumerate(si.astype(np.int64)):
+        r[i + 1] = v - r[i]
+    return r
+
+
 def _official_loop(official: types.ModuleType, tree: Tree, dataset: str, bn: int, ba: int,
                    seed: int, steps: int | None) -> dict:
     """The official loader loop (ucf_main.py L25, L32-L41, L67-L72; train.py L58-L60) on the
@@ -855,22 +872,29 @@ def _official_loop(official: types.ModuleType, tree: Tree, dataset: str, bn: int
 def _window_check(official: types.ModuleType, tree: Tree, dataset: str, wl: Sequence[int],
                   unit: int) -> dict:
     """Official window boundaries (rows j -> j through get_data; XD random_perturb) against
-    derive_n.linspace_bounds."""
+    derive_n.linspace_bounds: the official window means equal the exact values, or (n >= unit,
+    float32 rounding of large row values) the boundaries recovered from them equal derive_n's
+    exactly ("recovered" lists those lengths; PLAN.md 기록, (q1c) probe)."""
     from wvad.extract import derive_n
 
     with official_urdmu(official, "cpu", [tree.official_mod]) as off:
         utils = off.top("utils")
         with _cwd(tree.root):
             wds = _official_dataset(off, dataset, is_normal=False, dim=1)
-        rows = {}
+        rows, recovered = {}, []
         for i, p in enumerate(tree.order):
+            n = int(wl[p])
             got = wds.get_data(i)[0][:, 0]
-            want = _window_values(derive_n.linspace_bounds(int(wl[p]), unit))
-            rows[int(wl[p])] = bool(np.array_equal(got, want))
+            bounds = derive_n.linspace_bounds(n, unit)
+            ok = bool(np.array_equal(got, _window_values(bounds)))
+            if not ok and n >= unit:
+                ok = bool(np.array_equal(_recovered_bounds(got), bounds))
+                recovered += [n] if ok else []
+            rows[n] = ok
         perturb = {int(n): bool(np.array_equal(
             np.asarray(utils.random_perturb(int(n), unit), dtype=np.int64),
             derive_n.linspace_bounds(int(n), unit))) for n in wl if n <= 65535}
-    return {"rows": rows, "perturb": perturb}
+    return {"rows": rows, "recovered": sorted(recovered), "perturb": perturb}
 
 
 def _means_check(official: types.ModuleType, tree: Tree, dataset: str,
@@ -935,6 +959,7 @@ def q1c(official: types.ModuleType, dataset: str, labels: Sequence[int],
             "first_difference_step": first_bad, "generator_state_equal": state_equal,
             "window_bounds_equal": bounds_ok,
             "window_bounds_failed": sorted(n for n, v in windows["rows"].items() if not v),
+            "window_bounds_recovered": windows["recovered"],
             "window_lengths_checked": len(wl), "random_perturb_equal": perturb_ok,
             "window_means_vs_derive_n": means, "edits": list(tree.edits),
             "diff_sha256": hashlib.sha256(tree.diff.encode("utf-8")).hexdigest(),
