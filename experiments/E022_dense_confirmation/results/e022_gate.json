@@ -14,10 +14,12 @@
   "w": true,
   "w2": true,
   "v": true,
-  "v2": true
+  "v2": true,
+  "v3": true,
+  "s3t": true
  },
  "code": {
-  "commit": "722b2598bef510a63fdc63c3f08eeb5e4ff7a511",
+  "commit": "ae84d0c96c9507b470b20cfa9733d743adbaeed3",
   "source": "git",
   "dirty": true
  },
@@ -10278,6 +10280,4405 @@
    }
   ],
   "max_abs_diff": 0.0,
+  "ok": true
+ },
+ "v3": {
+  "rows": {
+   "ucf_xcb_xcl_s42/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s42/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s42/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s42/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s42/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s42/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s42/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s123/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s123/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s123/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s123/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s123/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s123/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s123/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s777/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s777/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s777/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s777/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s777/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s777/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s777/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s1000/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s1000/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s1000/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s1000/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s1000/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s1000/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s1000/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s2025/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s2025/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s2025/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s2025/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s2025/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s2025/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s2025/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s7/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s7/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s7/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s7/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s7/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s7/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s7/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s13/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s13/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s13/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s13/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s13/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s13/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s13/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s99/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s99/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s99/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s99/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s99/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s99/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s99/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s555/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s555/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s555/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s555/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s555/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s555/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s555/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s31337/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s31337/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s31337/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s31337/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s31337/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s31337/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_xcl_s31337/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s42/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s42/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s42/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s42/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s42/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s42/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s42/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s123/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s123/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s123/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s123/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s123/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s123/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s123/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s777/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s777/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s777/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s777/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s777/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s777/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s777/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s1000/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s1000/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s1000/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s1000/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s1000/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s1000/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s1000/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s2025/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s2025/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s2025/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s2025/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s2025/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s2025/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s2025/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s7/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s7/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s7/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s7/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s7/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s7/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s7/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s13/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s13/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s13/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s13/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s13/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s13/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s13/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s99/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s99/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s99/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s99/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s99/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s99/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s99/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s555/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s555/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s555/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s555/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s555/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s555/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s555/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s31337/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s31337/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s31337/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s31337/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s31337/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s31337/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "ucf_xcb_siglip_s31337/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s42/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s42/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s42/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s42/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s42/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s42/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s42/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s123/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s123/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s123/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s123/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s123/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s123/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s123/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s777/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s777/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s777/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s777/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s777/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s777/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s777/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s1000/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s1000/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s1000/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s1000/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s1000/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s1000/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s1000/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s2025/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s2025/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s2025/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s2025/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s2025/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s2025/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s2025/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s7/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s7/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s7/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s7/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s7/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s7/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s7/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s13/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s13/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s13/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s13/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s13/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s13/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s13/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s99/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s99/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s99/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s99/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s99/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s99/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s99/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s555/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s555/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s555/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s555/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s555/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s555/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s555/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s31337/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s31337/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s31337/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s31337/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s31337/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s31337/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_xcl_s31337/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s42/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s42/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s42/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s42/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s42/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s42/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s42/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s123/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s123/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s123/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s123/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s123/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s123/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s123/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s777/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s777/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s777/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s777/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s777/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s777/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s777/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s1000/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s1000/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s1000/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s1000/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s1000/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s1000/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s1000/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s2025/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s2025/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s2025/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s2025/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s2025/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s2025/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s2025/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s7/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s7/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s7/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s7/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s7/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s7/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s7/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s13/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s13/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s13/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s13/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s13/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s13/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s13/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s99/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s99/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s99/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s99/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s99/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s99/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s99/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s555/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s555/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s555/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s555/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s555/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s555/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s555/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s31337/C": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0,
+     "o32_logits": 0,
+     "o32_probs": 0,
+     "o32_local_logits": 0,
+     "o32_offsets": 0,
+     "s3t_z": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s31337/C.G": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s31337/C.last": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s31337/R1": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s31337/R1.last": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s31337/B": {
+    "problems": [],
+    "nonfinite": {
+     "logits": 0,
+     "probs": 0,
+     "local_logits": 0,
+     "offsets": 0,
+     "gamma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   },
+   "xdv_xcb_siglip_s31337/A1.S": {
+    "problems": [],
+    "nonfinite": {
+     "gamma": 0,
+     "z": 0,
+     "c": 0,
+     "zc": 0,
+     "sigma": 0
+    },
+    "numerical_failure": false,
+    "ok": true
+   }
+  },
+  "errors": [],
+  "absent": [],
+  "files": 280,
+  "nonfinite_runs": [],
+  "scored_with": {
+   "files": {
+    "ucf_xcb_siglip_s1000/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s1000/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s1000/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s1000/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s1000/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s1000/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s1000/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s123/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s123/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s123/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s123/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s123/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s123/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s123/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s13/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s13/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s13/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s13/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s13/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s13/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s13/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s2025/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s2025/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s2025/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s2025/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s2025/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s2025/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s2025/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s31337/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s31337/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s31337/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s31337/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s31337/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s31337/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s31337/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s42/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s42/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s42/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s42/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s42/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s42/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s42/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s555/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s555/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s555/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s555/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s555/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s555/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s555/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s7/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s7/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s7/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s7/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s7/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s7/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s7/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s777/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s777/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s777/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s777/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s777/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s777/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s777/R1.npz": "meta_16.json",
+    "ucf_xcb_siglip_s99/A1.S.npz": "meta_16.json",
+    "ucf_xcb_siglip_s99/B.npz": "meta_16.json",
+    "ucf_xcb_siglip_s99/C.G.npz": "meta_16.json",
+    "ucf_xcb_siglip_s99/C.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s99/C.npz": "meta_16.json",
+    "ucf_xcb_siglip_s99/R1.last.npz": "meta_16.json",
+    "ucf_xcb_siglip_s99/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s1000/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s1000/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s1000/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s1000/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s1000/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s1000/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s1000/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s123/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s123/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s123/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s123/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s123/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s123/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s123/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s13/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s13/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s13/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s13/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s13/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s13/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s13/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s2025/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s2025/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s2025/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s2025/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s2025/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s2025/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s2025/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s31337/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s31337/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s31337/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s31337/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s31337/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s31337/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s31337/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s42/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s42/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s42/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s42/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s42/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s42/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s42/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s555/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s555/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s555/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s555/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s555/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s555/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s555/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s7/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s7/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s7/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s7/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s7/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s7/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s7/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s777/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s777/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s777/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s777/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s777/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s777/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s777/R1.npz": "meta_16.json",
+    "ucf_xcb_xcl_s99/A1.S.npz": "meta_16.json",
+    "ucf_xcb_xcl_s99/B.npz": "meta_16.json",
+    "ucf_xcb_xcl_s99/C.G.npz": "meta_16.json",
+    "ucf_xcb_xcl_s99/C.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s99/C.npz": "meta_16.json",
+    "ucf_xcb_xcl_s99/R1.last.npz": "meta_16.json",
+    "ucf_xcb_xcl_s99/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s1000/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s1000/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s1000/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s1000/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s1000/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s1000/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s1000/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s123/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s123/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s123/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s123/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s123/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s123/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s123/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s13/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s13/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s13/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s13/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s13/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s13/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s13/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s2025/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s2025/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s2025/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s2025/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s2025/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s2025/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s2025/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s31337/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s31337/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s31337/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s31337/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s31337/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s31337/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s31337/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s42/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s42/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s42/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s42/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s42/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s42/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s42/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s555/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s555/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s555/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s555/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s555/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s555/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s555/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s7/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s7/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s7/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s7/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s7/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s7/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s7/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s777/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s777/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s777/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s777/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s777/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s777/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s777/R1.npz": "meta_16.json",
+    "xdv_xcb_siglip_s99/A1.S.npz": "meta_16.json",
+    "xdv_xcb_siglip_s99/B.npz": "meta_16.json",
+    "xdv_xcb_siglip_s99/C.G.npz": "meta_16.json",
+    "xdv_xcb_siglip_s99/C.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s99/C.npz": "meta_16.json",
+    "xdv_xcb_siglip_s99/R1.last.npz": "meta_16.json",
+    "xdv_xcb_siglip_s99/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s1000/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s1000/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s1000/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s1000/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s1000/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s1000/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s1000/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s123/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s123/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s123/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s123/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s123/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s123/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s123/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s13/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s13/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s13/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s13/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s13/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s13/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s13/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s2025/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s2025/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s2025/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s2025/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s2025/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s2025/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s2025/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s31337/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s31337/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s31337/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s31337/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s31337/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s31337/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s31337/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s42/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s42/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s42/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s42/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s42/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s42/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s42/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s555/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s555/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s555/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s555/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s555/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s555/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s555/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s7/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s7/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s7/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s7/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s7/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s7/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s7/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s777/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s777/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s777/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s777/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s777/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s777/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s777/R1.npz": "meta_16.json",
+    "xdv_xcb_xcl_s99/A1.S.npz": "meta_16.json",
+    "xdv_xcb_xcl_s99/B.npz": "meta_16.json",
+    "xdv_xcb_xcl_s99/C.G.npz": "meta_16.json",
+    "xdv_xcb_xcl_s99/C.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s99/C.npz": "meta_16.json",
+    "xdv_xcb_xcl_s99/R1.last.npz": "meta_16.json",
+    "xdv_xcb_xcl_s99/R1.npz": "meta_16.json"
+   },
+   "unbound": [],
+   "meta": [
+    "meta_16.json"
+   ],
+   "commits": [
+    "ae84d0c96c9507b470b20cfa9733d743adbaeed3"
+   ],
+   "commit": "ae84d0c96c9507b470b20cfa9733d743adbaeed3",
+   "commit_changed": false,
+   "plan_sha256": "e04c987d6b94407051a308115e32b57615603367daeea31121e04f131be1eaab",
+   "ok": true
+  },
+  "commit_changed": false,
+  "train_inputs_after": {
+   "meta_16.json": true
+  },
+  "calls_cut_short": [],
+  "gate_failed": [],
+  "skipped": [],
+  "ok": true
+ },
+ "s3t": {
+  "rows": {
+   "ucf_xcb_xcl_s42/C": {
+    "n": 9280,
+    "max_rel_dz": 8.344650268554688e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.344650268554688e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s123/C": {
+    "n": 9280,
+    "max_rel_dz": 8.940696716308594e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.940696716308594e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s777/C": {
+    "n": 9280,
+    "max_rel_dz": 9.5367431640625e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 9.5367431640625e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s1000/C": {
+    "n": 9280,
+    "max_rel_dz": 8.940696716308594e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.940696716308594e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s2025/C": {
+    "n": 9280,
+    "max_rel_dz": 8.062335211627085e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.062335211627085e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s7/C": {
+    "n": 9280,
+    "max_rel_dz": 8.046627044677734e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.046627044677734e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s13/C": {
+    "n": 9280,
+    "max_rel_dz": 8.940696716308594e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.940696716308594e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s99/C": {
+    "n": 9280,
+    "max_rel_dz": 7.748603820800781e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 7.748603820800781e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s555/C": {
+    "n": 9280,
+    "max_rel_dz": 1.1324882507324219e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.1324882507324219e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_xcl_s31337/C": {
+    "n": 9280,
+    "max_rel_dz": 8.046627044677734e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.046627044677734e-07,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s42/C": {
+    "n": 9280,
+    "max_rel_dz": 1.1920928955078125e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.1920928955078125e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s123/C": {
+    "n": 9280,
+    "max_rel_dz": 1.1324882507324219e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.1324882507324219e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s777/C": {
+    "n": 9280,
+    "max_rel_dz": 1.2516975402832031e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.2516975402832031e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s1000/C": {
+    "n": 9280,
+    "max_rel_dz": 2.086162567138672e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 2.086162567138672e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s2025/C": {
+    "n": 9280,
+    "max_rel_dz": 1.7881393432617188e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.7881393432617188e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s7/C": {
+    "n": 9280,
+    "max_rel_dz": 1.2218952178955078e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.2218952178955078e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s13/C": {
+    "n": 9280,
+    "max_rel_dz": 1.430511474609375e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.430511474609375e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s99/C": {
+    "n": 9280,
+    "max_rel_dz": 1.043081283569336e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.043081283569336e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s555/C": {
+    "n": 9280,
+    "max_rel_dz": 1.2516975402832031e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.2516975402832031e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "ucf_xcb_siglip_s31337/C": {
+    "n": 9280,
+    "max_rel_dz": 1.3709068298339844e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.3709068298339844e-06,
+     "n": 9280,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 290
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s42/C": {
+    "n": 25600,
+    "max_rel_dz": 1.1324882507324219e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.1324882507324219e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s123/C": {
+    "n": 25600,
+    "max_rel_dz": 8.368607011888443e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.368607011888443e-07,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s777/C": {
+    "n": 25600,
+    "max_rel_dz": 1.1622905731201172e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.1622905731201172e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s1000/C": {
+    "n": 25600,
+    "max_rel_dz": 1.1324882507324219e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.1324882507324219e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s2025/C": {
+    "n": 25600,
+    "max_rel_dz": 1.0728836059570312e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.0728836059570312e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s7/C": {
+    "n": 25600,
+    "max_rel_dz": 1.1920928955078125e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.1920928955078125e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s13/C": {
+    "n": 25600,
+    "max_rel_dz": 1.0728836059570312e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.0728836059570312e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s99/C": {
+    "n": 25600,
+    "max_rel_dz": 1.341104507446289e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.341104507446289e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s555/C": {
+    "n": 25600,
+    "max_rel_dz": 1.1622905731201172e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.1622905731201172e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_xcl_s31337/C": {
+    "n": 25600,
+    "max_rel_dz": 8.344650268554688e-07,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 8.344650268554688e-07,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s42/C": {
+    "n": 25600,
+    "max_rel_dz": 1.3113021850585938e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.3113021850585938e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s123/C": {
+    "n": 25600,
+    "max_rel_dz": 1.4007091522216797e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.4007091522216797e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s777/C": {
+    "n": 25600,
+    "max_rel_dz": 1.8477439880371094e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.8477439880371094e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s1000/C": {
+    "n": 25600,
+    "max_rel_dz": 1.7285346984863281e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.7285346984863281e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s2025/C": {
+    "n": 25600,
+    "max_rel_dz": 1.6838312149047852e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.6838312149047852e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s7/C": {
+    "n": 25600,
+    "max_rel_dz": 1.9073486328125e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.9073486328125e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s13/C": {
+    "n": 25600,
+    "max_rel_dz": 1.6689300537109375e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.6689300537109375e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s99/C": {
+    "n": 25600,
+    "max_rel_dz": 1.6093254089355469e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.6093254089355469e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s555/C": {
+    "n": 25600,
+    "max_rel_dz": 1.7881393432617188e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.7881393432617188e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   },
+   "xdv_xcb_siglip_s31337/C": {
+    "n": 25600,
+    "max_rel_dz": 1.4764638599694418e-06,
+    "pass": true,
+    "server": {
+     "max_rel_dz": 1.4764638599694418e-06,
+     "n": 25600,
+     "pass": true,
+     "variant": "d16m",
+     "videos": 800
+    },
+    "ok": true
+   }
+  },
+  "max_rel_dz": 2.086162567138672e-06,
+  "gate_failed": [],
+  "skipped": [],
   "ok": true
  }
 }
