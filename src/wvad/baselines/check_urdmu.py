@@ -1560,6 +1560,9 @@ def dataset_verdict(records: Sequence[Mapping]) -> dict:
     if any(r.get("selftest") for r in records):
         return {"pass": False, "reason": "self-test records are not (q1b) runs"}
     vs = [r["verdict"] for r in records]
+    if any("comparison" not in r for r in records):          # a worker failed: no comparison
+        return {"pass": False, "criterion": None, "reason": "a worker failed",
+                "seeds": [r["seed"] for r in records]}
     if all(v["criterion"] == "bit" and v["pass"] for v in vs):
         return {"pass": True, "criterion": "bit", "seeds": [r["seed"] for r in records]}
     diffs = [r["comparison"]["validation"]["selected"].get("sigma", {}).get("diff_points")

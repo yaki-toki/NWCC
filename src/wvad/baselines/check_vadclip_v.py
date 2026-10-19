@@ -845,6 +845,21 @@ def official_val_auc(official: ModuleType, dataset: str, feature_dim: int,
     return float(common.v_aucs(vs["sigma"][None, :], labels)[0])
 
 
+def official_env(official_src: Path, base: Mapping[str, str], out_dir: Path) -> dict:
+    """Environment of the official (q1b) subprocess: the official src first, then the caller's
+    PYTHONPATH entries outside the repository (environment additions such as the folder that
+    holds pkg_resources and tqdm for the official clip import); no repository code is on it."""
+    from wvad.paths import REPO_ROOT
+
+    repo = REPO_ROOT.resolve()
+    extra = [str(q) for q in (Path(p).resolve() for p in
+                              base.get("PYTHONPATH", "").split(os.pathsep) if p)
+             if q != repo and repo not in q.parents]
+    return dict(base, PYTHONPATH=os.pathsep.join([str(official_src), *extra]),
+                CUBLAS_WORKSPACE_CONFIG=":4096:8", E023_Q1B_OUT=str(out_dir),
+                KMP_DUPLICATE_LIB_OK="TRUE")
+
+
 def run_q1b(official: ModuleType, run: Q1bRun, *, paths=None, split=None, log=print
             ) -> dict:
     """(q1b) one (dataset, pair, seed): the official pipeline (subprocess) and the port's chain
@@ -890,9 +905,7 @@ def run_q1b(official: ModuleType, run: Q1bRun, *, paths=None, split=None, log=pr
            str(inputs.dim), "--train-list", str(csv)]
     cmd += ["--batch-size", str(run.batch)] if run.batch is not None else []
     cmd += ["--max-epoch", str(run.epochs)] if run.epochs is not None else []
-    env = dict(os.environ, PYTHONPATH=str(of.repo_dir(NAME) / "src"),
-               CUBLAS_WORKSPACE_CONFIG=":4096:8", E023_Q1B_OUT=str(off_dir),
-               KMP_DUPLICATE_LIB_OK="TRUE")
+    env = official_env(of.repo_dir(NAME) / "src", os.environ, off_dir)
     t0 = time.time()
     res = subprocess.run(cmd, cwd=off_dir, env=env, capture_output=True, text=True,
                          check=False)
