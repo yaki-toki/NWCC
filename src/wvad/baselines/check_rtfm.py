@@ -120,14 +120,14 @@ from wvad.paths import REPO_ROOT
 
 KEY = "rtfm"
 OFFICIAL_DIM, OFFICIAL_CROPS, OFFICIAL_BATCH = 2048, 10, 32
-OFFICIAL_SHA256 = {
-    "config.py": "69e4ca31f2e9754b3025a590e55c5d93702996ac1267fb2fd5ca65756959643b",
-    "dataset.py": "76d833f2d11647be25327906e1dc0d0c745ff89003852012691c3ea4fc1a5f7d",
-    "main.py": "aa6331620b1a21daaf5df911b570dcced8f3ca36e6361f30fd3828d860aecf01",
-    "model.py": "0208e061dab6855b055bb79f2e1c8fe53cf84e9a5eaa1a39bbb8115335d2efd0",
-    "option.py": "a7a4a2a27f7b8d8d8c921e568b0d777459208e7a295a903d2bfcd41aab2cc09d",
-    "train.py": "7cb6d6d71a412bb795ea598afbe8e31ccc13061a361810e6a0cd52398db16aec",
-    "utils.py": "1f3f189cf5fdd437cfd0fdf2d5fd33d113424e7effd8dcbebe10f624bd25e50b",
+OFFICIAL_SHA256 = {                          # LF-normalised (CRLF -> LF), commit cf938f4c
+    "config.py": "f4b4db1adb8d807d7e1c324bd5f0027bdec15bca978e32d36f2193c352b0bcae",
+    "dataset.py": "1f0fba5cec128db185d72d6dd3fd4e18ad0b5cfb3632c7d36f86b9a7d019353f",
+    "main.py": "dbfe8ceb561037ea58ed6c5a653811dd21f0d6e121849092da2808be3a8ce086",
+    "model.py": "a545c7f9e39cd8f589c64404aba2fdbca6b2714faab6dfc4fa683a85af58bd7b",
+    "option.py": "2ac5d30d7d2e1c7880484ae97d02801e5cdf8a020138ecb92b174c85bddbe1ee",
+    "train.py": "20bad7116f87b28f84395e39b2b02dff240644fc5f111fe791435ad4e895fdb1",
+    "utils.py": "ee2dcf9e3f4466fe7e040f5c0cf01e7a0813515b2d2b1de2d8fa921d2964f62b",
 }
 BARE = ("model", "train", "utils", "dataset", "option", "config", "test_10crop")
 PLAN_FILE = E023_DIR / "PLAN.md"
@@ -241,7 +241,9 @@ def _sha_text(text: str) -> str:
 
 
 def _sha_file(path: Path) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    """sha256 of the file with CRLF normalised to LF (a Windows checkout with core.autocrlf
+    stores CRLF; the pinned values are of the committed LF content)."""
+    return hashlib.sha256(Path(path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 # --- loading the official code ----------------------------------------------------------------
