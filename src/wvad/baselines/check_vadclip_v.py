@@ -413,7 +413,7 @@ class VisualBranch(nn.Module):
 
 
 class MemoryTestSet(Dataset):
-    """UCFDataset / XDDataset test mode (dataset.py L312-L321, L333-L341) over in-memory rows:
+    """UCFDataset / XDDataset test mode (dataset.py L24-L33, L45-L54) over in-memory rows:
     the official process_split, torch.tensor, label, length."""
 
     def __init__(self, tools, videos: Sequence[np.ndarray], clip_dim: int, label: str) -> None:

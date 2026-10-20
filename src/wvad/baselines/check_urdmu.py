@@ -45,7 +45,11 @@ audit hook lists every file the official and port runs open ("blocked" patterns 
       bit for bit; the official window boundaries (UCF get_data, XD random_perturb) equal
       derive_n.linspace_bounds (exact means, or for long videos the boundaries recovered from
       the float32-rounded means); the official float32 window means equal derive_n's stored
-      rows bit for bit (part of the pass since PLAN.md 기록 2026-10-20, choice A).
+      rows bit for bit (part of the pass since PLAN.md 기록 2026-10-20, choice A). XD's
+      random_perturb casts the boundaries to uint16, so they wrap for n > 65535 (the port keeps
+      int64): such lengths are not compared with random_perturb but listed
+      ("random_perturb_over_uint16"), and the largest training-part n_v is recorded
+      ("max_training_n_v", "max_training_n_v_over_uint16"; q7 URDMU-3).
 (q1e) ``q1e(device)``: the official test functions (ucf_test.py / xd_test.py ``test``, their own
       crop loop: UCF 10 items, XD batches of 5, one crop here) on the same weights, eval mode,
       fp32, against common.score_video (lengths below and above the unit and N_chunk, the last
@@ -871,6 +875,9 @@ def _official_loop(official: types.ModuleType, tree: Tree, dataset: str, bn: int
                 "commit": off.commit}
 
 
+UINT16_MAX = 65535      # xd utils.random_perturb: np.linspace(..., dtype=np.uint16)
+
+
 def _window_check(official: types.ModuleType, tree: Tree, dataset: str, wl: Sequence[int],
                   unit: int) -> dict:
     """Official window boundaries (rows j -> j through get_data; XD random_perturb) against
@@ -895,8 +902,9 @@ def _window_check(official: types.ModuleType, tree: Tree, dataset: str, wl: Sequ
             rows[n] = ok
         perturb = {int(n): bool(np.array_equal(
             np.asarray(utils.random_perturb(int(n), unit), dtype=np.int64),
-            derive_n.linspace_bounds(int(n), unit))) for n in wl if n <= 65535}
-    return {"rows": rows, "recovered": sorted(recovered), "perturb": perturb}
+            derive_n.linspace_bounds(int(n), unit))) for n in wl if n <= UINT16_MAX}
+    over = sorted({int(n) for n in wl if n > UINT16_MAX})      # official uint16 bounds wrap
+    return {"rows": rows, "recovered": sorted(recovered), "perturb": perturb, "over": over}
 
 
 def _means_check(official: types.ModuleType, tree: Tree, dataset: str,
@@ -966,6 +974,9 @@ def q1c(official: types.ModuleType, dataset: str, labels: Sequence[int],
             "window_bounds_failed": sorted(n for n, v in windows["rows"].items() if not v),
             "window_bounds_recovered": windows["recovered"],
             "window_lengths_checked": len(wl), "random_perturb_equal": perturb_ok,
+            "random_perturb_over_uint16": windows["over"],
+            "max_training_n_v": max((int(n) for n in lengths), default=None),
+            "max_training_n_v_over_uint16": any(int(n) > UINT16_MAX for n in lengths),
             "window_means_vs_derive_n": means, "window_means_bit_equal": means_ok,
             "edits": list(tree.edits),
             "diff_sha256": hashlib.sha256(tree.diff.encode("utf-8")).hexdigest(),

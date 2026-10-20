@@ -15,9 +15,12 @@ Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0); they were changed as l
                          line of forward (L203-L204: logits1 = classifier(v + mlp2(v)))
     src/utils/layers.py  GraphConvolution (L61-L109), DistanceAdj (L165-L179)
     src/ucf_train.py     CLAS2 (L27-L39; src/xd_train.py L27-L39 is the same loss)
-    src/utils/tools.py   pad, process_split (L258-L289) with the length loop of src/ucf_test.py
-                         test() (L23-L51; src/xd_test.py identical): the test-sequence rule
-The training-input rule (process_feat, tools.py L265-L273) is wvad.extract.derive_n variant
+    src/utils/tools.py   pad (L75-L80), process_split (L92-L106) with the length loop of
+                         src/ucf_test.py test() (L23-L51; src/xd_test.py identical): the
+                         test-sequence rule (called by src/utils/dataset.py UCFDataset L29 /
+                         XDDataset L50 in test mode)
+The training-input rule (process_feat, tools.py L82-L90 with uniform_extract L60-L73; called by
+dataset.py L27 / L48) is wvad.extract.derive_n variant
 d16p256; the per-epoch paired loaders (ucf_train.py L62-L71) are samplers "window_mean"; the XD
 loader (xd_train.py L131, L67) is the sampler "vadclip_v_xd" registered here.
 
@@ -42,11 +45,19 @@ runs the official XD configuration.
 Adaptations: (every change against the official code)
     1. input dimension: visual_width = D (official 512, the CLIP ViT-B/16 image embedding), so
        the temporal transformer, GCN (width int(D / 2)), linear, mlp2, classifier and the frame
-       position embeddings are built at D; embed_dim (the removed text branch's width) stays 512
+       position embeddings are built at D; embed_dim (the removed text branch's width) stays 512;
+       the lr is the official value, set for visual_width 512, and is not adjusted for the
+       port's width (D = 1792 / 1920; no numeric change, read D4 with this in mind)
     2. text branch removed (PLAN.md VCV, VadCLIP Table 6 "C-branch only"): no CLIP text encoder,
        no learnable prompts (text_prompt_embeddings), no mlp1 visual-prompt fusion, no logits2,
        no CLASM loss2, no loss3; the training loss is CLAS2 alone (weight 1) and the score is the
-       C-branch sigmoid (official prob1)
+       C-branch sigmoid (official prob1). CLAS2 (sigmoid, then BCE on the probabilities) has an
+       absorbing saturated state: once the fp32 sigmoid of the top-k logits rounds to 1 for a
+       normal video (0 for an anomalous one), the loss is clamped at 100 and its gradient is
+       exactly zero. In official VadCLIP the loss2 gradient (CLASM on logits2, through the shared
+       visual features) and the per-epoch reload of the best checkpoint (adaptation 10) counter
+       it; VCV has neither, which explains the seed collapses (left out by the plan's collapse
+       rule, PLAN.md 붕괴 제외). The loss is not changed.
     3. the removed modules' random draws are replayed in the official construction order (mlp1:
        two nn.Linear; clip.load("ViT-B/16"): the CLIP ViT-B/16 construction and its
        initialize_parameters; text_prompt_embeddings: nn.Embedding(77, 512) and its normal_ of
@@ -82,7 +93,10 @@ Adaptations: (every change against the official code)
        L99-L114) are not ported; selection is on validation after training (PLAN.md 체크포인트
        선택). This changes the training trajectory: the official run restarts every epoch from
        the best test checkpoint so far, here training continues from the current weights (the
-       reload needs the test set; disclosed in the (3b) record)
+       reload needs the test set; disclosed in the (3b) record), so a chain that reaches CLAS2's
+       saturated state stays there (adaptation 2). The official in-training test() iterators
+       also advance the global torch generator, so the official batch orders differ from the
+       port's after the first evaluation; the port isolates its evaluation (common.isolated_rng)
 """
 
 from __future__ import annotations
@@ -116,6 +130,14 @@ REPO = "vcv"                                  # results/e023_licences.json key
 OFFICIAL_UNIT = 256
 X32_UNIT = 32
 CLASSES = {"ucf": 14, "xdv": 7}               # ucf_option.py L14 / xd_option.py L14
+# q7 VCV-1 disclosure (adaptations 2 and 10), used in the (3b) record
+SATURATION_NOTE = ("CLAS2 (sigmoid, then BCE on the probabilities) has an absorbing saturated "
+                   "state: once the fp32 sigmoid of the top-k logits rounds to 1 for a normal "
+                   "video (0 for an anomalous one) the loss is clamped at 100 and its gradient "
+                   "is exactly zero; in official VadCLIP the loss2 gradient (CLASM on logits2) "
+                   "and the per-epoch reload of the best checkpoint counter it, VCV has neither, "
+                   "which explains the seed collapses (excluded by the plan's collapse rule, "
+                   "PLAN.md 붕괴 제외); the loss is not changed")
 
 
 # --- official configuration -------------------------------------------------------------------
@@ -497,7 +519,7 @@ def CLAS2(logits, labels, lengths, device):  # noqa: N802 - the official name
     return clsloss
 
 
-# --- copied official test-sequence rule (tools.py L258-L289, ucf_test.py L23-L51) -----------
+# --- copied official test-sequence rule (tools.py L75-L80, L92-L106, ucf_test.py L23-L51) --
 
 def pad(feat: torch.Tensor, min_len: int) -> torch.Tensor:
     """tools.pad on a (n, D) tensor: zero rows up to ``min_len`` (unchanged when longer)."""
@@ -554,9 +576,9 @@ def _input_table(cfg: VCVConfig) -> tuple[InputRow, ...]:
                  "crop a separate training item (list/*_CLIP_rgb.csv)",
                  "frozen VLM dense snippets, single crop, D = 1792 (XCB+XCL) / 1920 "
                  "(XCB+SigLIP); visual_width = D", "adapt",
-                 "src/utils/dataset.py L295-L342, src/ucf_option.py L8"),
+                 "src/utils/dataset.py L7-L54, src/ucf_option.py L8"),
         InputRow("clip_normalisation", "none (raw CLIP features)", "none", "keep",
-                 "src/utils/dataset.py L312-L321"),
+                 "src/utils/dataset.py L24-L33, L45-L54"),
         InputRow("sampler_and_length",
                  "UCF: two shuffled drop_last loaders (64 normal + 64 anomalous rows) re-created "
                  "every epoch, min(len) steps; XD: one shuffled loader of 96 rows; each list holds "
@@ -567,7 +589,8 @@ def _input_table(cfg: VCVConfig) -> tuple[InputRow, ...]:
                  "training video repeated 10 times in a row (crops 10: the official steps per "
                  "epoch and milestones; each row carries the single-crop input), on the derived "
                  "d16p256 cache (derive_n kind p = process_feat without random extract)",
-                 "keep", f"{tr} {loader}, src/utils/tools.py L265-L273, {cfg.list_file}"),
+                 "keep", f"{tr} {loader}, src/utils/tools.py L60-L73, L82-L90, "
+                 f"{cfg.list_file}"),
         InputRow("scale_match", "none", "the d16p256 rows scale-matched on the training part "
                  "(derive_n); the same map is the fixed input layer at validation and test",
                  "adapt", "-"),
@@ -579,7 +602,8 @@ def _input_table(cfg: VCVConfig) -> tuple[InputRow, ...]:
                  f"{tr} L27-L39"),
         InputRow("text_branch", "A branch: CLIP text encoder with learnable prompts, mlp1 "
                  "visual-prompt fusion, logits2 with CLASM (loss2) and loss3",
-                 "removed (C branch only: LGT-Adapter + classifier, CLAS2)", "adapt",
+                 "removed (C branch only: LGT-Adapter + classifier, CLAS2); "
+                 + SATURATION_NOTE, "adapt",
                  f"src/model.py L185-L223, {tr} {text}"),
         InputRow("top_k", "CLAS2: mean of the top int(len / 16 + 1) sigmoid scores of the "
                  "valid rows, BCE", "the same at the training length", "keep",
@@ -589,7 +613,9 @@ def _input_table(cfg: VCVConfig) -> tuple[InputRow, ...]:
                  "every epoch end (each epoch restarts from the best test point so far)",
                  "validation V-AUC after training; no reload, so training continues from the "
                  "current weights at every epoch end (a different training trajectory; the "
-                 "reload needs the test set)", "adapt", f"{tr} {select}"),
+                 "reload needs the test set; without it a chain in CLAS2's saturated state "
+                 "stays there, see text_branch); evaluation isolated from the global generator "
+                 "(the official test() iterators advance it)", "adapt", f"{tr} {select}"),
         InputRow("precision", "fp32", "fp32", "keep", "src/model.py L162"),
     )
 
@@ -601,7 +627,8 @@ def make_recipe(cfg: VCVConfig) -> Recipe:
     sources = {
         "optimizer": _src(tr, "L47" if ucf else "L48", "torch.optim.AdamW(model.parameters(), "
                           "lr=args.lr): betas, eps and weight decay are the torch defaults"),
-        "lr": _src(op, "L27"),
+        "lr": _src(op, "L27", "the official value at visual_width 512, not adjusted for the "
+                   "port's width D (1792 / 1920)"),
         "weight_decay": _src(tr, "L47" if ucf else "L48", "torch.optim.AdamW default 0.01"),
         "schedule": _src(tr, "L48, L113" if ucf else "L49, L98",
                          f"MultiStepLR({list(cfg.milestones)}, {cfg.gamma}) stepped per epoch; "
@@ -619,9 +646,9 @@ def make_recipe(cfg: VCVConfig) -> Recipe:
         "loss_weights": _src(tr, "L80-L93" if ucf else "L76-L89",
                              "loss = loss1 + loss2 + loss3; loss2 and loss3 belong to the removed "
                              "text branch"),
-        "unit": _src(op, "L7", "visual-length 256; src/utils/tools.py L265-L273 process_feat"),
+        "unit": _src(op, "L7", "visual-length 256; src/utils/tools.py L82-L90 process_feat"),
         "test_sequence": _src(cfg.test_script, "L23-L51",
-                              "process_split (src/utils/tools.py L275-L289) pieces of "
+                              "process_split (src/utils/tools.py L92-L106) pieces of "
                               "visual_length, last one padded, the length loop"),
         "visual_layers": _src(op, "L10"),
         "attn_window": _src(op, "L11"),
@@ -657,7 +684,9 @@ def make_recipe(cfg: VCVConfig) -> Recipe:
                "and the reload of the best test checkpoint at every epoch end are removed: the "
                "official trajectory restarts each epoch from the best test point so far, here "
                "training continues from the current weights (selection on validation after "
-               "training). See the module docstring 'Adaptations:'."),
+               "training). " + SATURATION_NOTE + ". The lr is the official value at "
+               "visual_width 512, not adjusted for the port's width D (1792 / 1920). See the "
+               "module docstring 'Adaptations:'."),
     )
 
 
@@ -679,10 +708,19 @@ class VadCLIPVisualMethod(BaselineMethod):
     def for_dataset(self, dataset: str) -> VadCLIPVisualMethod:
         """The method with the official configuration of ``dataset``: this instance when it is
         already that dataset's (an override or a recording subclass is kept), else
-        ``METHODS[dataset]``."""
+        ``METHODS[dataset]``; an instance with overrides (a configuration or recipe other than
+        its dataset's official one) is refused for another dataset, whose official instance would
+        silently drop them (q7 VCV-8)."""
         if dataset not in METHODS:
             raise MethodError(f"vadclip_v: no official configuration for {dataset!r}")
-        return self if self.config.dataset == dataset else METHODS[dataset]
+        if self.config.dataset == dataset:
+            return self
+        if self.config != OFFICIAL[self.config.dataset] or \
+                self.recipe != METHODS[self.config.dataset].recipe:
+            raise MethodError(f"vadclip_v: an instance with overrides of the "
+                              f"{self.config.dataset!r} configuration asked for {dataset!r} (the "
+                              "overrides would be dropped)")
+        return METHODS[dataset]
 
     def with_overrides(self, **changes) -> VadCLIPVisualMethod:
         """A copy with changed configuration fields (tests and the (q1b) self-test only, e.g.
@@ -718,6 +756,9 @@ class VadCLIPVisualMethod(BaselineMethod):
 
 
 # --- the XD sampler (xd_train.py L131, L67) --------------------------------------------------
+# _Positions and _as_tuple duplicate samplers' private _Positions / _collate on purpose: this
+# module registers its own sampler without reaching into samplers' private names (samplers.py is
+# shared by every port; q7 VCV-8 (a)).
 
 class _Positions(Dataset):
     def __init__(self, positions: Sequence[int]) -> None:

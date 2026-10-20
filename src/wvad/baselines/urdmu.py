@@ -44,11 +44,13 @@ a constant lr; per step one batch of 64 normal and one of 64 anomalous training 
 shuffled drop_last DataLoaders, each re-created when exhausted; torch.cat((normal, abnormal)));
 200 training windows per item (UCF ``np.linspace(0, n, 201, dtype=np.int)``, XD
 ``utils.random_perturb`` = ``np.linspace(0, n, 201, dtype=np.uint16)``: the same deterministic
-boundaries for n <= 65535; window i = mean of rows r[i]..r[i+1]-1, an empty window takes row
-r[i]); loss AD_Loss = att BCE + 0.1 (A_loss + N_Aatt + N_loss + A_Nloss) + 0.1 triplet
-+ 0.001 kl + 0.0001 distance (distance margin 100, triplet margin 1); net.flag "Train" /
-"Test" switches the training and the test forward; the test feeds the whole video and uses the
-sigmoid output ``frame``. The training input of the 200 unit is the derived cache ``d16m200``
+boundaries for n <= 65535; above it the official uint16 boundaries wrap, the port keeps int64
+(check_urdmu (q1c) lists such training lengths and records the largest XD training n_v);
+window i = mean of rows r[i]..r[i+1]-1, an empty window takes row r[i]); loss AD_Loss = att
+BCE + 0.1 (A_loss + N_Aatt + N_loss + A_Nloss) + 0.1 triplet + 0.001 kl + 0.0001 distance
+(distance margin 100, triplet margin 1); net.flag "Train" / "Test" switches the training and
+the test forward; the test feeds the whole video and uses the sigmoid output ``frame``. The
+training input of the 200 unit is the derived cache ``d16m200``
 (wvad.extract.derive_n kind m: these boundaries, scale-matched on the training part), sampled
 by the shared "window_mean" sampler (the same DataLoaders, per-pool reset, normal first).
 
@@ -74,10 +76,17 @@ official dict omits) instead of visdom; (10) training inputs: the d16m200 cache 
 scale match; the official float32 window means of the scale-matched snippets, bit for bit;
 official: of raw I3D crops); (11) checkpoint
 selection on validation by the shared loop (30 points) instead of the official test-set AUC / AP
-every 10 steps after step 10, and no test pass at step 0 (it also draws from the global
-generator); (12) test pieces: the whole video, cut only by the plan's N_chunk rule (score_video,
-n_v > N_chunk); (13) cudnn: the official utils.set_seed sets cudnn.deterministic = True and
-benchmark = False; here the shared loop sets cudnn.deterministic only in --deterministic mode.
+every 10 steps after step 10; no test pass at all: every official test pass (step 0 and every
+10 steps after step 10) creates a DataLoader iterator that draws from the CPU generator, and the
+port and the (q1b) reference have no test passes, so the batch orders equal the official run's
+only with the test passes removed; (12) test pieces: the whole video, cut only by the plan's
+N_chunk rule (score_video, n_v > N_chunk); the cut limits UR-DMU's global attention (attn1
+of the GL-MHSA ``Attention``) and its convolution borders to each piece, so it is not neutral
+across methods (per-snippet methods such as MIL are unaffected); the cut videos and the last
+pieces under 16 snippets per dataset are counted from the recorded total_frames in gate (q6)
+(``e023_gates.piece_counts``); (13) cudnn: the official utils.set_seed sets
+cudnn.deterministic = True and benchmark = False; here the shared loop sets cudnn.deterministic
+only in --deterministic mode.
 """
 
 from __future__ import annotations

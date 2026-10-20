@@ -286,6 +286,29 @@ def _calls(source: str, name: str) -> int:
         or (isinstance(n.func, ast.Attribute) and n.func.attr == name)))
 
 
+# short-piece thresholds (q7 RTFM-4, URDMU-2): RTFM's top-k (k = 3) and UR-DMU's context (16)
+SHORT_PIECES = {"rtfm_lt3": 3, "urdmu_lt16": 16}
+
+
+def piece_counts(total_frames: Sequence[int], n_chunk: int,
+                 short: Mapping[str, int] = SHORT_PIECES) -> dict:
+    """From the frame counts only (no feature, no score): the videos cut by N_chunk and, per
+    threshold, the last pieces of the cut videos and the whole (uncut) videos shorter than it,
+    in snippets (common.chunk_bounds of n_v = ceil(T / 16))."""
+    from wvad.baselines.common import chunk_bounds
+    from wvad.extract import grid
+
+    n_v = [grid.n_snippets(int(t)) for t in total_frames]
+    cut = [n for n in n_v if n > int(n_chunk)]
+    last = [chunk_bounds(n, int(n_chunk))[-1] for n in cut]
+    return {"videos": len(n_v), "cut_videos": len(cut),
+            "max_snippets": max(n_v) if n_v else None,
+            "short": {k: {"snippets_below": int(m),
+                          "cut_last_pieces": sum(1 for a, b in last if b - a < m),
+                          "whole_videos": sum(1 for n in n_v if n <= int(n_chunk) and n < m)}
+                      for k, m in short.items()}}
+
+
 def gate_q6(n_chunk: int, totals: Mapping[str, Sequence[int]],
             names: Mapping[str, Sequence[str]] | None, recorded: Mapping[str, Sequence[str]],
             sources: Mapping[str, str]) -> dict:
@@ -293,7 +316,8 @@ def gate_q6(n_chunk: int, totals: Mapping[str, Sequence[int]],
     (0) frame counts equals the recorded target list per dataset: by name with ``names``, else
     by count; access (A)'s own list is compared by name in (v3)) and validation and test call
     the same function (``score_video`` is called in each source of ``sources``: the training
-    loop and the test scoring)."""
+    loop and the test scoring). Each dataset row also records ``pieces`` (``piece_counts``: cut
+    videos, short last pieces and short whole videos; information, not a pass condition)."""
     from wvad.baselines.common import chunk_targets
 
     rows = {}
@@ -305,6 +329,7 @@ def gate_q6(n_chunk: int, totals: Mapping[str, Sequence[int]],
         else:
             want = [names[d][i] for i in idx]
             rows[d] = {"targets": want, "recorded": rec, "ok": want == rec}
+        rows[d]["pieces"] = piece_counts(list(t), int(n_chunk))
     shared = {k: _calls(src, "score_video") > 0 for k, src in sources.items()}
     return {"n_chunk": int(n_chunk), "datasets": rows, "same_function": shared,
             "ok": bool(rows) and all(r["ok"] for r in rows.values()) and bool(shared)

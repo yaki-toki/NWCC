@@ -55,12 +55,20 @@ regulariser; (4) the hard-coded pool sizes Num_abnormal = 810 / Num_Normal = 800
 part's anomalous / normal video counts, indexed in training-part order (official: sorted feature
 file names); (5) Keras / Theano -> PyTorch: the dropout masks come from torch's generator
 (official: Theano MRG streams seeded by the np.random.randint draws, which are still consumed);
-Theano 1.0.2's float32 C sigmoid (exactly 1 above 15 and 0 below -88) is not emulated
-(torch.sigmoid differs from it there by < 3.1e-7); the Keras objective wrapper with unit sample
-weights (the mean of 1,920 copies of the loss) is the identity and omitted; (6) the loop seeds
-random / numpy / torch (official: unseeded); (7) checkpoint = validation V-AUC selection over 30
-evaluation points (official: weights saved every 1,000 iterations and at the end); (8) the
-network returns logits (the official sigmoid is applied by the loss and the readouts).
+Theano 1.0.2's float32 C sigmoid (exactly 1 above 15 and 0 below -88, and its zero gradient
+there) is not emulated (torch.sigmoid differs from it there by < 3.1e-7); the Keras objective
+wrapper with unit sample weights (the mean of 1,920 copies of the loss) is the identity and
+omitted; (6) the loop seeds random / numpy / torch (official: unseeded); (7) checkpoint =
+validation V-AUC selection over 30 evaluation points (official: weights saved every 1,000
+iterations and at the end); (8) the network returns logits (the official sigmoid is applied by
+the loss and the readouts).
+
+Paper vs official code (MIL-1): the code is followed (PLAN.md rule: the official code is the
+reference). The optimizer lr is the code's Adagrad lr 0.01 (T L276) and the weight penalty the
+code's Keras W_regularizer l2(0.001), i.e. 0.001 x sum(W^2) per Dense weight (T L31-L35); the
+paper (Sec. 5.1) states lr 0.001 and an unweighted Frobenius-norm term. The paper lr is x1/10
+of the code value: of the D4 learning-rate values the closest is the widened x1/9 (reached only
+when x1/3 wins), and of the base grid x1/3.
 """
 
 from __future__ import annotations
@@ -151,10 +159,12 @@ RECIPE = Recipe(
     sources={
         "optimizer": _src(OFFICIAL_FILE, "L276-L278", "Adagrad(lr=0.01, epsilon=1e-08); "
                           "Keras 1.1.0 optimizers.py L251-L278 (decay 0)"),
-        "lr": _src(OFFICIAL_FILE, "L276"),
+        "lr": _src(OFFICIAL_FILE, "L276", "code value 0.01 followed; the paper (Sec. 5.1) "
+                   "states 0.001 (x1/10; closest D4 value: the widened x1/9, base grid x1/3)"),
         "weight_decay": _src(OFFICIAL_FILE, "L31-L35", "W_regularizer=l2(0.001) on every "
                              "Dense weight: a loss term (loss_weights.weight_l2), not "
-                             "optimizer decay"),
+                             "optimizer decay; code followed, the paper (Sec. 5.1) states an "
+                             "unweighted Frobenius norm"),
         "schedule": _src(OFFICIAL_FILE, "L276, L301-L306", "constant lr, one batch per "
                          "iteration"),
         "iterations": _src(OFFICIAL_FILE, "L296", "num_iters = 20000"),
@@ -169,7 +179,10 @@ RECIPE = Recipe(
                               "(row-wise network)"),
     },
     notes="Re-implementation (no licence). Adaptations: see the wvad.baselines.mil docstring. "
-          "No scale constant (D4 checks the lr only).",
+          "No scale constant (D4 checks the lr only). Paper vs code: the official code is "
+          "followed (lr 0.01 at T L276, l2(0.001) at T L31-L35); the paper (Sec. 5.1) states "
+          "lr 0.001 and an unweighted Frobenius norm; the paper lr is x1/10 of the code value "
+          "(closest D4 value: the widened x1/9, base grid x1/3).",
 )
 
 if RECIPE.loss_weights["ranking"] != 1.0:          # T L271: T.mean(z) enters unweighted

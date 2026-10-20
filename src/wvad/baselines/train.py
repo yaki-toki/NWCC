@@ -302,7 +302,11 @@ def _device(name: str | None) -> torch.device:
 def _environment(device: torch.device) -> dict:
     return {"python": sys.version.split()[0], "torch": torch.__version__,
             "cuda": torch.version.cuda, "numpy": np.__version__, "device": str(device),
-            "gpu": torch.cuda.get_device_name(device) if device.type == "cuda" else None}
+            "gpu": torch.cuda.get_device_name(device) if device.type == "cuda" else None,
+            # recorded, never set (q7 MIL-3): TF32 and the float32 matmul precision
+            "cuda_matmul_allow_tf32": bool(torch.backends.cuda.matmul.allow_tf32),
+            "cudnn_allow_tf32": bool(torch.backends.cudnn.allow_tf32),
+            "float32_matmul_precision": torch.get_float32_matmul_precision()}
 
 
 def _code() -> dict:

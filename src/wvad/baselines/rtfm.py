@@ -36,7 +36,9 @@ What is re-implemented (official file and lines at that commit)
                 (the generic "window_mean" sampler, normal first), zero_grad / backward / step.
     scoring     test_10crop.py L11-L19: every snippet of the whole video in one sequence, eval
                 mode; the official score is the sigmoid of fc3, ``sequence_logits`` returns the
-                fc3 output itself (its fp32 sigmoid is the official score).
+                fc3 output itself (its fp32 sigmoid is the official score); that per-snippet
+                sigmoid is computed off-device in fp32 NumPy (common.score_video), the official
+                one on the device: ULP-level differences, within the (q1e) tolerance.
 
 Adaptations: (1) input dimension D = 1792 (XCB+XCL) / 1920 (XCB+SigLIP) instead of the I3D 2048:
 the input width of the three dilated convolutions and of the 1x1 convolution, the output width
@@ -61,6 +63,17 @@ every 5 steps after step 200; no test call before training; the generators are s
 construction (the official code seeds nothing). (8) XD-Violence uses the official settings
 above (the repository configures only ShanghaiTech and UCF-Crime; option.py defaults apply to
 both).
+
+Paper vs official code (q7 RTFM-1, RTFM-2): the code at cf938f4c is followed wherever it differs
+from the paper (PLAN.md rule: the official code is the reference). The paper (arXiv 2101.10030,
+Sec. 4.2 "Implementation Details") states Adam with weight decay 0.0005, batch size 64 (32 normal
++ 32 abnormal) for 50 epochs, lr 0.001 for ShanghaiTech and UCF-Crime and lr 0.0001 for
+XD-Violence (m = 100, k = 3, T = 32); the code uses weight decay 0.005 (main.py L41), lr 0.001
+for every dataset (option.py L11) and 15000 steps (option.py L19). The paper's XD lr is x1/10 of
+the code value (closest D4 value: the widened x1/9, base grid x1/3). The paper's feature
+magnitude loss (Sec. 3.3, Eq. 6) is the hinge max(0, m - (g_k(X+) - g_k(X-))); the code's is
+(|m - ||f_a||| + ||f_n||)^2 (train.py L71-L77); the code also applies dropout to the top-k
+selection mask (model.py L231-L232, L253-L254), which the paper does not describe.
 """
 
 from __future__ import annotations
@@ -168,7 +181,15 @@ RECIPE = Recipe(
     notes="RTFM official defaults (option.py) for both datasets: the repository has no "
           "XD-Violence configuration. Official unit 32, so there is no X.32 arm. The margin is "
           "the only scale constant (D4 x{1/10, 1, 10}); alpha, smooth and sparsity weights are "
-          "loss weights. See the module docstring for the adaptations.",
+          "loss weights. See the module docstring for the adaptations. Paper vs code (the code "
+          "at cf938f4c is followed): the paper (arXiv 2101.10030 Sec. 4.2) states Adam weight "
+          "decay 0.0005, lr 0.001 (ShanghaiTech, UCF-Crime) and 0.0001 (XD-Violence), batch 64 "
+          "for 50 epochs; the code uses weight decay 0.005, lr 0.001 for every dataset and "
+          "15000 steps; the paper's XD lr is x1/10 of the code value (closest D4 value: the "
+          "widened x1/9, base grid x1/3). The code's magnitude loss (|m - ||f_a||| + "
+          "||f_n||)^2 differs from the paper's hinge (Eq. 6), and the code drops out the top-k "
+          "selection mask. Loss parts mag_abnormal / mag_normal: batch means of the top-k "
+          "feature magnitudes (diagnostics, not in the cost).",
 )
 
 
@@ -324,6 +345,10 @@ class RTFMLoss(NamedTuple):
     rtfm: torch.Tensor          # BCE + alpha * magnitude term
     smooth: torch.Tensor
     sparsity: torch.Tensor
+    # q7 RTFM-5 diagnostics (detached, never part of the cost): batch means of the top-k feature
+    # magnitudes ||mean_k f|| of the abnormal / normal videos, to read against the margin
+    mag_abnormal: torch.Tensor | None = None
+    mag_normal: torch.Tensor | None = None
 
 
 def rtfm_cost(model: RTFMNet, inputs: torch.Tensor, labels: torch.Tensor, n_normal: int, *,
@@ -343,10 +368,12 @@ def rtfm_cost(model: RTFMNet, inputs: torch.Tensor, labels: torch.Tensor, n_norm
     smooth = w["smooth"] * torch.sum((following - abn) ** 2)
     score = torch.cat((out.score_normal, out.score_abnormal), 0).squeeze()
     cls = F.binary_cross_entropy(score, labels.to(score.device))
-    far = torch.abs(margin - torch.norm(torch.mean(out.feat_abnormal, dim=1), p=2, dim=1))
+    mag_abn = torch.norm(torch.mean(out.feat_abnormal, dim=1), p=2, dim=1)
+    far = torch.abs(margin - mag_abn)
     near = torch.norm(torch.mean(out.feat_normal, dim=1), p=2, dim=1)
     rtfm = cls + w["alpha"] * torch.mean((far + near) ** 2)
-    return RTFMLoss(rtfm + smooth + sparse, rtfm, smooth, sparse)
+    return RTFMLoss(rtfm + smooth + sparse, rtfm, smooth, sparse,
+                    mag_abn.detach().mean(), near.detach().mean())
 
 
 # --- the method -------------------------------------------------------------------------------
@@ -372,10 +399,17 @@ class RTFM(BaselineMethod):
         expected = torch.cat([torch.zeros(n), torch.ones(b - n)]).to(batch.labels)
         if 2 * n != b or not torch.equal(batch.labels, expected):
             raise MethodError("rtfm batches are n normal videos followed by n abnormal ones")
+        if n < 2:
+            # q7 RTFM-3: with one normal video the official forward swaps in its inference path
+            # (model.py L226-L229: abnormal := normal), a degenerate training batch
+            raise MethodError(f"rtfm trains on at least 2 normal + 2 abnormal videos, got "
+                              f"n_normal={n} (the official one-video case is its inference)")
         out = rtfm_cost(model, batch.features[:, None], batch.labels, n,
                         margin=float(scale["margin"]), weights=self.recipe.loss_weights)
         return LossOutput(out.total, {"rtfm": out.rtfm.detach(), "smooth": out.smooth.detach(),
-                                      "sparsity": out.sparsity.detach()})
+                                      "sparsity": out.sparsity.detach(),
+                                      "mag_abnormal": float(out.mag_abnormal),
+                                      "mag_normal": float(out.mag_normal)})
 
     def sequence_logits(self, model: nn.Module, x: torch.Tensor, *, unit: int) -> torch.Tensor:
         self.recipe.unit_input(unit)
