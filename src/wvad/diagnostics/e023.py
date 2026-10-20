@@ -433,9 +433,31 @@ def stored_logits(runs: Path, scores: Path, label: str, entry: Mapping) -> dict:
             "labels": z["labels"], "steps": z["eval_steps"], "val_indices": z["val_indices"]}
 
 
+def collapse_check(selection: Mapping, e022_selection: Path | None = None) -> dict:
+    """PLAN.md "실패 처리" "붕괴 제외": the selection's collapse record is the rule's. It holds the
+    "collapse" block; its "c_chains" equal e023_score.c_collapse of E022's committed selection
+    (default E022_SELECTION: every chain of the experiment, no partial set); every chain's
+    "collapsed" flag equals e023_stats.collapsed of its selected sigma V-AUC (no selection:
+    False). The one check of gates --stage train ("collapse"), records_check and failures."""
+    block = selection.get("collapse")
+    try:
+        rows, problems = sc.c_collapse(e022_selection or E022_SELECTION)
+    except (OSError, ValueError) as exc:
+        rows, problems = {}, [f"E022 selection unreadable: {exc!r}"]
+    flags = sorted(k for k, e in (selection.get("chains") or {}).items()
+                   if bool(e.get("collapsed")) != st.collapsed(
+                       ((e.get("selection") or {}).get("sigma") or {}).get("v_auc")))
+    has = isinstance(block, Mapping)
+    equal = has and not problems and dict(block.get("c_chains") or {}) == rows
+    return {"block": has, "c_chains_equal": bool(equal), "c_chains": len(rows),
+            "c_problems": problems, "flags_mismatched": flags,
+            "ok": bool(has and equal and not flags)}
+
+
 def train_gates(args: argparse.Namespace) -> dict:
-    """(a), (b), (d), (f), (g), (p), (s), (w), (w2), (n) (PLAN.md "학습·선택 관문"); runs named
-    by --gate_failed are left out and recorded."""
+    """(a), (b), (d), (f), (g), (p), (s), (w), (w2), (n) (PLAN.md "학습·선택 관문") and the
+    collapse record (``collapse_check``, PLAN.md "붕괴 제외"); runs named by --gate_failed are
+    left out and recorded."""
     selection, book = _json(OUT["selection"]), _json_or(OUT["all_ckpts"], {"chains": {}})
     arms = gt.arms_from_json(selection["arms"])
     dropped = sorted(set(args.gate_failed))
@@ -495,7 +517,8 @@ def train_gates(args: argparse.Namespace) -> dict:
     res["w2"] = gt.gate_w2(w2)
     hist = {k: _json(Path(args.runs) / k / bt.FILES["history"])["points"] for k, _ in base}
     res["n"] = gt.gate_n(hist, {k: v["z"] for k, v in stored.items()})
-    names = ("a", "a_cl20", "b", "d", "f", "g", "p", "s", "w", "w2", "n")
+    res["collapse"] = collapse_check(selection)
+    names = ("a", "a_cl20", "b", "d", "f", "g", "p", "s", "w", "w2", "n", "collapse")
     res["status"] = {n: bool(res[n]["ok"]) for n in names}
     res["ok"] = all(res["status"].values())
     return res
@@ -698,8 +721,15 @@ def history_nonfinite(runs: Path, label: str, entry: Mapping) -> bool:
 def failures(runs: Path, selection: Mapping, loaded: Loaded, gate_failed: Sequence[str]
              ) -> list[st22.Failure]:
     """The runs left out per rule (PLAN.md "실패 처리"): infrastructure (selection), gate
-    (--gate_failed), numerical (a non-finite training loss: every rule of the chain; no selected
-    checkpoint; non-finite test scores)."""
+    (--gate_failed), collapsed (st.COLLAPSED, "붕괴 제외": the chain's "collapsed" flag of the
+    committed selection, every rule of the chain; E022 C's chains under "collapse" ->
+    "c_chains", C and C.last; a collapse record that fails ``collapse_check`` is refused),
+    numerical (a non-finite training loss: every rule of the chain; no selected checkpoint;
+    non-finite test scores)."""
+    chk = collapse_check(selection)
+    if not chk["ok"]:
+        raise ValueError(f"the selection's collapse record is not the rule's (PLAN.md 붕괴 "
+                         f"제외): {chk}")
     out = []
     for label, e in (selection.get("chains") or {}).items():
         chain, _run = label.split("/")
@@ -709,9 +739,16 @@ def failures(runs: Path, selection: Mapping, loaded: Loaded, gate_failed: Sequen
             kind = st22.INFRASTRUCTURE if label not in gate_failed else st22.GATE
             out += [st22.Failure(d, p, s, a, kind) for a in rules]
             continue
+        if e.get("collapsed"):
+            out += [st22.Failure(d, p, s, a, st.COLLAPSED) for a in rules]
+            continue
         hist = history_nonfinite(runs, label, e)
         out += [st22.Failure(d, p, s, a, st22.NUMERICAL) for a in rules
                 if hist or (d, p, s, a) not in loaded.units]
+    for label, r in selection["collapse"]["c_chains"].items():
+        if r["collapsed"]:
+            d, p, s = gt.split_chain(label.split("/")[0])
+            out += [st22.Failure(d, p, s, a, st.COLLAPSED) for a in gt.C_ARMS]
     for (d, p, s, a), bad in loaded.nonfinite.items():
         if a in gt.C_ARMS and bad:
             out.append(st22.Failure(d, p, s, a, st22.NUMERICAL))
@@ -972,6 +1009,7 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
     offsets = load_e022(args.e022_scores, sets, loaded)
     fails = failures(args.runs, selection, loaded, args.gate_failed)
     gone = {(f.dataset, f.pair, f.seed, f.arm) for f in fails}
+    collapsed_runs = {(f.dataset, f.pair, f.seed, f.arm) for f in fails if f.kind == st.COLLAPSED}
     units = {k: u for k, u in loaded.units.items() if k not in gone}
     metrics, per_sigma = {}, {}
     for k, u in units.items():
@@ -1005,7 +1043,9 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
                                   for d in gt.DATASETS},
                       pooled={d: values(metrics, d, "logit", PRIMARY[d]) for d in gt.DATASETS},
                       family_arms=fam, x32_arms=x32, boot_l=boot_l, boot_pooled=boot_p,
-                      degenerate_rows=st.degenerate(sel_v, loaded.constant_share, fam),
+                      degenerate_rows=st.degenerate({k: v for k, v in
+                                                     loaded.constant_share.items()
+                                                     if k not in collapsed_runs}, fam),
                       weak=weak_arms(arms), gates_ok=True)
     summary = {"check": "E023 stage F2: localisation against same-feature comparison methods "
                         "(PLAN.md 판정)", **stamp, "gate": gate.get("status"),
@@ -1052,7 +1092,8 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
 
 def records_check(scores: Path) -> dict:
     """The committed records the analysis relies on: (v3) and (k) passed, the score sha256 list
-    committed and equal to the copy's, the selection files, E022's lists."""
+    committed and equal to the copy's, the selection files and their collapse record
+    (``collapse_check``), E022's lists."""
     gate = _json_or(OUT["gate"], {})
     listed = Path(scores) / "test" / "scores.sha256"
     out = {"gate_committed": OUT["gate"].is_file() and committed(OUT["gate"]),
@@ -1062,6 +1103,7 @@ def records_check(scores: Path) -> dict:
            "scores_list_equal": OUT["scores"].is_file() and listed.is_file()
            and OUT["scores"].read_text(encoding="utf-8") == listed.read_text(encoding="utf-8"),
            "selection_committed": OUT["selection"].is_file() and committed(OUT["selection"]),
+           "collapse_record": collapse_check(_json_or(OUT["selection"], {}))["ok"],
            "e022_lists_committed": committed(E022_SCORES_LIST) and committed(E022_SELECTION),
            "q1d_recorded": q1d_check(_json_or(OUT["q1b"], {}).get("q1d"), [
                a.method for a in gt.arms_from_json(

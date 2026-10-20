@@ -50,7 +50,10 @@ x{1/10, 1, 10} (not widened); development seeds 0-2, the full official schedule,
 points' sigma W-readout validation V-AUCs, then the mean over the 3 seeds (``d4_score``). Choice:
 the highest score by strict >; a float64 tie with the official value keeps the official value;
 other ties take the value closer to the official one (|log multiplier|), and an equal distance
-the smaller multiplier (``d4_pick``).
+the smaller multiplier (``d4_pick``). Eligibility (PLAN.md "실패 처리" "붕괴 제외", user
+2026-10-20): a value takes part in the choice only when at least 2 of its development seeds did
+not collapse (selected sigma V-AUC >= 0.60; the score is over those seeds); with no eligible
+value nothing is chosen.
 """
 
 from __future__ import annotations
@@ -400,6 +403,7 @@ class D4Grid:
     top: int = 5
     readout: str = "sigma"
     official: str = "1"
+    min_surviving: int = 2                       # development seeds left after "붕괴 제외"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "widen", _frozen(self.widen))
@@ -408,7 +412,7 @@ class D4Grid:
         return {"lr_mults": list(self.lr_mults), "widen": dict(self.widen),
                 "scale_mults": list(self.scale_mults), "seeds": list(self.seeds),
                 "eval_points": self.eval_points, "top": self.top, "readout": self.readout,
-                "official": self.official,
+                "official": self.official, "min_surviving": self.min_surviving,
                 "score": f"per seed the mean of the {self.top} highest of the "
                          f"{self.eval_points} evaluation points' {self.readout} W-readout "
                          "validation V-AUCs, then the mean over the seeds",
@@ -416,7 +420,11 @@ class D4Grid:
                           "it; other ties: closer to the official value (|log m|), then the "
                           "smaller multiplier",
                 "widening": "lr only, once, in the direction of a winning end value; scale "
-                            "constants are not widened"}
+                            "constants are not widened",
+                "eligibility": f"a value takes part in the choice only with at least "
+                               f"{self.min_surviving} development seeds that did not collapse "
+                               "(selected sigma V-AUC >= 0.60, PLAN.md 붕괴 제외); none "
+                               "eligible: no choice"}
 
 
 D4 = D4Grid()
@@ -436,13 +444,20 @@ def d4_score(v_auc, grid: D4Grid = D4) -> float:
     return float(per_seed.mean())
 
 
-def d4_pick(scores: Mapping[str, float], grid: D4Grid = D4) -> str:
+def d4_pick(scores: Mapping[str, float], grid: D4Grid = D4,
+            surviving: Mapping[str, int | None] | None = None) -> str | None:
     """The chosen multiplier label: highest score by strict >; ties keep the official value,
     else the one closer to it (|log m|), then the smaller multiplier. Non-finite scores never
-    win; all non-finite: the official value."""
-    finite = {k: float(v) for k, v in scores.items() if math.isfinite(float(v))}
+    win; all non-finite: the official value. ``surviving`` (value -> development seeds that did
+    not collapse): a value with fewer than ``grid.min_surviving`` is not eligible and never
+    chosen; no eligible value (or only non-finite ones without the official value): None."""
+    cand = {k: v for k, v in scores.items()
+            if surviving is None or (surviving.get(k) or 0) >= grid.min_surviving}
+    if not cand:
+        return None
+    finite = {k: float(v) for k, v in cand.items() if math.isfinite(float(v))}
     if not finite:
-        return grid.official
+        return grid.official if surviving is None or grid.official in cand else None
     best = max(finite.values())
     tied = [k for k, v in finite.items() if v == best]
     if grid.official in tied:

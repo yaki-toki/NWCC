@@ -16,7 +16,12 @@ RTFM, URDMU, VCV, ...), their checkpoint rules "<arm>.logit" / "<arm>.last", the
                 positive, negative, equivalent (98% Welch interval inside (-m_L, +m_L)),
                 inconclusive (e022_stats.grade, rule 'point'); without margins (D6 (c)) neither
                 substantive nor equivalent; a contrast with fewer than 8 complete seeds in an
-                arm: "판정 없음(비교 기법 수치 불안정)", counted as inconclusive (p = NaN, Holm 1)
+                arm (numerical failures and collapsed chains left out): "판정 없음(비교 기법 수치
+                불안정·붕괴)", counted as inconclusive (p = NaN, Holm 1)
+    collapse    PLAN.md "실패 처리" "붕괴 제외" (user, 2026-10-20): a chain whose selected sigma
+                validation V-AUC is below 0.60 leaves every rule (``collapsed``; fixed in the
+                selection record before access (A), no rerun, no replacement seed); the flag
+                "비교 기법 퇴화" keeps only the test-constancy criterion (``degenerate``)
     B*_d        the main-family arm of the highest seed-mean L (ties: smaller seed SD, then name);
                 C - B*_d by Welch, Holm over the two datasets
     S_d         1 all substantive positive, 2 all positive, 3 a negative grade, 4 C - B*_d positive
@@ -60,13 +65,15 @@ BOOT_LEVEL = 0.99
 BOOT_LEVELS = (0.99, 0.95)
 BOOT_R, BOOT_SEED = 5000, 20261019
 MIN_COMPLETE = 8
+COLLAPSE_V_AUC = 0.60                            # "붕괴 제외": selected sigma V-AUC (fraction)
+COLLAPSED = "collapsed"                          # the failure kind (e022_stats.Failure.kind)
 MARGIN_POOLED = dict(st20.MARGIN)                # m_d: UCF frame AUC 0.5, XD frame AP 2.0
 MARGIN_L = {"a": {"ucf": 0.5, "xdv": 2.0}, "b": {"ucf": 1.0, "xdv": 2.0}, "c": None}   # D6
 D5_OPTIONS, REQUIREMENTS, D6_OPTIONS = ("a", "b", "c"), ("i", "ii"), ("a", "b", "c")
 
 SUB, STAT, NEG, EQ, INC = st22.SUB, st22.STAT, st22.NEG, st22.EQ, st22.INC
 POSITIVE = (SUB, STAT)
-NO_VERDICT = "판정 없음(비교 기법 수치 불안정)"
+NO_VERDICT = "판정 없음(비교 기법 수치 불안정·붕괴)"
 GRADE_NAMES = {SUB: "실질 양", STAT: "통계 양", NEG: "음", EQ: "동등", INC: "결론 없음"}
 CATEGORIES = {1: "모든 비교 기법보다 낫다(실질)", 2: "모든 비교 기법보다 낫다(통계적으로만)",
               3: "비교 기법에 뒤짐(목록)", 4: "가장 강한 비교 기법보다 낫다", 5: "미충족(등급표)"}
@@ -91,7 +98,7 @@ FLAG_NAMES = {"setting_dependent": "설정 의존", "readout_sensitive": "판독
               "l_metric_kind_sensitive": "L 지표 종류 민감",
               "pooled_inferiority": "합산 지표 열세",
               "baseline_degenerate": "비교 기법 퇴화",
-              "numerically_unstable": "수치 불안정",
+              "numerically_unstable": "수치 불안정·붕괴",
               "weak_under_adaptation": "적응 하의 약함"}
 MECH_RAISED, MECH_LOWERED, MECH_NONE = "offset_raised", "offset_lowered", "not_established"
 
@@ -534,21 +541,30 @@ def setting_family(vals_by_d: ByDataset, arms: Sequence[str], c: str = "C", *,
     return rows
 
 
-def degenerate(selected_v_auc: Mapping[tuple[str, str, int, str], float],
-               constant_share: Mapping[tuple[str, str, int, str], float],
-               arms: Sequence[str], threshold: float = 0.60, seeds_min: int = 3) -> dict:
-    """"비교 기법 퇴화" per arm and dataset: >= 3 seeds with a selected validation V-AUC
-    (fraction, either pair) below 0.60, or a run whose test scores are constant inside more than
-    half of the videos (``constant_share``: (dataset, pair, seed, arm) -> share)."""
+def collapsed(v_auc: float | None, threshold: float = COLLAPSE_V_AUC) -> bool:
+    """PLAN.md "실패 처리" "붕괴 제외" (user, 2026-10-20; validation only): a chain whose selected
+    validation V-AUC of the sigma readout (fraction) is below ``threshold`` (0.60: below it
+    collapses, 0.60 itself does not) leaves every rule of the chain, like a numerical failure; no
+    rerun, no replacement seed. None or a non-finite value (no selection: a numerical failure,
+    handled as such) is not a collapse."""
+    return v_auc is not None and math.isfinite(float(v_auc)) and float(v_auc) < threshold
+
+
+def degenerate(constant_share: Mapping[tuple[str, str, int, str], float],
+               arms: Sequence[str]) -> dict:
+    """"비교 기법 퇴화" per arm and dataset (PLAN.md "실패 처리" "퇴화 표지"; a flag, the run is
+    kept): a run whose test scores are constant inside more than half of the videos
+    (``constant_share``: (dataset, pair, seed, arm) -> share; the caller leaves out only the
+    collapsed runs, so a numerically failed run with finite test scores can still raise it). The
+    former validation criterion (>= 3 seeds below V-AUC 0.60) is now the exclusion rule
+    ``collapsed``."""
     out = {}
     for d in DATASETS:
         for a in arms:
-            low = sorted({s for (dd, _p, s, aa), v in selected_v_auc.items()
-                          if dd == d and aa == a and v is not None and v < threshold})
             const = sorted(f"{p}/s{s}" for (dd, p, s, aa), v in constant_share.items()
                            if dd == d and aa == a and v > 0.5)
-            if len(low) >= seeds_min or const:
-                out[key(a, d)] = {"low_v_auc_seeds": low, "constant_runs": const}
+            if const:
+                out[key(a, d)] = {"constant_runs": const}
     return out
 
 
@@ -573,7 +589,9 @@ def flags(*, main: Mapping, arms: Sequence[str], l_sigma_main: Mapping,
     training_unit_sensitive     C - X.32 grades (Holm over the X.32 family) differ from C - X
     l_metric_kind_sensitive     grades change with the opposite within-video metric
     pooled_inferiority          condition (3)'s flag
-    baseline_degenerate / numerically_unstable / weak_under_adaptation"""
+    baseline_degenerate         ``degenerate`` (test-constant runs, kept)
+    numerically_unstable        the "판정 없음" contrasts (numerical failures or collapses)
+    weak_under_adaptation       (q1d)"""
     fam = main["contrasts"]
     sig = {k: r["p_holm"] < alpha for k, r in fam.items()}
     out = {"setting_dependent": sorted(k for k, r in settings.items()

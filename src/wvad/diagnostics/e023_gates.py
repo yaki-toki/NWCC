@@ -46,6 +46,7 @@ from wvad.baselines.recipes import dataset_recipe
 from wvad.data import dense_test as dt
 from wvad.diagnostics import e022_gates as g22
 from wvad.diagnostics import e023_access as ea
+from wvad.diagnostics.e023_stats import collapsed
 from wvad.paths import REPO_ROOT
 
 E023_DIR = REPO_ROOT / "experiments" / "E023_localisation_baselines"
@@ -328,33 +329,45 @@ def q1d_record(v_aucs: Mapping[str, Mapping[str, Mapping[int, float | None]]],
     0-2, the official recipe at lr x1) each method's mean selected sigma V-AUC (points) against
     the MIL port's mean - ``floor_points``; below the floor the method is kept and flagged
     "적응 하의 약함" (no porting gate). ``v_aucs``: method -> dataset -> seed -> the chain's
-    selected sigma V-AUC (0-1; None: the chain has no selection). ``complete`` is False while a
-    value is missing (the record is then refused by the callers)."""
+    selected sigma V-AUC (0-1; None or a non-finite value: missing). A collapsed chain (PLAN.md
+    "붕괴 제외": e023_stats.collapsed, V-AUC < 0.60) is left out of the means and named under
+    "collapsed_seeds" (no seed left: mean None, no flag). ``complete`` is False while a value is
+    missing (the record is then refused by the callers)."""
     if reference not in methods:
         raise ValueError(f"(q1d) needs the reference port {reference!r} in {list(methods)}")
+    def present(v: float | None) -> bool:
+        return v is not None and math.isfinite(float(v))
     missing = sorted(f"{m}/{d}/s{s}" for m in methods for d in datasets for s in seeds
-                     if (v_aucs.get(m, {}).get(d, {}) or {}).get(s) is None)
+                     if not present((v_aucs.get(m, {}).get(d, {}) or {}).get(s)))
+
+    def mean_points(vals: Sequence[float | None]) -> float | None:
+        kept = [v for v in vals if not collapsed(v)]
+        return 100 * float(np.mean(kept)) if kept and all(present(v) for v in vals) else None
     rows: dict = {m: {"datasets": {}, "flag": False} for m in methods}
     refs = {}
     for d in datasets:
         ref = [(v_aucs.get(reference, {}).get(d, {}) or {}).get(s) for s in seeds]
-        ref_mean = 100 * float(np.mean(ref)) if all(v is not None for v in ref) else None
+        ref_mean = mean_points(ref)
         refs[d] = {"reference_mean_points": ref_mean,
                    "floor_points": None if ref_mean is None else ref_mean - floor_points}
         for m in methods:
             vals = [(v_aucs.get(m, {}).get(d, {}) or {}).get(s) for s in seeds]
-            mean = 100 * float(np.mean(vals)) if all(v is not None for v in vals) else None
+            mean = mean_points(vals)
             below = None if mean is None or ref_mean is None else bool(
                 mean < ref_mean - floor_points)
             rows[m]["datasets"][d] = {"seeds": {str(s): v for s, v in zip(seeds, vals,
                                                                          strict=True)},
+                                      "collapsed_seeds": [s for s, v in zip(seeds, vals,
+                                                                            strict=True)
+                                                          if collapsed(v)],
                                       "mean_points": mean, "below_floor": below}
             rows[m]["flag"] = bool(rows[m]["flag"] or below)
     return {"check": "E023 (q1d) sanity floor (PLAN.md 관문; not a porting gate)",
             "pair": Q1D_PAIR, "seeds": list(seeds), "reference": reference,
             "floor_points": floor_points, "rule": "flag '적응 하의 약함' when the mean selected "
             "sigma V-AUC (points, development seeds) < the MIL port's mean - 2.0 points on a "
-            "dataset; the method is kept", "datasets": refs, "methods": rows,
+            "dataset; the method is kept; collapsed chains (selected sigma V-AUC < 0.60, PLAN.md "
+            "붕괴 제외) are left out of the means", "datasets": refs, "methods": rows,
             "missing": missing, "complete": not missing}
 
 

@@ -27,15 +27,19 @@ the frozen wvad.train, E021's HB L20 command plus --save_epoch_ckpts), developme
     devlr --runs_root R [--out results/e023_devlr.json] [--family ...]
         D4 from the finished development chains (validation only): per method and setting the
         lr scores x{1/3, 1, 3} (widened once to x1/9 or x9 when an end value wins), then the
-        scale constants x{1/10, 1, 10} at the chosen lr (recipes.d4_score / d4_pick); "choices"
-        holds every complete setting; each setting records the official lr and the scale
-        constants of its dataset's configuration
+        scale constants x{1/10, 1, 10} at the chosen lr (recipes.d4_score / d4_pick) over the
+        chains that did not collapse (PLAN.md "붕괴 제외"; recorded per setting under
+        "collapsed", each value's surviving seeds under "surviving"; a value with fewer than 2
+        is never chosen, and a setting without an eligible value is listed under "no_eligible"
+        with no choice); "choices" holds every complete setting; each setting records the
+        official lr and the scale constants of its dataset's configuration
     q1d --runs_root R --record results/e023_q1b.json [--family ...]
         (q1d) sanity floor (pre-freeze, validation only) from the development chains at the
         official recipe (lr x1, scale x1; <runs>/dev/<dataset>_xcb_xcl_s<0-2>/<method>_u<unit>
         _lr1_sc1, the chains (3f) and D4 use too): per dataset each method's mean selected
-        sigma V-AUC against the MIL port's mean - 2.0 points (e023_gates.q1d_record), merged into
-        the record under "q1d"; exit 1 (nothing written) while a chain or selection is missing
+        sigma V-AUC over its chains that did not collapse against the MIL port's mean - 2.0
+        points (e023_gates.q1d_record), merged into the record under "q1d"; exit 1 (nothing
+        written) while a chain or selection is missing
     jobs --stage d4|confirm --runs_root R [--family ...] [--devlr FILE]
         one line per chain still to train: "method unit dataset pair seed lr_mult scale_mult
         out_dir d14" (d4: the development chains D4 needs next; confirm: the 40 settings x seeds
@@ -49,7 +53,9 @@ the frozen wvad.train, E021's HB L20 command plus --save_epoch_ckpts), developme
     select --runs_root R --scores S [--family ...] [--infra_failed ..] [--out ..] [--all_ckpts ..]
         per chain the evaluation point of the highest full-validation V-AUC of the W readout
         (sigma: max fp32 sigma(u_k), logit: max u_k; no offset), strict >, earliest point on
-        ties; the last point; checkpoint sha256 -> results/e023_selection.json; D14: the 30
+        ties; the last point; checkpoint sha256; per chain "collapsed" (PLAN.md "실패 처리"
+        "붕괴 제외": selected sigma V-AUC < 0.60; E022 C's chains from its committed selection
+        under "collapse") -> results/e023_selection.json; D14: the 30
         evaluation-point checkpoints of every main-family chain with their V-AUCs ->
         results/e023_all_ckpts.json (commit both before access (A))
     score --split test --runs_root R --out S --test_log LOG --selection_sha256 X
@@ -102,6 +108,7 @@ from wvad.diagnostics import e021_score as es
 from wvad.diagnostics import e023_access as ea
 from wvad.diagnostics import e023_gates as gt
 from wvad.diagnostics.common import code_version, gpu_environment, write_json
+from wvad.diagnostics.e023_stats import COLLAPSE_V_AUC, collapsed
 from wvad.eval.dense import score_dense, snippet_logits
 from wvad.eval.dense_readout import sigmoid32
 from wvad.extract import derive_n, grid
@@ -250,51 +257,80 @@ def dev_dir(runs: Path, dataset: str, pair: str, seed: int, run: str) -> Path:
     return Path(runs) / "dev" / gt.chain_name(dataset, pair, seed) / run
 
 
-def _dev_score(runs: Path, method: str, unit: int, d: str, p: str, lr: str, sc: str
-               ) -> float | None:
-    """D4 score of one value (None until all development seeds finished)."""
+def _dev_score(runs: Path, method: str, unit: int, d: str, p: str, lr: str, sc: str,
+               left_out: list[str] | None = None) -> tuple[float | None, int | None]:
+    """(D4 score, surviving development seeds) of one value ((None, None) until all development
+    seeds finished): the score over its chains that did not collapse (PLAN.md "실패 처리" "붕괴
+    제외": the selected, i.e. highest, sigma V-AUC below 0.60; their '<chain>/<run>' added to
+    ``left_out``), NaN when every seed collapsed; d4_pick takes the value only with at least
+    D4.min_surviving surviving seeds."""
     rows = []
     for s in D4.seeds:
         f = dev_dir(runs, d, p, s, dev_run(method, unit, lr, sc))
         if not (f / bt.FILES["record"]).is_file():
-            return None
+            return None, None
         with np.load(f / bt.FILES["val"]) as z:
-            rows.append(np.asarray(z["v_auc_sigma"], dtype=np.float64))
-    return d4_score(np.stack(rows))
+            rows.append((f, np.asarray(z["v_auc_sigma"], dtype=np.float64)))
+    keep = []
+    for f, r in rows:
+        if not collapsed(float(r.max())):
+            keep.append(r)
+        elif left_out is not None and f"{f.parent.name}/{f.name}" not in left_out:
+            left_out.append(f"{f.parent.name}/{f.name}")
+    return (d4_score(np.stack(keep)) if keep else float("nan")), len(keep)
+
+
+def _no_eligible(stage: str) -> str:
+    return (f"{stage}: no value with at least {D4.min_surviving} surviving development seeds "
+            "(PLAN.md 붕괴 제외); nothing chosen (user decision)")
 
 
 def d4_state(runs: Path, method: str, unit: int, dataset: str, pair: str,
              has_scale: bool) -> dict:
     """The D4 state of one method and setting: lr scores (widened once), scale scores at the
-    chosen lr, the values still to train and the choice once complete."""
-    lr_scores = {m: _dev_score(runs, method, unit, dataset, pair, m, "1") for m in D4.lr_mults}
+    chosen lr, each value's surviving development seeds ("surviving"; a value with fewer than
+    D4.min_surviving is never chosen), the values still to train, the choice once complete, the
+    collapsed development chains left out ("collapsed") and "no_eligible" when no value of a
+    stage is eligible (then no choice and nothing more to train)."""
+    left: list[str] = []
+    lr = {m: _dev_score(runs, method, unit, dataset, pair, m, "1", left) for m in D4.lr_mults}
+    lr_scores, lr_alive = {m: v[0] for m, v in lr.items()}, {m: v[1] for m, v in lr.items()}
     need = [(m, "1") for m, v in lr_scores.items() if v is None]
-    out = {"lr": {"scores": lr_scores, "pick": None, "widened": None, "final": None},
-           "scale": None, "need": need, "complete": False, "choice": None}
+    out = {"lr": {"scores": lr_scores, "surviving": lr_alive, "pick": None, "widened": None,
+                  "final": None},
+           "scale": None, "need": need, "complete": False, "choice": None, "collapsed": left,
+           "no_eligible": None}
     if need:
         return out
-    pick = d4_pick(lr_scores)
+    pick = d4_pick(lr_scores, surviving=lr_alive)
     out["lr"]["pick"] = pick
+    if pick is None:
+        out["no_eligible"] = _no_eligible("lr")
+        return out
     wide = d4_widen(pick)
     final = pick
     if wide is not None:
-        ws = _dev_score(runs, method, unit, dataset, pair, wide, "1")
-        out["lr"]["widened"] = {"value": wide, "score": ws}
+        ws, wn = _dev_score(runs, method, unit, dataset, pair, wide, "1", left)
+        out["lr"]["widened"] = {"value": wide, "score": ws, "surviving": wn}
         if ws is None:
             out["need"] = [(wide, "1")]
             return out
-        final = d4_pick({**lr_scores, wide: ws})
+        final = d4_pick({**lr_scores, wide: ws}, surviving={**lr_alive, wide: wn})
     out["lr"]["final"] = final
     sc_final = "1"
     if has_scale:
-        sc_scores = {m: _dev_score(runs, method, unit, dataset, pair, final, m)
-                     for m in D4.scale_mults}
-        out["scale"] = {"scores": sc_scores, "pick": None}
+        sc = {m: _dev_score(runs, method, unit, dataset, pair, final, m, left)
+              for m in D4.scale_mults}
+        sc_scores, sc_alive = {m: v[0] for m, v in sc.items()}, {m: v[1] for m, v in sc.items()}
+        out["scale"] = {"scores": sc_scores, "surviving": sc_alive, "pick": None}
         out["need"] = [(final, m) for m, v in sc_scores.items() if v is None]
         if out["need"]:
             return out
-        sc_final = d4_pick(sc_scores)
+        sc_final = d4_pick(sc_scores, surviving=sc_alive)
         out["scale"]["pick"] = sc_final
+        if sc_final is None:
+            out["no_eligible"] = _no_eligible("scale")
+            return out
     out["complete"] = True
     out["choice"] = {"lr_mult": final, "scale_mult": sc_final}
     return out
@@ -320,6 +356,7 @@ def devlr_record(runs: Path, family: Sequence[str], resolver: Resolver = bc.get_
     return {"check": "E023 D4 validation check (PLAN.md 검증 점검; development seeds 0-2)",
             "code": code_version(), "time_utc": now_utc(), "grid": D4.to_json(),
             "family": list(family), "settings": settings, "choices": choices,
+            "no_eligible": sorted(k for k, v in settings.items() if v["no_eligible"]),
             "complete": len(choices) == len(settings)}
 
 
@@ -688,11 +725,34 @@ def cl20_entry(scores: Path, chain: str) -> dict:
     return entry
 
 
+def c_collapse(e022_selection: Path | None = None) -> tuple[dict, list[str]]:
+    """PLAN.md "실패 처리" "붕괴 제외" for E022 C (every arm; validation only): per
+    '<chain>/hb_m10' of the experiment its selected W-readout (sigma) validation V-AUC in E022's
+    committed selection (default ea.E022_SELECTION) and the flag (all >= 0.958 when the rule was
+    written: none collapses), and the problems (a chain without a selected V-AUC)."""
+    rec = _json(e022_selection or ea.E022_SELECTION)
+    rows, problems = {}, []
+    for d in gt.DATASETS:
+        for p in gt.PAIRS:
+            for s in gt.SEEDS:
+                label = f"{gt.chain_name(d, p, s)}/hb_m10"
+                v = ((((rec.get("chains") or {}).get(label) or {}).get("readouts") or {})
+                     .get("W") or {}).get("selected_v_auc")
+                if v is None:
+                    problems.append(f"{label}: no selected W V-AUC in E022's selection")
+                    continue
+                rows[label] = {"selected_v_auc": float(v), "collapsed": collapsed(v)}
+    return rows, problems
+
+
 def selection_record(runs: Path, scores: Path, family: Sequence[str],
-                     excluded: Sequence[str] = (), resolver: Resolver = bc.get_method
-                     ) -> tuple[dict, dict]:
+                     excluded: Sequence[str] = (), resolver: Resolver = bc.get_method,
+                     e022_selection: Path | None = None) -> tuple[dict, dict]:
     """(e023_selection.json body, e023_all_ckpts.json body); SystemExit when a chain that is not
-    an infrastructure failure has no record or the D14 bookkeeping is incomplete."""
+    an infrastructure failure has no record or the D14 bookkeeping is incomplete. Each chain
+    records "collapsed" (PLAN.md "실패 처리" "붕괴 제외": its selected sigma V-AUC < 0.60; the
+    chain then leaves every rule of the analysis, e023.failures), "collapse" the rule, the
+    collapsed chains and E022 C's (``c_collapse``)."""
     arms = family_arms(family, resolver)
     chains, d14, problems = {}, {}, []
     for label, a in chain_labels(arms):
@@ -715,15 +775,27 @@ def selection_record(runs: Path, scores: Path, family: Sequence[str],
         problems += probs
         if book is not None:
             d14[label] = book
+    c_rows, c_problems = c_collapse(e022_selection)
+    problems += c_problems
     if problems:
         raise SystemExit(f"{len(problems)} selection problem(s), nothing written: {problems[:5]}")
+    for e in chains.values():
+        e["collapsed"] = collapsed(((e.get("selection") or {}).get("sigma") or {}).get("v_auc"))
     rule = ("full-validation V-AUC of the W readout on the E021 32-window grid (sigma: max fp32 "
             "sigma(u_k); logit: max u_k; no offset), first maximum (strict >, earliest point on "
             "ties); last = the last evaluation point")
+    collapse = {"rule": f"PLAN.md 실패 처리 '붕괴 제외': selected sigma validation V-AUC < "
+                        f"{COLLAPSE_V_AUC} (validation only, fixed here before access (A)); the "
+                        "chain leaves every rule, no rerun, no replacement seed",
+                "threshold": COLLAPSE_V_AUC,
+                "collapsed": sorted(k for k, e in chains.items() if e["collapsed"]),
+                "c_chains": c_rows,
+                "c_collapsed": sorted(k for k, r in c_rows.items() if r["collapsed"])}
     common = {"code": code_version(), "time_utc": now_utc(), "family": list(family),
               "arms": {k: v.to_json() for k, v in arms.items()}}
     sel = {"check": "E023 checkpoint selection (PLAN.md 체크포인트 선택; validation only)",
-           **common, "rule": rule, "infra_failed": list(excluded), "chains": chains}
+           **common, "rule": rule, "infra_failed": list(excluded), "collapse": collapse,
+           "chains": chains}
     book = {"check": "E023 D14 evaluation-point checkpoints (temporary until access (A))",
             **common, "chains": d14}
     return sel, book
@@ -741,8 +813,9 @@ def select_command(args: argparse.Namespace, resolver: Resolver = bc.get_method)
     write_json(Path(args.out), sel)
     write_json(Path(args.all_ckpts), book)
     failed = sorted(k for k, v in sel["chains"].items() if v.get("failed"))
-    print(f"[e023_score] selection -> {args.out} ({len(sel['chains'])} chains, failed {failed}); "
-          f"D14 -> {args.all_ckpts} ({len(book['chains'])} chains)")
+    gone = sel["collapse"]["collapsed"] + sel["collapse"]["c_collapsed"]
+    print(f"[e023_score] selection -> {args.out} ({len(sel['chains'])} chains, failed {failed}, "
+          f"collapsed {gone}); D14 -> {args.all_ckpts} ({len(book['chains'])} chains)")
 
 
 # --- test scoring: jobs, binding, order -----------------------------------------------------------
@@ -1305,7 +1378,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         rec = devlr_record(args.runs_root, args.family)
         write_json(Path(args.out), rec)
         print(f"[e023_score] D4: {len(rec['choices'])}/{len(rec['settings'])} settings complete "
-              f"-> {args.out}")
+              f"(no eligible value: {rec['no_eligible']}) -> {args.out}")
     elif args.command == "q1d":
         q1d_command(args)
     elif args.command == "jobs":

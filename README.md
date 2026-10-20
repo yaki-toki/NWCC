@@ -1189,7 +1189,7 @@ for ds in ucf xdv; do
   done
 done
 ```
-(q1d), the sanity floor, uses the development chains at the official recipe (`lr x1`, `scale x1`; XCB+XCL, seeds 0-2; the same chains serve (3f), the timing (3h) and later D4): each method's mean selected V-AUC against the MIL port's mean - 2.0 points per dataset, merged into `results/e023_q1b.json` under `q1d` (refused while a chain is missing; a method below the floor is kept and flagged "적응 하의 약함"; the analysis refuses a missing record). (q7), one code review per port: the review file (outside the repository; its name and sha256 are recorded) and its Jev judgement go into `results/e023_q1b.json` under `q7` with the `e023 q7` command; the pre-freeze gates require both records.
+(q1d), the sanity floor, uses the development chains at the official recipe (`lr x1`, `scale x1`; XCB+XCL, seeds 0-2; the same chains serve (3f), the timing (3h) and later D4): each method's mean selected V-AUC against the MIL port's mean - 2.0 points per dataset (a collapsed chain, selected sigma V-AUC < 0.60, is left out of the means: PLAN.md "붕괴 제외"), merged into `results/e023_q1b.json` under `q1d` (refused while a chain is missing; a method below the floor is kept and flagged "적응 하의 약함"; the analysis refuses a missing record). (q7), one code review per port: the review file (outside the repository; its name and sha256 are recorded) and its Jev judgement go into `results/e023_q1b.json` under `q7` with the `e023 q7` command; the pre-freeze gates require both records.
 ```bash
 NC=4096; FAMILY="mil rtfm urdmu vadclip_v"     # server; the default N_chunk until (3j)
 for m in "mil 32" "rtfm 32" "urdmu 200" "vadclip_v 256"; do set -- $m
@@ -1216,7 +1216,7 @@ The steps below use the E023 experiment modules: `wvad.diagnostics.e023_score` (
 NC=4096; FAMILY="mil rtfm urdmu vadclip_v"; S=~/wvad_runs/e023_scores      # server
 FREEZE=<the freeze commit>; SEL=<sha256 of results/e023_selection.json>; ALL=<sha256 of results/e023_all_ckpts.json>
 ```
-**Pre-freeze records** (no test access; after the ports pass (q1)-(q1e), (q7)). (3c): the 42 E021 training inputs and 6 scale maps with the C.L20 reference configs, merged into the file `derive_n` wrote; (3f) on the development chains (seeds 0-2, XCB+XCL; the C type from the E021 score files), (3j) on the server GPU after access (0); (3g) and (3e) locally; the pre-freeze gates (q2), (q3), (q5), (q6), (q7) (`--q5 METHOD=<chain>,<its --no_eval twin>`).
+**Pre-freeze records** (no test access; after the ports pass (q1)-(q1e), (q7)). (3c): the 42 E021 training inputs and 6 scale maps with the C.L20 reference configs, merged into the file `derive_n` wrote; (3f) on the development chains (seeds 0-2, XCB+XCL; the C type from the E021 score files; a seed whose port or C-type chain collapsed is left out), (3j) on the server GPU after access (0); (3g) and (3e) locally; the pre-freeze gates (q2), (q3), (q5), (q6), (q7) (`--q5 METHOD=<chain>,<its --no_eval twin>`).
 ```bash
 python -m wvad.diagnostics.e023_score inputs --out $RUNS/e023_train_inputs.json --e021_runs ~/wvad_runs/e021
 python -m wvad.diagnostics.e023_prefreeze --out $RUNS/e023_prefreeze.json spread --e021_scores ~/wvad_runs/e021_scores \
@@ -1247,7 +1247,7 @@ git rev-parse HEAD | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_COMMIT'
 python -c "import json; from wvad.data.dense_test import write_lineage; print(json.dumps(write_lineage('$FREEZE')))" \
     | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_LINEAGE.json'
 ```
-**D4 validation check** (server, development seeds 0-2, the full official schedule; validation only): `jobs --stage d4` prints the development chains D4 still needs (the lr values x1/3, 1, 3; then the one widened value if an end value won; then the scale constants x1/10, 10 at the chosen lr); run them, print again, until nothing is left; `devlr` writes the choices. Each line: method, unit, dataset, pair, seed, lr multiplier, scale multiplier, output folder, D14 flag.
+**D4 validation check** (server, development seeds 0-2, the full official schedule; validation only): `jobs --stage d4` prints the development chains D4 still needs (the lr values x1/3, 1, 3; then the one widened value if an end value won; then the scale constants x1/10, 10 at the chosen lr); run them, print again, until nothing is left; `devlr` writes the choices (collapsed development chains left out, named per setting under `collapsed`). A value is eligible only with at least 2 surviving (not collapsed) development seeds (`surviving` per value); a setting without an eligible value gets no choice and is listed under `no_eligible` for the user to decide. Each line: method, unit, dataset, pair, seed, lr multiplier, scale multiplier, output folder, D14 flag.
 ```bash
 python -m wvad.diagnostics.e023_score jobs --stage d4 --runs_root $RUNS --family $FAMILY > $RUNS/jobs_d4.txt
 export NC; setsid nohup xargs -P 24 -L 1 bash -c '
@@ -1302,7 +1302,7 @@ setsid nohup xargs -P 8 -L 1 bash -c '                          # gate (b): the 
 ' < $RUNS/jobs_repeat.txt > $RUNS/queue_repeat.log 2>&1 &
 pgrep -fc "wvad[.](baselines[.])?train"                         # 0 before the next batch
 ```
-**Validation scoring, selection, training gates** (no test file is opened before this commit). The server re-scores every comparison-method chain's kept checkpoints on the validation videos (gate (s)) and scores C.L20's 30 stage-2 epoch checkpoints and `ckpt_last.pt` by E022 C's path; locally `select` writes `results/e023_selection.json` (W readout, sigma and logit, strict >, earliest point on ties; checkpoint sha256) and `results/e023_all_ckpts.json` (D14: the 30 evaluation-point checkpoints of the main family), and `gates --stage train` checks (a), (b), (d), (f), (g), (p), (s), (w), (w2), (n) into `results/e023_gate.json` (only before the first test read). A chain dropped after an unfixable gate failure is named with `--gate_failed <chain>/<run>` here and in the two later steps. Commit: the selection is fixed by this commit.
+**Validation scoring, selection, training gates** (no test file is opened before this commit). The server re-scores every comparison-method chain's kept checkpoints on the validation videos (gate (s)) and scores C.L20's 30 stage-2 epoch checkpoints and `ckpt_last.pt` by E022 C's path; locally `select` writes `results/e023_selection.json` (W readout, sigma and logit, strict >, earliest point on ties; checkpoint sha256; per chain `collapsed`, selected sigma V-AUC < 0.60, and E022 C's chains under `collapse`: a collapsed chain leaves every rule of the analysis, PLAN.md "붕괴 제외") and `results/e023_all_ckpts.json` (D14: the 30 evaluation-point checkpoints of the main family), and `gates --stage train` checks (a), (b), (d), (f), (g), (p), (s), (w), (w2), (n) into `results/e023_gate.json` (only before the first test read). A chain dropped after an unfixable gate failure is named with `--gate_failed <chain>/<run>` here and in the two later steps. Commit: the selection is fixed by this commit.
 ```bash
 setsid nohup python -m wvad.diagnostics.e023_score score --split val --runs_root $RUNS --out $S \
     --family $FAMILY > $S.val.log 2>&1 < /dev/null &

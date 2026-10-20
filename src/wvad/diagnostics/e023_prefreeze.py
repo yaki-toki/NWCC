@@ -9,7 +9,10 @@ fresh interpreter). New code (add-only rule); the comparison methods only throug
                     0-2 XCB+XCL, its sigma-best point), the per-video difference port - C averaged
                     over the seeds, set to mean 0 per method; output only its SD and the 99%
                     bootstrap half-width of the mean of 140 videos (R 5000, default_rng(20261019)),
-                    and the port's seed SD of the proxy (mean, sign and level never output)
+                    and the port's seed SD of the proxy (mean, sign and level never output); a
+                    seed whose port or C-type chain collapsed (PLAN.md "실패 처리" "붕괴 제외":
+                    selected sigma V-AUC < 0.60) is left out of that method's values and named
+                    under "collapsed_seeds" (its V-AUC is not output)
     (3g) power      the true advantage over the strongest comparison method needed for a joint
                     probability 0.8 under D5 (a), (b), (c) (Welch, Holm over the 8 contrasts /
                     over B*'s 2, alpha 0.01, n 10 vs 10), C's SD measured (UCF 0.090 / XD 0.170)
@@ -51,6 +54,7 @@ import torch
 from scipy import stats
 
 from wvad.baselines import common as bc
+from wvad.diagnostics.e023_stats import collapsed
 from wvad.eval import frames as fr
 from wvad.eval.crossfit import rank_auc
 from wvad.eval.dense_readout import readout
@@ -94,17 +98,24 @@ def split_rows(flat: np.ndarray, counts: Sequence[int]) -> list[np.ndarray]:
     return [np.asarray(flat[a:a + n]) for a, n in zip(starts, counts, strict=True)]
 
 
-def c_type_epoch(dense_z: np.ndarray, counts: Sequence[int], totals: Sequence[int],
-                 labels: Sequence[int], gamma: Sequence[float] | None) -> int:
-    """0-based epoch of E022 C's rule on an E021 HB M10 validation file: the highest
-    full-validation V-AUC of the W readout with c(v) (video score max fp32 sigma), earliest on
-    ties."""
+def c_type_aucs(dense_z: np.ndarray, counts: Sequence[int], totals: Sequence[int],
+                labels: Sequence[int], gamma: Sequence[float] | None) -> np.ndarray:
+    """Per epoch of an E021 HB M10 validation file the full-validation V-AUC of E022 C's rule:
+    the W readout with c(v) (video score max fp32 sigma)."""
     scores = np.empty((len(dense_z), len(counts)))
     for e in range(len(dense_z)):
         g = None if gamma is None else float(gamma[e])
         for i, z in enumerate(split_rows(dense_z[e], counts)):
             scores[e, i] = readout(z, int(totals[i]), g, "W").video_score
-    i, _ = bc.select_point(rank_auc(scores, np.asarray(labels, dtype=np.int64)))
+    return rank_auc(scores, np.asarray(labels, dtype=np.int64))
+
+
+def c_type_epoch(dense_z: np.ndarray, counts: Sequence[int], totals: Sequence[int],
+                 labels: Sequence[int], gamma: Sequence[float] | None) -> int:
+    """0-based epoch of E022 C's rule on an E021 HB M10 validation file: the highest
+    full-validation V-AUC of the W readout with c(v) (video score max fp32 sigma), earliest on
+    ties."""
+    i, _ = bc.select_point(c_type_aucs(dense_z, counts, totals, labels, gamma))
     return i
 
 
@@ -147,47 +158,64 @@ def centred_spread(diffs: Sequence[float], n_test: int = TEST_VIDEOS_UCF,
 def spread(c_runs: Sequence[Mapping], ports: Mapping[str, Sequence[Mapping]],
            frame_labels: Mapping[int, np.ndarray], totals: Sequence[int]) -> dict:
     """(3f) from validation logits: ``c_runs`` per development seed {"z": [per-video snippet
-    logits]} of the C type, ``ports`` method -> the same per seed; returns per method the
-    spread of the seed-mean differences (mean 0) and the port's seed SD of the proxy L."""
+    logits], "collapsed", "seed"} of the C type, ``ports`` method -> the same per seed (seed
+    order); returns per method the spread of the seed-mean differences (mean 0) and the port's
+    seed SD of the proxy L over the seeds where neither chain collapsed ("붕괴 제외"; the others
+    named under "collapsed_seeds")."""
     c_auc = [video_aucs(r["z"], totals, frame_labels) for r in c_runs]
     out = {}
     for m, runs in ports.items():
         p_auc = [video_aucs(r["z"], totals, frame_labels) for r in runs]
-        common = sorted(set.intersection(*(set(a) for a in (*c_auc, *p_auc))))
-        diffs = [float(np.mean([p[v] - c[v] for p, c in zip(p_auc, c_auc, strict=True)]))
-                 for v in common]
-        seed_l = [float(np.mean([p[v] for v in common])) for p in p_auc] if common else []
+        rows = list(zip(p_auc, c_auc, runs, c_runs, strict=True))
+        both = [(p, c) for p, c, r, cr in rows if not (r.get("collapsed") or cr.get("collapsed"))]
+        gone = [cr.get("seed", i) for i, (_, _, r, cr) in enumerate(rows)
+                if r.get("collapsed") or cr.get("collapsed")]
+        common = sorted(set.intersection(*(set(a) for pc in both for a in pc))) if both else []
+        diffs = [float(np.mean([p[v] - c[v] for p, c in both])) for v in common]
+        seed_l = [float(np.mean([p[v] for v in common])) for p, _ in both] if common else []
         out[m] = {**centred_spread(diffs),
                   "proxy_seed_sd": float(np.std(seed_l, ddof=1)) if len(seed_l) > 1
-                  else math.nan, "seeds": len(runs)}
+                  else math.nan, "seeds": len(both), "collapsed_seeds": gone}
     return out
 
 
 def e021_c_runs(e021_scores: Path, dataset: str = "ucf", pair: str = "xcb_xcl",
                 seeds: Sequence[int] = DEV_SEEDS) -> tuple[list[dict], dict]:
-    """The C type's development runs from the E021 stage-2 score files (hb_m10)."""
+    """The C type's development runs from the E021 stage-2 score files (hb_m10), each with
+    "collapsed" (its selected V-AUC under C's rule < 0.60, PLAN.md "붕괴 제외")."""
     runs, meta = [], {}
     for s in seeds:
         f = Path(e021_scores) / "stage2" / f"{dataset}_{pair}_s{s}" / "hb_m10.npz"
         with np.load(f) as sf:
             counts, totals = sf["dense_counts"], sf["total_frames"]
-            e = c_type_epoch(sf["dense_z"], counts, totals, sf["labels"], sf["gamma"])
-            runs.append({"z": split_rows(sf["dense_z"][e], counts), "epoch": e + 1})
+            aucs = c_type_aucs(sf["dense_z"], counts, totals, sf["labels"], sf["gamma"])
+            e, _ = bc.select_point(aucs)
+            runs.append({"z": split_rows(sf["dense_z"][e], counts), "epoch": e + 1, "seed": s,
+                         "collapsed": collapsed(float(aucs[e]))})
             meta = {"val_indices": [int(x) for x in sf["val_indices"]],
                     "totals": [int(x) for x in totals], "labels": [int(x) for x in sf["labels"]]}
     return runs, meta
 
 
-def port_runs(dirs: Sequence[Path]) -> list[dict]:
+def port_runs(dirs: Sequence[Path], seeds: Sequence[int] = DEV_SEEDS) -> list[dict]:
     """A port's development chains: the sigma-best point's validation logits (val_scores.npz,
-    selection.json of wvad.baselines.train)."""
+    selection.json of wvad.baselines.train), "collapsed" (its selected sigma V-AUC < 0.60,
+    PLAN.md "붕괴 제외") and its seed (config.json), which must equal ``seeds`` at the same
+    position (the C-type runs' seeds: spread pairs by position; SystemExit otherwise)."""
+    if len(dirs) != len(seeds):
+        raise SystemExit(f"{len(dirs)} chains for the seeds {list(seeds)}")
     out = []
-    for d in dirs:
+    for d, want in zip(dirs, seeds, strict=True):
         sel = json.loads((Path(d) / "selection.json").read_text(encoding="utf-8"))
+        seed = int(json.loads((Path(d) / "config.json").read_text(encoding="utf-8"))["seed"])
+        if seed != int(want):
+            raise SystemExit(f"{d}: seed {seed} in config.json, the C-type run at its position "
+                             f"has seed {want}")
         point = int(sel["selection"]["sigma"]["point"])
         with np.load(Path(d) / "val_scores.npz") as z:
             out.append({"z": split_rows(z["z"][point - 1], z["counts"]), "point": point,
-                        "val_indices": [int(x) for x in z["val_indices"]]})
+                        "val_indices": [int(x) for x in z["val_indices"]], "seed": seed,
+                        "collapsed": collapsed(sel["selection"]["sigma"]["v_auc"])})
     return out
 
 
@@ -476,7 +504,8 @@ def main(argv: Sequence[str] | None = None) -> None:
         names = [names_all[i] for i in meta["val_indices"]]
         labels = proxy_labels(names, meta["labels"], meta["totals"], load_proxy(a.proxy),
                               a.variant)
-        ports = {k: port_runs(v) for k, v in _chains(a.chains).items()}
+        ports = {k: port_runs(v, [r["seed"] for r in c_runs]) for k, v in
+                 _chains(a.chains).items()}
         for k, runs in ports.items():
             if any(r["val_indices"] != meta["val_indices"] for r in runs):
                 raise SystemExit(f"{k}: validation videos differ from the C type's")
