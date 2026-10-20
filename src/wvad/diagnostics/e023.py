@@ -1046,7 +1046,7 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
                       degenerate_rows=st.degenerate({k: v for k, v in
                                                      loaded.constant_share.items()
                                                      if k not in collapsed_runs}, fam),
-                      weak=weak_arms(arms), gates_ok=True)
+                      weak=weak_arms(arms), gates_ok=True, decisions=st.RECORDED)
     summary = {"check": "E023 stage F2: localisation against same-feature comparison methods "
                         "(PLAN.md 판정)", **stamp, "gate": gate.get("status"),
                "family": selection.get("family"), "arms": selection.get("arms"),

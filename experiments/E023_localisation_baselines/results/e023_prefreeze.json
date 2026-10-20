@@ -1,0 +1,5364 @@
+{
+ "3f": {
+  "variant": "M2A",
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "pair": "xcb_xcl",
+  "methods": {
+   "mil": {
+    "n_videos": 73,
+    "sd": 7.866600265171662,
+    "n_test": 140,
+    "half_width_99": 1.6365472814341264,
+    "R": 5000,
+    "seed": 20261019,
+    "proxy_seed_sd": 0.1893399575972037,
+    "seeds": 3,
+    "collapsed_seeds": []
+   },
+   "rtfm": {
+    "n_videos": 73,
+    "sd": 16.860117795108305,
+    "n_test": 140,
+    "half_width_99": 3.6039261820232027,
+    "R": 5000,
+    "seed": 20261019,
+    "proxy_seed_sd": 1.815271650519838,
+    "seeds": 3,
+    "collapsed_seeds": []
+   },
+   "urdmu": {
+    "n_videos": 73,
+    "sd": 13.667378671596495,
+    "n_test": 140,
+    "half_width_99": 2.8688567622821375,
+    "R": 5000,
+    "seed": 20261019,
+    "proxy_seed_sd": 1.4585780181895927,
+    "seeds": 3,
+    "collapsed_seeds": []
+   },
+   "vadclip_v": {
+    "n_videos": 73,
+    "sd": 16.53809890752214,
+    "n_test": 140,
+    "half_width_99": 3.6019898619994053,
+    "R": 5000,
+    "seed": 20261019,
+    "proxy_seed_sd": 0.7947037521453185,
+    "seeds": 2,
+    "collapsed_seeds": [
+     2
+    ]
+   }
+  },
+  "videos_with_proxy": 73,
+  "xd": "not measured (no validation frame labels); E022 pooled half-width 0.96 as a rough reference"
+ },
+ "3g": {
+  "n_sim": 3000,
+  "seed": 20261019,
+  "target": 0.8,
+  "alpha": 0.01,
+  "n": 10,
+  "c_sd": {
+   "measured": {
+    "ucf": 0.09,
+    "xdv": 0.17
+   },
+   "corr0": {
+    "ucf": 0.153,
+    "xdv": 0.136
+   }
+  },
+  "sd": {
+   "ucf_proxy": {
+    "mil": 0.1893399575972037,
+    "rtfm": 1.815271650519838,
+    "urdmu": 1.4585780181895927,
+    "vadclip_v": 0.7947037521453185
+   },
+   "ucf_values": [
+    0.3,
+    0.56332,
+    1.0,
+    1.126641,
+    2.0,
+    2.253282,
+    3.0,
+    5.0
+   ],
+   "grid": [
+    0.3,
+    1.0,
+    2.0,
+    3.0,
+    5.0
+   ],
+   "proxy_scale": [
+    0.5,
+    1.0,
+    2.0
+   ]
+  },
+  "half_widths": {
+   "ucf": {
+    "mil": 1.6365472814341264,
+    "rtfm": 3.6039261820232027,
+    "urdmu": 2.8688567622821375,
+    "vadclip_v": 3.6019898619994053
+   },
+   "ucf_median": 3.2354233121407714,
+   "xdv": [
+    1.0,
+    2.0,
+    3.0
+   ]
+  },
+  "scenario": {
+   "others": [
+    [
+     1.0,
+     0.2
+    ],
+    [
+     2.0,
+     0.5
+    ],
+    [
+     3.0,
+     1.0
+    ]
+   ]
+  },
+  "joint": [
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 0.5,
+     "b": 0.5,
+     "c": 2.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.4,
+     "b": 1.4,
+     "c": 2.3
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.9,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 0.8,
+     "b": 0.8,
+     "c": 2.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.4,
+     "b": 1.4,
+     "c": 2.3
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.9,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.4,
+     "b": 1.4,
+     "c": 2.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.6,
+     "b": 1.6,
+     "c": 2.3
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.7,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.5,
+     "b": 1.5,
+     "c": 2.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.7,
+     "b": 1.7,
+     "c": 2.3
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.7,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.1,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 3.1,
+     "b": 3.1,
+     "c": 3.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.1,
+     "b": 4.1,
+     "c": 4.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 5.0,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.2,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 3.0,
+     "b": 3.0,
+     "c": 3.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 3.0,
+     "b": 3.0,
+     "c": 3.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.8,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 3.3,
+     "b": 3.3,
+     "c": 3.3
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.7,
+     "b": 4.6,
+     "c": 4.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.1,
+     "b": 4.1,
+     "c": 4.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 5.0,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.2,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.1,
+     "b": 4.1,
+     "c": 4.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.9,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.1,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.5,
+     "b": 4.5,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.2,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.4,
+     "b": 5.4,
+     "c": 5.4
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 6.9,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.1,
+     "b": 7.0,
+     "c": 7.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.1,
+     "b": 7.1,
+     "c": 7.1
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 7.5,
+     "b": 7.5,
+     "c": 7.5
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.7,
+     "b": 7.7,
+     "c": 7.7
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.8,
+     "b": 7.8,
+     "c": 7.8
+    }
+   },
+   {
+    "c_sd": "measured",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 8.0,
+     "b": 7.9,
+     "c": 8.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 0.5,
+     "b": 0.5,
+     "c": 2.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.4,
+     "b": 1.4,
+     "c": 2.3
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.3,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 0.8,
+     "b": 0.8,
+     "c": 2.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.4,
+     "b": 1.4,
+     "c": 2.3
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.3,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.9,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 0.56332,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.4,
+     "b": 1.4,
+     "c": 2.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.6,
+     "b": 1.6,
+     "c": 2.3
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.7,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.9,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.5,
+     "b": 1.5,
+     "c": 2.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.8,
+     "b": 4.7,
+     "c": 4.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 1.7,
+     "b": 1.7,
+     "c": 2.3
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.7,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 1.126641,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 2.7,
+     "b": 2.7,
+     "c": 2.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.4,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 3.0,
+     "b": 3.0,
+     "c": 3.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.1,
+     "b": 4.1,
+     "c": 4.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 5.0,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.2,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 3.0,
+     "b": 3.0,
+     "c": 3.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 3.0,
+     "b": 3.0,
+     "c": 3.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 3.3,
+     "b": 3.3,
+     "c": 3.3
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.6,
+     "b": 4.5,
+     "c": 4.6
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.7,
+     "b": 4.5,
+     "c": 4.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 4.9,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.1,
+     "b": 4.1,
+     "c": 4.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.9,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.0,
+     "b": 5.0,
+     "c": 5.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.2,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.8,
+     "b": 6.8,
+     "c": 6.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 2.253282,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.0,
+     "b": 4.0,
+     "c": 4.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.1,
+     "b": 4.1,
+     "c": 4.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.8,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 4.9,
+     "b": 4.9,
+     "c": 4.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.1,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 4.5,
+     "b": 4.5,
+     "c": 4.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.1,
+     "b": 5.1,
+     "c": 5.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.2,
+     "b": 5.2,
+     "c": 5.2
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 5.4,
+     "b": 5.4,
+     "c": 5.4
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 6.9,
+     "b": 6.9,
+     "c": 6.9
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 6.9,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 3.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.1,
+     "b": 7.0,
+     "c": 7.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 0.3
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 0.3
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 1.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 1.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 2.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 2.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 3.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 6.7,
+     "b": 6.7,
+     "c": 6.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.0,
+     "b": 7.0,
+     "c": 7.0
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.1,
+     "b": 7.0,
+     "c": 7.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 3.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.1,
+     "b": 7.1,
+     "c": 7.1
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 5.0
+    },
+    "half_width": null,
+    "boot": false,
+    "required": {
+     "a": 7.5,
+     "b": 7.5,
+     "c": 7.5
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 1.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.7,
+     "b": 7.7,
+     "c": 7.7
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 2.0
+    },
+    "boot": true,
+    "required": {
+     "a": 7.8,
+     "b": 7.8,
+     "c": 7.8
+    }
+   },
+   {
+    "c_sd": "corr0",
+    "sd": {
+     "ucf": 5.0,
+     "xdv": 5.0
+    },
+    "half_width": {
+     "ucf": 3.2354233121407714,
+     "xdv": 3.0
+    },
+    "boot": true,
+    "required": {
+     "a": 8.0,
+     "b": 7.9,
+     "c": 8.0
+    }
+   }
+  ],
+  "designated": {
+   "ucf": {
+    "sd": 1.1266408851674556,
+    "half_width": 3.2354233121407714,
+    "c_sd": 0.09,
+    "required": {
+     "a": 4.5,
+     "b": 4.4,
+     "c": 4.5
+    }
+   },
+   "xdv": {
+    "sd": 2.0,
+    "half_width": 2.0,
+    "c_sd": 0.17,
+    "required": {
+     "a": 3.1,
+     "b": 3.1,
+     "c": 3.1
+    }
+   },
+   "recommend": "a",
+   "rule": "(b) when (a) needs >= 0.5 L points more than (b) in any dataset"
+  }
+ }
+}

@@ -111,8 +111,9 @@ ByDataset = Mapping[str, Values]
 @dataclass(frozen=True)
 class Decisions:
     """PLAN.md "사용자 결정 기록": D1, D2, D3, D9, D13 (a) and the default bundle accepted on
-    2026-10-19; D5 (wording, dataset requirement), D6 (m_L) and the D7 re-question are not
-    decided yet (None: every option is reported, condition (2) "D5·D6 미정")."""
+    2026-10-19; D5 (wording, dataset requirement), D6 (m_L) and the D7 re-question answered on
+    2026-10-21 (RECORDED). None (an undecided instance): every option is reported, condition
+    (2) "D5·D6 미정"."""
 
     d2: str = "a"
     d5: str | None = None
@@ -148,7 +149,7 @@ class Decisions:
         return {k: MARGIN_L[k] for k in keys}
 
 
-RECORDED = Decisions()
+RECORDED = Decisions(d5="b", d5_requirement="i", d6="a")    # PLAN.md 사용자 결정 기록, 2026-10-21
 
 
 # --- seed values and tests ------------------------------------------------------------------
