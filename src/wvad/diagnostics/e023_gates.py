@@ -46,7 +46,7 @@ from wvad.baselines.recipes import dataset_recipe
 from wvad.data import dense_test as dt
 from wvad.diagnostics import e022_gates as g22
 from wvad.diagnostics import e023_access as ea
-from wvad.diagnostics.e023_stats import collapsed
+from wvad.diagnostics.e023_stats import SINGLE_SEEDS, collapsed
 from wvad.paths import REPO_ROOT
 
 E023_DIR = REPO_ROOT / "experiments" / "E023_localisation_baselines"
@@ -60,6 +60,17 @@ DATASETS = ("ucf", "xdv")
 PAIRS = ("xcb_xcl", "xcb_siglip")
 SEEDS = g22.SEEDS                                   # the 10 confirmation seeds
 DEV_SEEDS = (0, 1, 2)
+# PLAN.md "단일 seed 실행과 판정" (2026-10-21): per chain the first of SINGLE_SEEDS that did not
+# collapse or fail ("multi": the 10 seeds of every chain, restored at the revision)
+ATTEMPT_OK, ATTEMPT_COLLAPSED, ATTEMPT_NUMERICAL, ATTEMPT_INFRA, ATTEMPT_GATE = (
+    "ok", "collapsed", "numerical", "infrastructure", "gate")
+ATTEMPT_STATUSES = (ATTEMPT_OK, ATTEMPT_COLLAPSED, ATTEMPT_NUMERICAL, ATTEMPT_INFRA,
+                    ATTEMPT_GATE)
+# the "failed" text of a selection entry without checkpoints: an infrastructure failure
+# (--infra_failed) or a gate failure before access (A) (select --gate_failed; single-seed: the
+# next seed replaces the attempt, PLAN.md "세부 규칙")
+INFRA_ENTRY, GATE_ENTRY = "infrastructure (PLAN.md)", "gate failure before access (A) (PLAN.md)"
+NO_CHECKPOINT_ENTRIES = (INFRA_ENTRY, GATE_ENTRY)
 PLAN_NAMES = {"mil": "MIL", "rtfm": "RTFM", "urdmu": "URDMU", "vadclip_v": "VCV",
               "mgfn": "MGFN", "clip_tsa": "CLIP-TSA"}
 MAIN = ("mil", "rtfm", "urdmu", "vadclip_v")
@@ -129,6 +140,35 @@ def arm_name(method: str, unit: int, official_unit: int) -> str:
 def rule_arm(arm: str, rule: str) -> str:
     """The analysis arm of a checkpoint rule: 'URDMU', 'URDMU.logit', 'URDMU.last'."""
     return arm + RULE_SUFFIX[rule]
+
+
+def single_seed(status: Mapping[int, str | None], seeds: Sequence[int] | None = None) -> dict:
+    """PLAN.md "단일 seed 실행과 판정" for one chain (dataset x pair x arm; validation only, before
+    access (A)): ``status`` seed -> the attempt's outcome (ATTEMPT_STATUSES; None or absent: not
+    trained / not finished). The seeds are tried in order; the first "ok" one is the chain's seed;
+    a collapsed, numerically failed, infrastructure- or gate-failed attempt passes to the next
+    seed; at most len(seeds) attempts (default SINGLE_SEEDS). Returns the attempts made, "seed"
+    (None until one is ok), "next" (the seed to train next, None when decided) and
+    "no_verdict" (every attempt failed: that arm and dataset is "판정 없음")."""
+    attempts, chosen, nxt = [], None, None
+    for s in SINGLE_SEEDS if seeds is None else seeds:
+        st = status.get(s)
+        if st is None:
+            nxt = s
+            break
+        if st not in ATTEMPT_STATUSES:
+            raise ValueError(f"seed {s}: unknown attempt status {st!r}")
+        attempts.append({"seed": int(s), "status": st})
+        if st == ATTEMPT_OK:
+            chosen = int(s)
+            break
+    return {"attempts": attempts, "seed": chosen, "next": nxt,
+            "no_verdict": chosen is None and nxt is None}
+
+
+def chain_key(arm: str, dataset: str, pair: str) -> str:
+    """The key of a chain in the single-seed record: '<arm>/<dataset>/<pair>'."""
+    return f"{arm}/{dataset}/{pair}"
 
 
 @dataclass(frozen=True)

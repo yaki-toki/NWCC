@@ -384,13 +384,13 @@ def _cfg_of(path: Path) -> dict:
 def baseline_labels(selection: Mapping, dropped: Sequence[str]) -> list[tuple[str, Mapping]]:
     return [(k, e) for k, e in (selection.get("chains") or {}).items()
             if e.get("role") != "mechanism" and k not in dropped
-            and e.get("failed") != "infrastructure (PLAN.md)"]
+            and e.get("failed") not in gt.NO_CHECKPOINT_ENTRIES]
 
 
 def cl20_labels(selection: Mapping, dropped: Sequence[str]) -> list[tuple[str, Mapping]]:
     return [(k, e) for k, e in (selection.get("chains") or {}).items()
             if e.get("role") == "mechanism" and k not in dropped
-            and e.get("failed") != "infrastructure (PLAN.md)"]
+            and e.get("failed") not in gt.NO_CHECKPOINT_ENTRIES]
 
 
 def gate_s_rows(runs: Path, scores: Path, selection: Mapping, book: Mapping,
@@ -449,9 +449,12 @@ def collapse_check(selection: Mapping, e022_selection: Path | None = None) -> di
                        ((e.get("selection") or {}).get("sigma") or {}).get("v_auc")))
     has = isinstance(block, Mapping)
     equal = has and not problems and dict(block.get("c_chains") or {}) == rows
+    single = sc.single_record_check(selection)
+    if st.SEED_MODE == st.SINGLE and "single_seed" not in selection:
+        single = {**single, "ok": False, "problems": ["no single_seed block (single-seed mode)"]}
     return {"block": has, "c_chains_equal": bool(equal), "c_chains": len(rows),
-            "c_problems": problems, "flags_mismatched": flags,
-            "ok": bool(has and equal and not flags)}
+            "c_problems": problems, "flags_mismatched": flags, "single_seed": single,
+            "ok": bool(has and equal and not flags and single["ok"])}
 
 
 def train_gates(args: argparse.Namespace) -> dict:
@@ -735,8 +738,9 @@ def failures(runs: Path, selection: Mapping, loaded: Loaded, gate_failed: Sequen
         chain, _run = label.split("/")
         d, p, s = gt.split_chain(chain)
         rules = [gt.rule_arm(e["arm"], r) for r in gt.RULES]
-        if e.get("failed") == "infrastructure (PLAN.md)" or label in gate_failed:
-            kind = st22.INFRASTRUCTURE if label not in gate_failed else st22.GATE
+        if e.get("failed") in gt.NO_CHECKPOINT_ENTRIES or label in gate_failed:
+            kind = st22.INFRASTRUCTURE if e.get("failed") == gt.INFRA_ENTRY and \
+                label not in gate_failed else st22.GATE
             out += [st22.Failure(d, p, s, a, kind) for a in rules]
             continue
         if e.get("collapsed"):
@@ -761,6 +765,10 @@ def run_metrics(units: e22.Units, ts, readouts: Sequence[str]) -> dict:
     out = {}
     for ro in readouts:
         m = e22.run_metrics(units, ts, ro)
+        if ro == "logit":
+            frames = e22.frames_of(units, "logit", ts.totals)
+            m["L_opposite_per_video"] = fr.within_video(frames, ts.gts, ts.labels,
+                                                        fr.OPPOSITE[ts.dataset])["per_video"]
         if ro == "sigma":
             frames = fr.frame_arrays(units.values("sigma"), ts.totals, units.kind)
             w = fr.within_video(frames, ts.gts, ts.labels, fr.L_METRIC[ts.dataset])
@@ -845,17 +853,19 @@ def values(metrics: Mapping, dataset: str, readout: str, metric: str,
             and (arms is None or k[3] in arms)}
 
 
-def per_video_arrays(metrics: Mapping, readout: str = "logit") -> tuple[dict, dict]:
-    """(dataset, pair, seed, arm) -> per-video L in the included order, and the order."""
+def per_video_arrays(metrics: Mapping, readout: str = "logit", name: str = "L_per_video"
+                     ) -> tuple[dict, dict]:
+    """(dataset, pair, seed, arm) -> per-video L (``name``) in the included order, and the
+    order."""
     order: dict[str, list[int]] = {}
     out = {}
     for k, m in metrics.items():
-        if k[4] != readout or "L_per_video" not in m:
+        if k[4] != readout or name not in m:
             continue
-        idx = sorted(int(i) for i in m["L_per_video"])
+        idx = sorted(int(i) for i in m[name])
         if order.setdefault(k[0], idx) != idx:
             raise ValueError(f"{k}: another set of included videos")
-        out[k[:4]] = np.array([m["L_per_video"][i] for i in idx], dtype=np.float64)
+        out[k[:4]] = np.array([m[name][i] for i in idx], dtype=np.float64)
     return out, order
 
 
@@ -892,11 +902,107 @@ def bootstraps(metrics: Mapping, loaded: Loaded, sets: Mapping, fam: Sequence[st
     return boot_l, boot_p
 
 
-def d14_points(loaded: Loaded, sets: Mapping, selection: Mapping, book: Mapping) -> dict:
+def seed_mode() -> str:
+    """The experiment's seed mode: e023_stats.SEED_MODE, the one switch (RECORDED.seed_mode is
+    derived from it; a patched mismatch is refused)."""
+    if st.RECORDED.seed_mode != st.SEED_MODE:
+        raise ValueError(f"RECORDED.seed_mode {st.RECORDED.seed_mode!r} is not SEED_MODE "
+                         f"{st.SEED_MODE!r}")
+    return st.SEED_MODE
+
+
+def chosen_runs(selection: Mapping) -> dict[tuple[str, str, str], int]:
+    """Single-seed mode (PLAN.md "단일 seed 실행과 판정"): (dataset, pair, analysis arm) -> the
+    chosen seed of its chain, every checkpoint rule of a new arm (the selection's "single_seed"
+    block, ``e023_score.single_record_check``) and E022's C / C.last; a chain without a chosen
+    seed (every attempt failed: "판정 없음") is absent."""
+    block = selection.get("single_seed")
+    if block is None:
+        raise ValueError("single-seed mode: the selection has no single_seed block")
+    chk = sc.single_record_check(selection)
+    if not chk["ok"]:
+        raise ValueError(f"the selection's single-seed block is not the rule's: {chk['problems']}")
+    out = {}
+    for k, ch in (block.get("chains") or {}).items():
+        arm, d, p = k.split("/")
+        if ch["seed"] is not None:
+            for rule_arm in [gt.rule_arm(arm, r) for r in gt.RULES]:
+                out[(d, p, rule_arm)] = int(ch["seed"])
+    for k, ch in (block.get("c_chains") or {}).items():
+        _arm, d, p = k.split("/")
+        if ch["seed"] is not None:
+            for arm in gt.C_ARMS:
+                out[(d, p, arm)] = int(ch["seed"])
+    return out
+
+
+def single_boots(metrics: Mapping, loaded: Loaded, sets: Mapping, n_resamples: int):
+    """Single-seed mode: the video bootstraps of e023_stats.evaluate (``boot_fn``; ``metrics``
+    and ``loaded.units`` hold only the chosen chains): (variant, dataset, a, b, pairs) -> the
+    bootstrap of a - b over ``pairs`` (variant "L", "L_sigma": b's sigma readout and C's logit
+    L, "L_opposite", "pooled"), None when an arm has no chain; the same resamples per dataset
+    and variant for every arm, resample 0 reproducing the evaluator's values (within
+    BOOT_POINT_TOL), each result computed once."""
+    pv_l, order = per_video_arrays(metrics)
+    pv_s, order_s = per_video_arrays(metrics, "sigma")
+    pv_o, order_o = per_video_arrays(metrics, "logit", "L_opposite_per_video")
+    for o in (order_s, order_o):
+        if any(o.get(d, order.get(d)) != order.get(d) for d in o):
+            raise ValueError("another set of included videos for the sigma / opposite L")
+    sigma_pv = {**{k: v for k, v in pv_s.items() if k[3] != "C"},
+                **{k: v for k, v in pv_l.items() if k[3] == "C"}}
+    per = {"L": pv_l, "L_sigma": sigma_pv, "L_opposite": pv_o}
+    w_l = {d: st.l_weights(len(order.get(d, [])), n_resamples) for d in gt.DATASETS}
+    w_p = {d: st20.bootstrap_weights(sets[d].labels, n_resamples, st.BOOT_SEED)
+           for d in gt.DATASETS}
+    points = {}
+    for d in gt.DATASETS:
+        sig = {k: v for k, v in values(metrics, d, "sigma", "L").items() if k[2] != "C"}
+        points[("L", d)] = values(metrics, d, "logit", "L")
+        points[("L_sigma", d)] = {**sig, **{k: v for k, v in points[("L", d)].items()
+                                            if k[2] == "C"}}
+        points[("L_opposite", d)] = values(metrics, d, "logit", "L_opposite")
+        points[("pooled", d)] = values(metrics, d, "logit", PRIMARY[d])
+    caches: dict = {}
+    done: dict = {}
+
+    def boot_fn(variant: str, d: str, a: str, b: str, pairs: Sequence[str]):
+        k = (variant, d, a, b, tuple(pairs))
+        if k in done:
+            return done[k]
+        vals = points[(variant, d)]
+        sa, sb = st.chain_seeds(vals, a, pairs), st.chain_seeds(vals, b, pairs)
+        if sa is None or sb is None:
+            done[k] = None
+            return None
+        cache = caches.setdefault((variant, d), {})
+        if variant == "pooled":
+            ts = sets[d]
+            atoms = {(p, s, x): (lambda u=loaded.units[(d, p, s, x)], g=ts.gts:
+                                 st22.snippet_atoms(u.logit, g))
+                     for (dd, p, s, x) in loaded.units if dd == d}
+            r = st.pooled_bootstrap_single(atoms, w_p[d], PRIMARY[d], a, b, sa, sb,
+                                           point=vals, pairs=pairs, cache=cache)
+        else:
+            pv = {(kk[1], kk[2], kk[3]): v for kk, v in per[variant].items() if kk[0] == d}
+            r = st.l_bootstrap_single(pv, w_l[d], a, b, sa, sb, point=vals, pairs=pairs,
+                                      cache=cache)
+        if not r["point_check_max_abs_diff"] <= BOOT_POINT_TOL:
+            raise ValueError(f"{d} {variant} {a}-{b}: bootstrap resample 0 differs from the "
+                             f"evaluator by {r['point_check_max_abs_diff']}")
+        done[k] = r
+        return r
+    return boot_fn
+
+
+def d14_points(loaded: Loaded, sets: Mapping, selection: Mapping, book: Mapping,
+               keep=None) -> dict:
     """D14 descriptive inputs: per main-family run the test L and pooled metric (snippet atoms,
     resample 0) of each evaluation point, its validation V-AUCs and the selected point."""
     out = {}
     for (d, p, s, arm), (z, counts) in loaded.d14.items():
+        if keep is not None and not keep((d, p, s, arm)):
+            continue                      # single-seed: the chosen chains only
         ts = sets[d]
         label = next(k for k, e in selection["chains"].items() if e["arm"] == arm
                      and k.split("/")[0] == gt.chain_name(d, p, s))
@@ -932,12 +1038,18 @@ def weak_arms(arms: Mapping[str, gt.Arm]) -> list[str]:
     return [a.name for a in main if rec["methods"][a.method].get("flag")]
 
 
-def run_rows(metrics: Mapping, fails: Sequence[st22.Failure], info: Mapping) -> list[dict]:
+def run_rows(metrics: Mapping, fails: Sequence[st22.Failure], info: Mapping,
+             keep=None) -> list[dict]:
+    """results/e023_runs.csv: every run (failed ones with their kind); single-seed mode
+    (``keep``: the chosen-chain predicate) adds "chosen" (False: a non-chosen attempt, kept
+    in the table, used by no rule)."""
     failed = {(f.dataset, f.pair, f.seed, f.arm): f.kind for f in fails}
     keys = sorted({k[:4] for k in metrics} | set(failed), key=str)
     rows = []
     for k in keys:
         base = {"dataset": k[0], "pair": k[1], "seed": k[2], "arm": k[3], **(info.get(k) or {})}
+        if keep is not None:
+            base["chosen"] = bool(keep(k))
         if k in failed:
             rows.append(base | {"failed": failed[k]})
             continue
@@ -945,7 +1057,7 @@ def run_rows(metrics: Mapping, fails: Sequence[st22.Failure], info: Mapping) -> 
             m = metrics.get((*k, ro))
             if m is not None:
                 rows.append(base | {"readout": ro, "failed": "", **{
-                    x: v for x, v in m.items() if x != "L_per_video"}})
+                    x: v for x, v in m.items() if not x.endswith("_per_video")}})
     return rows
 
 
@@ -1023,6 +1135,24 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
     if not h2["ok"]:
         _stop(stamp, "h2", "gate (h2) failed: E023's C / C.last values differ from E022's",
               {"h": True, "h2": False}, selection)
+    single = seed_mode() == st.SINGLE
+    keep = None
+    metrics_all = metrics
+    if single:          # PLAN.md "단일 seed 실행과 판정": only each chain's chosen seed from here
+        chosen = chosen_runs(selection)
+        c_tried = {(*k.split("/")[1:], a["seed"]) for k, ch in
+                   selection["single_seed"]["c_chains"].items() for a in ch["attempts"]}
+
+        def keep(k):
+            return chosen.get((k[0], k[1], k[3])) == k[2]
+        # the attempts only (E022's other C seeds are no attempt): the runs table and the
+        # non-chosen listing of the descriptives
+        metrics_all = {k: m for k, m in metrics.items()
+                       if k[3] not in gt.C_ARMS or tuple(k[:3]) in c_tried}
+        units = {k: u for k, u in units.items() if keep(k)}
+        metrics = {k: m for k, m in metrics.items() if k[:4] in units}
+        per_sigma = {k: v for k, v in per_sigma.items() if k in units}
+        offsets = {k: v for k, v in offsets.items() if keep((*k, "C"))}
     decomp = {k: decomposition(u, sets[k[0]]) for k, u in units.items()}
     d1 = d1_gate(decomp, metrics=metrics)
     write_gate("d1", d1, {"d1": d1["ok"]})
@@ -1031,7 +1161,14 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
         _stop(stamp, "d1", f"gate (d1) failed: {bad[:5]}", {"h": True, "h2": True, "d1": False},
               selection)
     loaded.units = units
-    boot_l, boot_p = bootstraps(metrics, loaded, sets, fam, args.boot_resamples)
+    boot_fn = None
+    if single:
+        boot_fn = single_boots(metrics, loaded, sets, args.boot_resamples)
+        boot_l = {d: {b: boot_fn("L", d, "C", b, st.PAIRS) for b in fam} for d in gt.DATASETS}
+        boot_p = {d: {b: boot_fn("pooled", d, "C", b, st.PAIRS) for b in fam}
+                  for d in gt.DATASETS}
+    else:
+        boot_l, boot_p = bootstraps(metrics, loaded, sets, fam, args.boot_resamples)
     l_logit = {d: values(metrics, d, "logit", "L") for d in gt.DATASETS}
     l_sigma = {d: {(k[1], k[2], k[3]): v for k, v in per_sigma.items()
                    if k[0] == d and k[3] in fam} for d in gt.DATASETS}
@@ -1043,9 +1180,9 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
                                   for d in gt.DATASETS},
                       pooled={d: values(metrics, d, "logit", PRIMARY[d]) for d in gt.DATASETS},
                       family_arms=fam, x32_arms=x32, boot_l=boot_l, boot_pooled=boot_p,
-                      degenerate_rows=st.degenerate({k: v for k, v in
-                                                     loaded.constant_share.items()
-                                                     if k not in collapsed_runs}, fam),
+                      boot_fn=boot_fn, degenerate_rows=st.degenerate({
+                          k: v for k, v in loaded.constant_share.items()
+                          if k not in collapsed_runs and (keep is None or keep(k))}, fam),
                       weak=weak_arms(arms), gates_ok=True, decisions=st.RECORDED)
     summary = {"check": "E023 stage F2: localisation against same-feature comparison methods "
                         "(PLAN.md 판정)", **stamp, "gate": gate.get("status"),
@@ -1054,9 +1191,11 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
                                           "frame AP; logit readout; pair mean)",
                            "check_metric": PRIMARY},
                "gates": {"h": h["ok"], "h2": h2["ok"], "d1": d1["ok"]},
-               "failures": [list(f) for f in fails], **clean(res), "complete": False}
+               "failures": [list(f) for f in fails],
+               "single_seed": selection.get("single_seed") if single else None,
+               **clean(res), "complete": False}
     write_json(OUT["summary"], clean(summary))                  # 1. verdict first
-    write_csv(OUT["runs"], [clean(r) for r in run_rows(metrics, fails, info)])
+    write_csv(OUT["runs"], [clean(r) for r in run_rows(metrics_all, fails, info, keep)])
     per_video, order = per_video_arrays(metrics)
     included = {d: [int(sets[d].totals[i]) for i in order.get(d, [])] for d in gt.DATASETS}
     metas = [_json(f) for f in sorted((Path(args.scores) / "test").glob("meta_*.json"))]
@@ -1068,7 +1207,9 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
     records = {}
     for label, e in selection["chains"].items():
         f = Path(args.runs) / label / bt.FILES["record"]
-        if e.get("role") != "mechanism" and f.is_file():
+        d_, p_, s_ = gt.split_chain(label.split("/")[0])
+        if e.get("role") != "mechanism" and f.is_file() and (
+                keep is None or keep((d_, p_, s_, e["arm"]))):
             r = _json(f)
             records[label] = {"arm": e["arm"], "parameters": r.get("parameters"),
                               "seconds": r.get("seconds")}
@@ -1080,11 +1221,14 @@ def analysis(args: argparse.Namespace, stamp: Mapping, gate: Mapping) -> dict:
         metrics=metrics, decomp={k: v.to_json() for k, v in decomp.items()},
         per_video=per_video, included_totals=included, chunked=chunked, selection=selection,
         devlr=_json_or(OUT["devlr"], {}), val_auc=sel_v, c_offsets=offsets,
-        chain_records=records, scoring_seconds=secs, sigma_ones=loaded.sigma_ones, h2=h2,
-        prefreeze=_json_or(OUT["prefreeze"], {}), boot_l=boot_l,
-        d14_points=d14_points(loaded, sets, selection, book), family_arms=fam,
+        chain_records=records, scoring_seconds=secs,
+        sigma_ones={k: v for k, v in loaded.sigma_ones.items() if keep is None or keep(k)},
+        h2=h2, prefreeze=_json_or(OUT["prefreeze"], {}), boot_l=boot_l,
+        d14_points=d14_points(loaded, sets, selection, book, keep), family_arms=fam,
         all_arms=[a for a in sorted({k[3] for k in units}) if a != "C"],
-        condition3=res["condition_3"])
+        condition3=res["condition_3"], single=single,
+        non_chosen={k: m for k, m in metrics_all.items() if k[:4] not in units}
+        if single else None)
     summary["complete"] = True
     write_json(OUT["summary"], clean(summary))                  # 2. descriptives
     return summary

@@ -24,6 +24,12 @@ values. New code (add-only rule).
         validation-selected point, L and pooled), validation-test Spearman over the points, the
         method order per point against the selected order
     12  condition (3)'s 98% Welch lower bounds
+
+Single-seed mode (PLAN.md "단일 seed 실행과 판정"; ``single``): the per-run inputs hold each
+chain's chosen seed only (the pairs and arms may hold different seeds), so the arm - C pairings
+of 1 and 2 pair on (dataset, pair) with each arm's own chosen seed and record the seeds used;
+the non-chosen attempts that still have values are listed in 1 under "non_chosen" (marked, used
+by nothing else).
 """
 
 from __future__ import annotations
@@ -72,8 +78,11 @@ def _base(arm: str) -> str:
 
 # --- 1 ---------------------------------------------------------------------------------------
 
-def cell_table(metrics: Mapping[tuple, Mapping]) -> dict:
-    """Descriptive 1 (``metrics``: (dataset, pair, seed, arm, readout) -> metric values)."""
+def cell_table(metrics: Mapping[tuple, Mapping], single: bool = False,
+               non_chosen: Mapping[tuple, Mapping] | None = None) -> dict:
+    """Descriptive 1 (``metrics``: (dataset, pair, seed, arm, readout) -> metric values;
+    ``single``: pair an arm with C on (dataset, pair), each its own chosen seed, the seeds
+    recorded; ``non_chosen``: the non-chosen attempts' values, listed and marked)."""
     groups: dict[str, list] = {}
     by: dict[tuple, float] = {}
     for (d, p, s, a, ro), m in metrics.items():
@@ -87,23 +96,36 @@ def cell_table(metrics: Mapping[tuple, Mapping]) -> dict:
         base = _base(a)
         if a == base:
             continue
-        diffs = [by[(d, p, s, a, ro)] - by[(d, p, s, base, "logit")]
-                 for (dd, pp, s, aa, rr) in by if (dd, pp, aa, rr) == (d, p, a, ro)
-                 and (d, p, s, base, "logit") in by]
+        if single:
+            mine = [s for (dd, pp, s, aa, rr) in by if (dd, pp, aa, rr) == (d, p, a, ro)]
+            theirs = [s for (dd, pp, s, aa, rr) in by if (dd, pp, aa, rr) == (d, p, base, "logit")]
+            pairs = [(sa, sb) for sa in mine for sb in theirs]
+        else:
+            pairs = [(s, s) for (dd, pp, s, aa, rr) in by if (dd, pp, aa, rr) == (d, p, a, ro)
+                     and (d, p, s, base, "logit") in by]
+        diffs = [by[(d, p, sa, a, ro)] - by[(d, p, sb, base, "logit")] for sa, sb in pairs]
         sd = float(np.std(diffs, ddof=1)) if len(diffs) > 1 else math.nan
         d_z[f"{d}/{p}/{a}/{ro}"] = {"n": len(diffs), "mean": float(np.mean(diffs)) if diffs
                                     else math.nan,
                                     "d_z": float(np.mean(diffs)) / sd if sd and math.isfinite(sd)
-                                    else math.nan}
-    return {"cells": {k: mean_sd(v) for k, v in sorted(groups.items())},
-            "d_z_vs_c": dict(sorted(d_z.items()))}
+                                    else math.nan,
+                                    "seeds": [[sa, sb] for sa, sb in pairs]}
+    out = {"cells": {k: mean_sd(v) for k, v in sorted(groups.items())},
+           "d_z_vs_c": dict(sorted(d_z.items()))}
+    if non_chosen is not None:
+        out["non_chosen"] = {f"{d}/{p}/s{s}/{a}/{ro}": {"chosen": False, **{
+            n: m[n] for n in METRICS if n in m}}
+            for (d, p, s, a, ro), m in sorted(non_chosen.items(), key=str)}
+    return out
 
 
 # --- 2 problem description -------------------------------------------------------------------
 
 def problem(decomp: Mapping[tuple, Mapping], metrics: Mapping[tuple, Mapping],
-            arms: Sequence[str]) -> dict:
-    """Descriptive 2 (``decomp``: (dataset, pair, seed, arm) -> Decomposition.to_json())."""
+            arms: Sequence[str], single: bool = False) -> dict:
+    """Descriptive 2 (``decomp``: (dataset, pair, seed, arm) -> Decomposition.to_json();
+    ``single``: a method pair is paired on (dataset, pair), each arm its own chosen seed, the
+    seeds recorded)."""
     runs = {}
     for (d, p, s, a), dc in decomp.items():
         m = metrics.get((d, p, s, a, "logit")) or {}
@@ -114,9 +136,14 @@ def problem(decomp: Mapping[tuple, Mapping], metrics: Mapping[tuple, Mapping],
     for d in DATASETS:
         for i, a in enumerate(arms):
             for b in arms[i + 1:]:
-                rows = [(decomp[(d, p, s, a)], decomp[(d, p, s, b)])
-                        for (dd, p, s, aa) in decomp if dd == d and aa == a
-                        and (d, p, s, b) in decomp]
+                if single:
+                    keys = [((d, p, sa, a), (d, p, sb, b))
+                            for (dd, p, sa, aa) in decomp if dd == d and aa == a
+                            for (d2, p2, sb, bb) in decomp if (d2, p2, bb) == (d, p, b)]
+                else:
+                    keys = [((d, p, s, a), (d, p, s, b)) for (dd, p, s, aa) in decomp
+                            if dd == d and aa == a and (d, p, s, b) in decomp]
+                rows = [(decomp[ka], decomp[kb]) for ka, kb in keys]
                 if not rows:
                     continue
                 w = np.array([x["w"] for x, _ in rows])
@@ -127,7 +154,8 @@ def problem(decomp: Mapping[tuple, Mapping], metrics: Mapping[tuple, Mapping],
                 pairs_out[f"{d}/{a}-{b}"] = {
                     "n": len(rows), "d_auc": mean_d, "within_part": float(within.mean()),
                     "cross_part": float(cross.mean()), "w_mean": float(w.mean()),
-                    "cross_share": float(cross.mean()) / mean_d if mean_d else math.nan}
+                    "cross_share": float(cross.mean()) / mean_d if mean_d else math.nan,
+                    "seeds": [[ka[1], ka[2], kb[2]] for ka, kb in keys]}
         flips[d] = order_flips(metrics, d, arms)
     return {"runs": runs, "pairs": pairs_out, "order": flips}
 
@@ -335,11 +363,11 @@ def descriptives(*, metrics: Mapping, decomp: Mapping, per_video: Mapping,
                  devlr: Mapping | None, val_auc: Mapping, c_offsets: Mapping,
                  chain_records: Mapping, scoring_seconds: float | None, sigma_ones: Mapping,
                  h2: Mapping, prefreeze: Mapping, boot_l: Mapping, d14_points: Mapping,
-                 family_arms: Sequence[str], all_arms: Sequence[str], condition3: Mapping
-                 ) -> dict:
+                 family_arms: Sequence[str], all_arms: Sequence[str], condition3: Mapping,
+                 single: bool = False, non_chosen: Mapping | None = None) -> dict:
     """Descriptives 1-12 (module docstring)."""
-    return {"1_cells": cell_table(metrics),
-            "2_problem": problem(decomp, metrics, ["C", *all_arms]),
+    return {"1_cells": cell_table(metrics, single, non_chosen),
+            "2_problem": problem(decomp, metrics, ["C", *all_arms], single),
             "3_mechanism": mechanism(decomp, metrics, c_offsets),
             "4_validation_test": validation_test(metrics, val_auc),
             "5_selected_points": selected_points(selection, devlr),

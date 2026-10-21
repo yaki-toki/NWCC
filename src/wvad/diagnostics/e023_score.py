@@ -29,10 +29,13 @@ the frozen wvad.train, E021's HB L20 command plus --save_epoch_ckpts), developme
         lr scores x{1/3, 1, 3} (widened once to x1/9 or x9 when an end value wins), then the
         scale constants x{1/10, 1, 10} at the chosen lr (recipes.d4_score / d4_pick) over the
         chains that did not collapse (PLAN.md "붕괴 제외"; recorded per setting under
-        "collapsed", each value's surviving seeds under "surviving"; a value with fewer than 2
-        is never chosen, and a setting without an eligible value is listed under "no_eligible"
-        with no choice); "choices" holds every complete setting; each setting records the
-        official lr and the scale constants of its dataset's configuration
+        "collapsed", each value's surviving seeds under "surviving"; a value with fewer than
+        D4.min_surviving is never chosen, and a setting without an eligible value is listed
+        under "no_eligible" with no choice); "choices" holds every complete setting; each
+        setting records the official lr and the scale constants of its dataset's
+        configuration. Single-seed D4 (D4.seed_mode "single", PLAN.md "단일 seed 실행과 판정"):
+        a value's score is that of its first development seed (0, then 1, then 2) that did not
+        collapse, min_surviving 1
     q1d --runs_root R --record results/e023_q1b.json [--family ...]
         (q1d) sanity floor (pre-freeze, validation only) from the development chains at the
         official recipe (lr x1, scale x1; <runs>/dev/<dataset>_xcb_xcl_s<0-2>/<method>_u<unit>
@@ -40,10 +43,12 @@ the frozen wvad.train, E021's HB L20 command plus --save_epoch_ckpts), developme
         sigma V-AUC over its chains that did not collapse against the MIL port's mean - 2.0
         points (e023_gates.q1d_record), merged into the record under "q1d"; exit 1 (nothing
         written) while a chain or selection is missing
-    jobs --stage d4|confirm --runs_root R [--family ...] [--devlr FILE]
+    jobs --stage d4|confirm --runs_root R [--family ...] [--devlr FILE] [--infra_failed ..]
         one line per chain still to train: "method unit dataset pair seed lr_mult scale_mult
-        out_dir d14" (d4: the development chains D4 needs next; confirm: the 40 settings x seeds
-        of every main-family and X.32 arm, from the committed D4 choices)
+        out_dir d14" (d4: the development chains D4 needs next; confirm: every main-family and
+        X.32 arm's chains from the committed D4 choices; single-seed mode, e023_stats.SEED_MODE: per
+        chain seed 42, or the next of 123, 777 after a collapsed, numerically failed or
+        --infra_failed attempt, ``confirm_seeds``)
     score --split val --runs_root R --out S [--family ...] [--infra_failed ..] [--rescore REASON]
         no test data: every comparison-method chain's kept checkpoints (sigma, logit, last)
         re-scored on the validation videos (gate (s)), S/val/<chain>/<run>.npz; every C.L20
@@ -55,7 +60,9 @@ the frozen wvad.train, E021's HB L20 command plus --save_epoch_ckpts), developme
         (sigma: max fp32 sigma(u_k), logit: max u_k; no offset), strict >, earliest point on
         ties; the last point; checkpoint sha256; per chain "collapsed" (PLAN.md "실패 처리"
         "붕괴 제외": selected sigma V-AUC < 0.60; E022 C's chains from its committed selection
-        under "collapse") -> results/e023_selection.json; D14: the 30
+        under "collapse"; single-seed mode: only each chain's attempts and the block
+        "single_seed", nothing written while a fallback seed is still to train) ->
+        results/e023_selection.json; D14: the 30
         evaluation-point checkpoints of every main-family chain with their V-AUCs ->
         results/e023_all_ckpts.json (commit both before access (A))
     score --split test --runs_root R --out S --test_log LOG --selection_sha256 X
@@ -89,6 +96,7 @@ import datetime as dt_time
 import json
 import os
 import shutil
+import sys
 import zipfile
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -99,7 +107,7 @@ import torch
 
 from wvad.baselines import common as bc
 from wvad.baselines import train as bt
-from wvad.baselines.recipes import D4, d4_pick, d4_score, d4_widen
+from wvad.baselines.recipes import D4Grid, d4_pick, d4_score, d4_widen
 from wvad.data import dense_test as dt
 from wvad.data import load_split, split_file
 from wvad.data.catalog import ENCODER_PAIRS, dense_dir
@@ -107,6 +115,7 @@ from wvad.data.dense import DenseSet
 from wvad.diagnostics import e021_score as es
 from wvad.diagnostics import e023_access as ea
 from wvad.diagnostics import e023_gates as gt
+from wvad.diagnostics import e023_stats as st23
 from wvad.diagnostics.common import code_version, gpu_environment, write_json
 from wvad.diagnostics.e023_stats import COLLAPSE_V_AUC, collapsed
 from wvad.eval.dense import score_dense, snippet_logits
@@ -118,6 +127,9 @@ from wvad.prep.manifests import sha256_file
 from wvad.train.stages import INPUT_LAYER_NORM
 
 COMMAND = "e023-score-test"
+# D4 in the experiment's seed mode (e023_stats.SEED_MODE, the one switch; PLAN.md "단일 seed 실행과
+# 판정"): single -> min_surviving 1, multi -> 2 (recipes.D4Grid enforces both)
+D4 = D4Grid(seed_mode=st23.SEED_MODE)
 ACCESS = "A"
 SCORE_KEYS = ("z", "zc", "sigma")
 CL20_KEY = ("hb", "l20")                         # e021_score RunKey head / pipeline
@@ -257,13 +269,60 @@ def dev_dir(runs: Path, dataset: str, pair: str, seed: int, run: str) -> Path:
     return Path(runs) / "dev" / gt.chain_name(dataset, pair, seed) / run
 
 
+def dev_seeds_next(runs: Path, method: str, unit: int, d: str, p: str, lr: str, sc: str
+                   ) -> list[int]:
+    """The development seeds of one value still to train: multi-seed D4 every unfinished seed;
+    single-seed D4 (PLAN.md "단일 seed 실행과 판정", "세부 규칙") the first unfinished seed after
+    collapsed or numerically failed ones (none once a seed is usable or every seed failed)."""
+    todo = []
+    for s in D4.seeds:
+        f = dev_dir(runs, d, p, s, dev_run(method, unit, lr, sc))
+        if not (f / bt.FILES["record"]).is_file():
+            if D4.seed_mode == "single":
+                return [s]
+            todo.append(s)
+            continue
+        if D4.seed_mode == "single" and dev_failure(f) is None:
+            return []
+    return todo
+
+
+def dev_failure(f: Path) -> str | None:
+    """A finished development chain's failure for single-seed D4: "numerical" (a non-finite
+    validation V-AUC: its D4 score would be NaN; PLAN.md "세부 규칙"), "collapsed" (selected
+    sigma V-AUC < 0.60), None (usable)."""
+    with np.load(Path(f) / bt.FILES["val"]) as z:
+        r = np.asarray(z["v_auc_sigma"], dtype=np.float64)
+    if not np.isfinite(r).all():
+        return "numerical"
+    return "collapsed" if collapsed(float(r.max())) else None
+
+
 def _dev_score(runs: Path, method: str, unit: int, d: str, p: str, lr: str, sc: str,
-               left_out: list[str] | None = None) -> tuple[float | None, int | None]:
+               left_out: list[str] | None = None, numerical: list[str] | None = None
+               ) -> tuple[float | None, int | None]:
     """(D4 score, surviving development seeds) of one value ((None, None) until all development
-    seeds finished): the score over its chains that did not collapse (PLAN.md "실패 처리" "붕괴
-    제외": the selected, i.e. highest, sigma V-AUC below 0.60; their '<chain>/<run>' added to
-    ``left_out``), NaN when every seed collapsed; d4_pick takes the value only with at least
-    D4.min_surviving surviving seeds."""
+    seeds it needs finished): the score over its chains that did not collapse (PLAN.md "실패
+    처리" "붕괴 제외": the selected, i.e. highest, sigma V-AUC below 0.60; their '<chain>/<run>'
+    added to ``left_out``), NaN when every seed collapsed; d4_pick takes the value only with at
+    least D4.min_surviving surviving seeds. Single-seed D4 (D4.seed_mode "single", PLAN.md "단일
+    seed 실행과 판정", "세부 규칙"): the seeds in order, the score of the first that neither
+    collapsed nor failed numerically (a non-finite V-AUC; added to ``numerical``); 1 surviving
+    seed; later seeds are not read; none usable: NaN, 0 (not eligible)."""
+    if D4.seed_mode == "single":
+        for s in D4.seeds:
+            f = dev_dir(runs, d, p, s, dev_run(method, unit, lr, sc))
+            if not (f / bt.FILES["record"]).is_file():
+                return None, None
+            why = dev_failure(f)
+            if why is None:
+                with np.load(f / bt.FILES["val"]) as z:
+                    r = np.asarray(z["v_auc_sigma"], dtype=np.float64)
+                return d4_score(r[None, :], D4), 1
+            into = left_out if why == "collapsed" else numerical
+            if into is not None and f"{f.parent.name}/{f.name}" not in into:
+                into.append(f"{f.parent.name}/{f.name}")
+        return float("nan"), 0
     rows = []
     for s in D4.seeds:
         f = dev_dir(runs, d, p, s, dev_run(method, unit, lr, sc))
@@ -277,10 +336,13 @@ def _dev_score(runs: Path, method: str, unit: int, d: str, p: str, lr: str, sc: 
             keep.append(r)
         elif left_out is not None and f"{f.parent.name}/{f.name}" not in left_out:
             left_out.append(f"{f.parent.name}/{f.name}")
-    return (d4_score(np.stack(keep)) if keep else float("nan")), len(keep)
+    return (d4_score(np.stack(keep), D4) if keep else float("nan")), len(keep)
 
 
 def _no_eligible(stage: str) -> str:
+    if D4.seed_mode == "single":
+        return (f"{stage}: no value with a usable development seed (PLAN.md 붕괴 제외, 세부 "
+                "규칙); the official value is used")
     return (f"{stage}: no value with at least {D4.min_surviving} surviving development seeds "
             "(PLAN.md 붕괴 제외); nothing chosen (user decision)")
 
@@ -290,47 +352,58 @@ def d4_state(runs: Path, method: str, unit: int, dataset: str, pair: str,
     """The D4 state of one method and setting: lr scores (widened once), scale scores at the
     chosen lr, each value's surviving development seeds ("surviving"; a value with fewer than
     D4.min_surviving is never chosen), the values still to train, the choice once complete, the
-    collapsed development chains left out ("collapsed") and "no_eligible" when no value of a
-    stage is eligible (then no choice and nothing more to train)."""
+    collapsed development chains left out ("collapsed"), the numerically failed ones
+    ("numerical", single-seed D4) and "no_eligible" when no value of a stage is eligible (then,
+    multi-seed, no choice and nothing more to train; single-seed, PLAN.md "세부 규칙", the
+    official value is used for that stage and recorded under "official_used")."""
     left: list[str] = []
-    lr = {m: _dev_score(runs, method, unit, dataset, pair, m, "1", left) for m in D4.lr_mults}
+    bad: list[str] = []
+    lr = {m: _dev_score(runs, method, unit, dataset, pair, m, "1", left, bad)
+          for m in D4.lr_mults}
     lr_scores, lr_alive = {m: v[0] for m, v in lr.items()}, {m: v[1] for m, v in lr.items()}
     need = [(m, "1") for m, v in lr_scores.items() if v is None]
     out = {"lr": {"scores": lr_scores, "surviving": lr_alive, "pick": None, "widened": None,
                   "final": None},
            "scale": None, "need": need, "complete": False, "choice": None, "collapsed": left,
-           "no_eligible": None}
+           "numerical": bad, "no_eligible": None, "official_used": []}
     if need:
         return out
-    pick = d4_pick(lr_scores, surviving=lr_alive)
+    pick = d4_pick(lr_scores, D4, surviving=lr_alive)
     out["lr"]["pick"] = pick
     if pick is None:
         out["no_eligible"] = _no_eligible("lr")
-        return out
-    wide = d4_widen(pick)
+        if D4.seed_mode != "single":
+            return out
+        pick = D4.official
+        out["official_used"].append("lr")
+    wide = d4_widen(pick, D4)
     final = pick
     if wide is not None:
-        ws, wn = _dev_score(runs, method, unit, dataset, pair, wide, "1", left)
+        ws, wn = _dev_score(runs, method, unit, dataset, pair, wide, "1", left, bad)
         out["lr"]["widened"] = {"value": wide, "score": ws, "surviving": wn}
         if ws is None:
             out["need"] = [(wide, "1")]
             return out
-        final = d4_pick({**lr_scores, wide: ws}, surviving={**lr_alive, wide: wn})
+        final = d4_pick({**lr_scores, wide: ws}, D4, surviving={**lr_alive, wide: wn})
     out["lr"]["final"] = final
     sc_final = "1"
     if has_scale:
-        sc = {m: _dev_score(runs, method, unit, dataset, pair, final, m, left)
+        sc = {m: _dev_score(runs, method, unit, dataset, pair, final, m, left, bad)
               for m in D4.scale_mults}
         sc_scores, sc_alive = {m: v[0] for m, v in sc.items()}, {m: v[1] for m, v in sc.items()}
         out["scale"] = {"scores": sc_scores, "surviving": sc_alive, "pick": None}
         out["need"] = [(final, m) for m, v in sc_scores.items() if v is None]
         if out["need"]:
             return out
-        sc_final = d4_pick(sc_scores, surviving=sc_alive)
+        sc_final = d4_pick(sc_scores, D4, surviving=sc_alive)
         out["scale"]["pick"] = sc_final
         if sc_final is None:
-            out["no_eligible"] = _no_eligible("scale")
-            return out
+            out["no_eligible"] = "; ".join(x for x in (out["no_eligible"],
+                                                       _no_eligible("scale")) if x)
+            if D4.seed_mode != "single":
+                return out
+            sc_final = D4.official
+            out["official_used"].append("scale")
     out["complete"] = True
     out["choice"] = {"lr_mult": final, "scale_mult": sc_final}
     return out
@@ -353,7 +426,9 @@ def devlr_record(runs: Path, family: Sequence[str], resolver: Resolver = bc.get_
                 settings[f"{m}/{d}/{p}"] = st
                 if st["complete"]:
                     choices[f"{m}/{d}/{p}"] = st["choice"]
-    return {"check": "E023 D4 validation check (PLAN.md 검증 점검; development seeds 0-2)",
+    return {"check": "E023 D4 validation check (PLAN.md 검증 점검; development seeds 0-2"
+                     + (", the first that did not collapse: 단일 seed 실행과 판정)"
+                        if D4.seed_mode == "single" else ")"),
             "code": code_version(), "time_utc": now_utc(), "grid": D4.to_json(),
             "family": list(family), "settings": settings, "choices": choices,
             "no_eligible": sorted(k for k, v in settings.items() if v["no_eligible"]),
@@ -422,16 +497,19 @@ def d4_jobs(runs: Path, family: Sequence[str], resolver: Resolver = bc.get_metho
         m, d, p = label.split("/")
         unit = int(resolver(m).official_unit)
         for lr, sc in st["need"]:
-            for s in D4.seeds:
+            for s in dev_seeds_next(runs, m, unit, d, p, lr, sc):
                 out = dev_dir(runs, d, p, s, dev_run(m, unit, lr, sc))
-                if not (out / bt.FILES["record"]).is_file():
-                    lines.append(job_line(m, unit, d, p, s, lr, sc, out, False))
+                lines.append(job_line(m, unit, d, p, s, lr, sc, out, False))
     return lines
 
 
 def confirm_jobs(runs: Path, devlr: Mapping, family: Sequence[str],
-                 resolver: Resolver = bc.get_method) -> list[str]:
-    """The confirmation chains of every main-family and X.32 arm not finished yet."""
+                 resolver: Resolver = bc.get_method, infra_failed: Sequence[str] = (),
+                 gate_failed: Sequence[str] = (), incomplete: list[str] | None = None
+                 ) -> list[str]:
+    """The confirmation chains of every main-family and X.32 arm not finished yet
+    (``confirm_seeds``; single-seed mode: seed 42, or the next fallback seed; a chain with an
+    attempt still running or crashed is not listed, its label added to ``incomplete``)."""
     arms = family_arms(family, resolver)
     lines = []
     for a in arms.values():
@@ -443,12 +521,62 @@ def confirm_jobs(runs: Path, devlr: Mapping, family: Sequence[str],
                 if ch is None:
                     raise SystemExit(f"no D4 choice for {a.method}/{d}/{p}: commit the complete "
                                      "results/e023_devlr.json first")
-                for s in gt.SEEDS:
+                for s in confirm_seeds(runs, a, d, p, infra_failed, gate_failed, incomplete):
                     out = Path(runs) / gt.chain_name(d, p, s) / a.run
-                    if not (out / bt.FILES["record"]).is_file():
-                        lines.append(job_line(a.method, a.unit, d, p, s, ch["lr_mult"],
-                                              ch["scale_mult"], out, a.d14))
+                    lines.append(job_line(a.method, a.unit, d, p, s, ch["lr_mult"],
+                                          ch["scale_mult"], out, a.d14))
     return lines
+
+
+def run_status(out: Path) -> str | None:
+    """The attempt outcome of a finished comparison-method chain from its own selection.json
+    (validation only; e023_gates.ATTEMPT_*): None while unfinished, "numerical" (a failed
+    record, a non-finite training loss or no sigma selection), "collapsed" (selected sigma V-AUC
+    < 0.60), else "ok". ``selection_record`` recomputes the selection and decides."""
+    f = Path(out) / bt.FILES["record"]
+    if not f.is_file():
+        return None
+    rec = _json(f)
+    v = ((rec.get("selection") or {}).get("sigma") or {}).get("v_auc")
+    if rec.get("failed") or int(rec.get("nonfinite_losses") or 0) > 0 or v is None:
+        return gt.ATTEMPT_NUMERICAL
+    return gt.ATTEMPT_COLLAPSED if collapsed(v) else gt.ATTEMPT_OK
+
+
+def started(runs: Path, label: str) -> bool:
+    """Whether an attempt's run folder exists (a comparison-method run; C.L20: either stage)."""
+    d = Path(runs) / label
+    return d.exists() or (d.name == gt.CL20_RUN and (d.parent / gt.CL20_STAGE1).exists())
+
+
+def confirm_seeds(runs: Path, arm: gt.Arm, d: str, p: str, infra_failed: Sequence[str] = (),
+                  gate_failed: Sequence[str] = (), incomplete: list[str] | None = None
+                  ) -> list[int]:
+    """The confirmation seeds of one chain still to train: multi-seed every unfinished seed;
+    single-seed (PLAN.md "단일 seed 실행과 판정") the next seed of 42, 123, 777 after collapsed,
+    numerically failed, infrastructure-failed ('<chain>/<run>' in ``infra_failed``) or
+    gate-failed (``gate_failed``, before access (A)) attempts, none once a seed is ok or all three
+    failed. An attempt whose run folder exists without a finished record is running or crashed:
+    nothing is listed for the chain (no second run into the same folder) and its label goes to
+    ``incomplete`` (wait for the batch; a crash is rerun once, then named with --infra_failed)."""
+    if st23.SEED_MODE != st23.SINGLE:
+        return [s for s in gt.SEEDS if not (Path(runs) / gt.chain_name(d, p, s) / arm.run /
+                                            bt.FILES["record"]).is_file()]
+    status = {}
+    for s in gt.SINGLE_SEEDS:
+        label = f"{gt.chain_name(d, p, s)}/{arm.run}"
+        if label in infra_failed or label in gate_failed:
+            status[s] = gt.ATTEMPT_INFRA if label in infra_failed else gt.ATTEMPT_GATE
+            continue
+        status[s] = run_status(Path(runs) / label)
+        if status[s] is None and started(runs, label):
+            if incomplete is not None:
+                incomplete.append(label)
+            return []
+        if status[s] in (None, gt.ATTEMPT_OK):
+            break
+    nxt = gt.single_seed(status)["next"]
+    return [] if nxt is None else [nxt]
 
 
 # --- validation: re-scoring (gate (s)) and C.L20 --------------------------------------------------
@@ -566,8 +694,11 @@ def check_excluded(names: Sequence[str], valid: Sequence[str], runs: Path) -> li
 
 
 def chain_labels(arms: Mapping[str, gt.Arm]) -> list[tuple[str, gt.Arm]]:
+    """Every chain the experiment may hold: the 10 seeds (multi-seed) or the attempts 42, 123,
+    777 (single-seed, PLAN.md "단일 seed 실행과 판정")."""
+    seeds = gt.SINGLE_SEEDS if st23.SEED_MODE == st23.SINGLE else gt.SEEDS
     return [(f"{gt.chain_name(d, p, s)}/{a.run}", a) for a in arms.values()
-            for d in gt.DATASETS for p in gt.PAIRS for s in gt.SEEDS]
+            for d in gt.DATASETS for p in gt.PAIRS for s in seeds]
 
 
 def score_val(args: argparse.Namespace, resolver: Resolver = bc.get_method) -> None:
@@ -586,7 +717,9 @@ def score_val(args: argparse.Namespace, resolver: Resolver = bc.get_method) -> N
         call["superseded"] = es.supersede(target, args.rescore)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     todo = [(lb, a) for lb, a in labels if lb not in excluded
-            and not gt.val_file(args.out, *lb.split("/")).is_file()]
+            and not gt.val_file(args.out, *lb.split("/")).is_file()
+            and (st23.SEED_MODE != st23.SINGLE
+                 or (Path(args.runs_root) / lb / bt.FILES["record"]).is_file())]
     written = []
     for d in gt.DATASETS:
         split = load_split(split_file(d))
@@ -745,36 +878,188 @@ def c_collapse(e022_selection: Path | None = None) -> tuple[dict, list[str]]:
     return rows, problems
 
 
+def history_nonfinite(runs: Path, label: str, entry: Mapping) -> bool:
+    """A non-finite training loss in the chain's record (C.L20: either stage's history, E022's
+    parser)."""
+    d = Path(runs) / label
+    if entry.get("role") == "mechanism":
+        from wvad.diagnostics import e022 as e22
+
+        return e22.history_failed(d) or e22.history_failed(d.parent / gt.CL20_STAGE1)
+    return int(_json(d / bt.FILES["record"]).get("nonfinite_losses") or 0) > 0
+
+
+def attempt_status(runs: Path, label: str, entry: Mapping) -> str:
+    """The outcome of one attempt (PLAN.md "단일 seed 실행과 판정"; validation only, before access
+    (A)) from its selection entry: "infrastructure" (--infra_failed), "gate" (--gate_failed, a
+    gate failure before access (A)), "collapsed" (its "collapsed" flag), "numerical" (no
+    selection: non-finite validation logits or a failed record; or a non-finite training
+    loss), else "ok"."""
+    if entry.get("failed") == gt.INFRA_ENTRY:
+        return gt.ATTEMPT_INFRA
+    if entry.get("failed") == gt.GATE_ENTRY:
+        return gt.ATTEMPT_GATE
+    if entry.get("collapsed"):
+        return gt.ATTEMPT_COLLAPSED
+    if entry.get("selection") is None or entry.get("failed") or \
+            history_nonfinite(runs, label, entry):
+        return gt.ATTEMPT_NUMERICAL
+    return gt.ATTEMPT_OK
+
+
+def c_single(c_rows: Mapping[str, Mapping]) -> dict:
+    """E022 C's chains under the single-seed rule: per dataset and pair the first of 42, 123,
+    777 that did not collapse (C is not retrained; ``c_collapse`` rows)."""
+    out = {}
+    for d in gt.DATASETS:
+        for p in gt.PAIRS:
+            status = {}
+            for s in gt.SINGLE_SEEDS:
+                r = c_rows.get(f"{gt.chain_name(d, p, s)}/hb_m10")
+                if r is not None:
+                    status[s] = gt.ATTEMPT_COLLAPSED if r["collapsed"] else gt.ATTEMPT_OK
+            k = gt.chain_key("C", d, p)
+            out[k] = gt.single_seed(status)
+    return out
+
+
+def single_record_check(selection: Mapping) -> dict:
+    """The single-seed block of a selection record against its chains: every attempt's chain
+    is in the record with its status consistent with the chain's "collapsed" flag and failure,
+    each decided chain equals e023_gates.single_seed of its attempts (nothing pending), no chain
+    outside the attempts, and the C block equals ``c_single`` of the collapse record. A
+    multi-seed record (no block): ok."""
+    block = selection.get("single_seed")
+    if block is None:
+        return {"mode": "multi", "problems": [], "ok": True}
+    chains = selection.get("chains") or {}
+    problems, used = [], set()
+    for k, ch in (block.get("chains") or {}).items():
+        arm, d, p = k.split("/")
+        status = {}
+        for att in ch.get("attempts") or []:
+            label = att["label"]
+            used.add(label)
+            e = chains.get(label)
+            status[att["seed"]] = att["status"]
+            if e is None or e.get("arm") != arm:
+                problems.append(f"{k}: attempt {label} not in the record")
+            elif bool(e.get("collapsed")) != (att["status"] == gt.ATTEMPT_COLLAPSED) or \
+                    (att["status"] == gt.ATTEMPT_OK and (e.get("failed") or not e.get(
+                        "selection"))) or \
+                    (e.get("failed") == gt.INFRA_ENTRY) != (att["status"] == gt.ATTEMPT_INFRA) \
+                    or (e.get("failed") == gt.GATE_ENTRY) != (att["status"] == gt.ATTEMPT_GATE):
+                problems.append(f"{k}: attempt {label} status {att['status']} differs")
+        again = gt.single_seed(status)
+        if {x: ch.get(x) for x in ("seed", "next", "no_verdict")} != \
+                {x: again[x] for x in ("seed", "next", "no_verdict")} or again["next"] is not None:
+            problems.append(f"{k}: not the single-seed rule's choice ({again})")
+    extra = sorted(set(chains) - used)
+    if extra:
+        problems.append(f"chains outside the attempts: {extra[:5]}")
+    c_rows = (selection.get("collapse") or {}).get("c_chains") or {}
+    if dict(block.get("c_chains") or {}) != c_single(c_rows):
+        problems.append("the C block differs from the collapse record")
+    return {"mode": st23.SINGLE, "problems": problems, "ok": not problems}
+
+
+def _entry(runs: Path, scores: Path, label: str, a: gt.Arm, excluded: Sequence[str],
+           problems: list[str], d14: dict, gate_failed: Sequence[str] = ()) -> dict | None:
+    """The selection entry of one chain (None with a problem recorded), its D14 bookkeeping;
+    an infrastructure (``excluded``) or pre-access gate failure (``gate_failed``) has no
+    checkpoint (never test-scored)."""
+    chain = label.split("/")[0]
+    if label in excluded or label in gate_failed:
+        return {"arm": a.name, "role": a.role,
+                "failed": gt.INFRA_ENTRY if label in excluded else gt.GATE_ENTRY,
+                "selection": None, "v_auc": None, "checkpoints": {}}
+    if a.role == "mechanism":
+        if not gt.val_file(scores, chain, a.run).is_file():
+            problems.append(f"{label}: no validation file")
+            return None
+        return cl20_entry(scores, chain)
+    if not (Path(runs) / label / bt.FILES["record"]).is_file():
+        problems.append(f"{label}: no selection.json")
+        return None
+    entry, book, probs = baseline_entry(runs, chain, a)
+    problems += probs
+    if book is not None:
+        d14[label] = book
+    return entry
+
+
+def _single_chains(runs: Path, scores: Path, arms: Mapping[str, gt.Arm],
+                   excluded: Sequence[str], problems: list[str], d14: dict,
+                   gate_failed: Sequence[str] = ()) -> tuple[dict, dict]:
+    """Single-seed mode: per chain (arm, dataset, pair) the attempts 42, 123, 777 in order until
+    one is ok (``attempt_status``; infrastructure and pre-access gate failures pass to the next
+    seed like collapses); a seed still to train (the first, or the fallback after a failed
+    attempt) is a problem naming it (nothing written: train it, score it, select again), and so
+    is an attempt that started without a finished record (running, or crashed: rerun once,
+    then --infra_failed)."""
+    chains, block = {}, {}
+    for a in arms.values():
+        for d in gt.DATASETS:
+            for p in gt.PAIRS:
+                status, labels = {}, {}
+                for s in gt.SINGLE_SEEDS:
+                    label = f"{gt.chain_name(d, p, s)}/{a.run}"
+                    trained = label in excluded or label in gate_failed or \
+                        (Path(runs) / label / bt.FILES["record"]).is_file()
+                    if not trained:
+                        if started(runs, label):
+                            problems.append(f"{label}: started without a finished record "
+                                            "(running: wait for its batch; crashed: rerun once, "
+                                            "then name it with --infra_failed)")
+                        break
+                    entry = _entry(runs, scores, label, a, excluded, problems, d14,
+                                   gate_failed)
+                    if entry is None:
+                        break
+                    entry["collapsed"] = collapsed(((entry.get("selection") or {}).get(
+                        "sigma") or {}).get("v_auc"))
+                    chains[label] = entry
+                    labels[s] = label
+                    status[s] = attempt_status(runs, label, entry)
+                    if status[s] == gt.ATTEMPT_OK:
+                        break
+                ch = gt.single_seed(status)
+                for att in ch["attempts"]:
+                    att["label"] = labels[att["seed"]]
+                k = gt.chain_key(a.name, d, p)
+                block[k] = ch
+                if ch["next"] is not None and not any(x.startswith(
+                        f"{gt.chain_name(d, p, ch['next'])}/{a.run}") for x in problems):
+                    problems.append(f"{gt.chain_key(a.name, d, p)}: seed {ch['next']} to train "
+                                    f"(single-seed rule; {gt.chain_name(d, p, ch['next'])}/"
+                                    f"{a.run})")
+    return chains, block
+
+
 def selection_record(runs: Path, scores: Path, family: Sequence[str],
                      excluded: Sequence[str] = (), resolver: Resolver = bc.get_method,
-                     e022_selection: Path | None = None) -> tuple[dict, dict]:
+                     e022_selection: Path | None = None, gate_failed: Sequence[str] = ()
+                     ) -> tuple[dict, dict]:
     """(e023_selection.json body, e023_all_ckpts.json body); SystemExit when a chain that is not
     an infrastructure failure has no record or the D14 bookkeeping is incomplete. Each chain
     records "collapsed" (PLAN.md "실패 처리" "붕괴 제외": its selected sigma V-AUC < 0.60; the
     chain then leaves every rule of the analysis, e023.failures), "collapse" the rule, the
-    collapsed chains and E022 C's (``c_collapse``)."""
+    collapsed chains and E022 C's (``c_collapse``). Single-seed mode (PLAN.md "단일 seed 실행과
+    판정"): only the attempts of each chain (``_single_chains``) and the block "single_seed"
+    (per chain its attempts and chosen seed; C's from E022's chains, ``c_single``); SystemExit
+    while a fallback seed is still to train. ``gate_failed``: chains dropped by a gate failure
+    before access (A) (recorded without checkpoints; single-seed: the next seed replaces them)."""
     arms = family_arms(family, resolver)
     chains, d14, problems = {}, {}, []
-    for label, a in chain_labels(arms):
-        chain = label.split("/")[0]
-        if label in excluded:
-            chains[label] = {"arm": a.name, "role": a.role, "failed": "infrastructure (PLAN.md)",
-                             "selection": None, "v_auc": None, "checkpoints": {}}
-            continue
-        if a.role == "mechanism":
-            if not gt.val_file(scores, chain, a.run).is_file():
-                problems.append(f"{label}: no validation file")
-                continue
-            chains[label] = cl20_entry(scores, chain)
-            continue
-        if not (Path(runs) / label / bt.FILES["record"]).is_file():
-            problems.append(f"{label}: no selection.json")
-            continue
-        entry, book, probs = baseline_entry(runs, chain, a)
-        chains[label] = entry
-        problems += probs
-        if book is not None:
-            d14[label] = book
+    block = None
+    if st23.SEED_MODE == st23.SINGLE:
+        chains, block = _single_chains(runs, scores, arms, excluded, problems, d14,
+                                       gate_failed)
+    else:
+        for label, a in chain_labels(arms):
+            entry = _entry(runs, scores, label, a, excluded, problems, d14, gate_failed)
+            if entry is not None:
+                chains[label] = entry
     c_rows, c_problems = c_collapse(e022_selection)
     problems += c_problems
     if problems:
@@ -784,9 +1069,11 @@ def selection_record(runs: Path, scores: Path, family: Sequence[str],
     rule = ("full-validation V-AUC of the W readout on the E021 32-window grid (sigma: max fp32 "
             "sigma(u_k); logit: max u_k; no offset), first maximum (strict >, earliest point on "
             "ties); last = the last evaluation point")
+    after = ("the next seed of 42, 123, 777 replaces it (PLAN.md 단일 seed 실행과 판정)"
+             if st23.SEED_MODE == st23.SINGLE else "no rerun, no replacement seed")
     collapse = {"rule": f"PLAN.md 실패 처리 '붕괴 제외': selected sigma validation V-AUC < "
                         f"{COLLAPSE_V_AUC} (validation only, fixed here before access (A)); the "
-                        "chain leaves every rule, no rerun, no replacement seed",
+                        f"chain leaves every rule, {after}",
                 "threshold": COLLAPSE_V_AUC,
                 "collapsed": sorted(k for k, e in chains.items() if e["collapsed"]),
                 "c_chains": c_rows,
@@ -794,8 +1081,17 @@ def selection_record(runs: Path, scores: Path, family: Sequence[str],
     common = {"code": code_version(), "time_utc": now_utc(), "family": list(family),
               "arms": {k: v.to_json() for k, v in arms.items()}}
     sel = {"check": "E023 checkpoint selection (PLAN.md 체크포인트 선택; validation only)",
-           **common, "rule": rule, "infra_failed": list(excluded), "collapse": collapse,
+           **common, "rule": rule, "infra_failed": list(excluded),
+           "gate_failed_before_access": sorted(gate_failed), "collapse": collapse,
            "chains": chains}
+    if block is not None:
+        sel["single_seed"] = {
+            "rule": "PLAN.md 단일 seed 실행과 판정: per chain (arm, dataset, pair) the first seed "
+                    "of 42, 123, 777 that neither collapsed nor failed (numerical, "
+                    "infrastructure or a gate before access (A)); every attempt failed: 판정 "
+                    "없음 for that arm and dataset",
+            "seeds": list(gt.SINGLE_SEEDS), "chains": block, "c_chains": c_single(c_rows),
+            "no_verdict": sorted(k for k, v in block.items() if v["no_verdict"])}
     book = {"check": "E023 D14 evaluation-point checkpoints (temporary until access (A))",
             **common, "chains": d14}
     return sel, book
@@ -804,10 +1100,12 @@ def selection_record(runs: Path, scores: Path, family: Sequence[str],
 def select_command(args: argparse.Namespace, resolver: Resolver = bc.get_method) -> None:
     labels = [lb for lb, _ in chain_labels(family_arms(args.family, resolver))]
     excluded = sorted(set(args.infra_failed))
-    unknown = [x for x in excluded if x not in labels]
+    gate_failed = sorted(set(args.gate_failed))
+    unknown = [x for x in excluded + gate_failed if x not in labels]
     if unknown:
-        raise SystemExit(f"--infra_failed {unknown}: not E023 runs")
-    sel, book = selection_record(args.runs_root, args.scores, args.family, excluded, resolver)
+        raise SystemExit(f"--infra_failed / --gate_failed {unknown}: not E023 runs")
+    sel, book = selection_record(args.runs_root, args.scores, args.family, excluded, resolver,
+                                 gate_failed=gate_failed)
     vl = Path(args.scores) / "val" / "scores.sha256"
     sel["val_list_sha256"] = sha256_file(vl) if vl.is_file() else None
     write_json(Path(args.out), sel)
@@ -816,6 +1114,11 @@ def select_command(args: argparse.Namespace, resolver: Resolver = bc.get_method)
     gone = sel["collapse"]["collapsed"] + sel["collapse"]["c_collapsed"]
     print(f"[e023_score] selection -> {args.out} ({len(sel['chains'])} chains, failed {failed}, "
           f"collapsed {gone}); D14 -> {args.all_ckpts} ({len(book['chains'])} chains)")
+    if "single_seed" in sel:
+        moved = sorted(k for k, v in sel["single_seed"]["chains"].items()
+                       if v["seed"] not in (None, gt.SINGLE_SEEDS[0]))
+        print(f"[e023_score] single seed: fallback seeds {moved}, 판정 없음 "
+              f"{sel['single_seed']['no_verdict']}")
 
 
 # --- test scoring: jobs, binding, order -----------------------------------------------------------
@@ -1327,6 +1630,10 @@ def parse(argv: Sequence[str] | None = None) -> argparse.Namespace:
     j.add_argument("--stage", required=True, choices=("d4", "confirm"))
     j.add_argument("--runs_root", required=True, type=Path)
     j.add_argument("--devlr", type=Path, default=gt.FILES["devlr"])
+    j.add_argument("--infra_failed", nargs="*", default=[],
+                   help="confirm, single-seed: '<chain>/<run>' whose rerun also failed")
+    j.add_argument("--gate_failed", nargs="*", default=[],
+                   help="confirm, single-seed: '<chain>/<run>' dropped by a gate before (A)")
     _family_arg(j)
     s = sub.add_parser("score", help="--split val (validation) or test (access (A))")
     s.add_argument("--split", required=True, choices=("val", "test"))
@@ -1353,6 +1660,8 @@ def parse(argv: Sequence[str] | None = None) -> argparse.Namespace:
     c.add_argument("--out", default=str(gt.FILES["selection"]))
     c.add_argument("--all_ckpts", default=str(gt.FILES["all_ckpts"]))
     c.add_argument("--infra_failed", nargs="*", default=[])
+    c.add_argument("--gate_failed", nargs="*", default=[],
+                   help="'<chain>/<run>' dropped by a gate failure before access (A)")
     _family_arg(c)
     args = ap.parse_args(argv)
     if args.command == "score" and args.split == "test":
@@ -1382,9 +1691,15 @@ def main(argv: Sequence[str] | None = None) -> None:
     elif args.command == "q1d":
         q1d_command(args)
     elif args.command == "jobs":
+        incomplete: list[str] = []
         lines = (d4_jobs(args.runs_root, args.family) if args.stage == "d4" else
-                 confirm_jobs(args.runs_root, _json(args.devlr), args.family))
+                 confirm_jobs(args.runs_root, _json(args.devlr), args.family,
+                              infra_failed=args.infra_failed, gate_failed=args.gate_failed,
+                              incomplete=incomplete))
         print("\n".join(lines))
+        if incomplete:
+            print(f"[e023_score] started without a finished record (running or crashed; not "
+                  f"listed): {incomplete}", file=sys.stderr)
     elif args.command == "select":
         select_command(args)
     elif args.split == "val":

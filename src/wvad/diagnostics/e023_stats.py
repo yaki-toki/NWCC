@@ -41,6 +41,19 @@ RTFM, URDMU, VCV, ...), their checkpoint rules "<arm>.logit" / "<arm>.last", the
                 is the seed mean of the pair-averaged differences (= e022_stats.bootstrap_contrast
                 bit for bit), else the difference of the two arms' seed means (Welch form)
     claims      secondary_improvements_allowed = False; abstract-level pooled improvement never
+
+Seed mode (PLAN.md "단일 seed 실행과 판정", user 2026-10-21, before the freeze; it overrides the
+seed-level rules above, which the revision restores): ``SEED_MODE`` = "single", recorded in
+``RECORDED.seed_mode``. Per chain (dataset x pair x arm) the first seed of SINGLE_SEEDS (42, 123,
+777) that neither collapsed nor failed numerically (fixed in the selection record before access
+(A); the caller keeps only that chain); an arm's value is its pair mean (the pairs may hold
+different seeds, ``chain_seeds``); no chain left in a pair: "판정 없음". Every contrast a - b
+then takes its p and intervals from the paired video bootstrap of the contrast (``kind`` "boot";
+the same resamples as above): two-sided p = min(1, 2 (min(n_<=0, n_>=0) + 1) / (R + 1)) over
+the resampled differences (``boot_p``), the 98% percentile interval where the Welch 98% interval
+stood, the 99% lower bound of condition (2) unchanged; B*_d the highest L (ties: the name); the
+mechanism and every graded flag family by the same bootstrap; the distribution flag (seed
+variance) "단일 seed라 계산 안 함". "multi" keeps the Welch / paired-t / complete-case-8 path.
 """
 
 from __future__ import annotations
@@ -65,7 +78,13 @@ BOOT_LEVEL = 0.99
 BOOT_LEVELS = (0.99, 0.95)
 BOOT_R, BOOT_SEED = 5000, 20261019
 MIN_COMPLETE = 8
-COLLAPSE_V_AUC = 0.60                            # "붕괴 제외": selected sigma V-AUC (fraction)
+SINGLE, MULTI = "single", "multi"
+SEED_MODES = (SINGLE, MULTI)
+SEED_MODE = SINGLE                               # PLAN.md "단일 seed 실행과 판정" (2026-10-21)
+SINGLE_SEEDS = SEEDS[:3]                         # attempts per chain: 42, 123, 777
+BOOT_LEVELS_SINGLE = (0.99, 0.98, 0.95)          # 99% gate bounds, 98% grade interval, 95%
+NOT_COMPUTED = "단일 seed라 계산 안 함"
+COLLAPSE_V_AUC = 0.60                          # "붕괴 제외": selected sigma V-AUC (fraction)
 COLLAPSED = "collapsed"                          # the failure kind (e022_stats.Failure.kind)
 MARGIN_POOLED = dict(st20.MARGIN)                # m_d: UCF frame AUC 0.5, XD frame AP 2.0
 MARGIN_L = {"a": {"ucf": 0.5, "xdv": 2.0}, "b": {"ucf": 1.0, "xdv": 2.0}, "c": None}   # D6
@@ -121,8 +140,11 @@ class Decisions:
     d6: str | None = None
     d9: str = "a"
     d13: str = "a"
+    seed_mode: str = SEED_MODE
 
     def __post_init__(self):
+        if self.seed_mode not in SEED_MODES:
+            raise ValueError(f"seed mode {self.seed_mode!r} (single, multi)")
         if self.d2 not in ("a", "b") or self.d9 not in ("a", "b") or \
                 self.d13 not in ("a", "b", "c"):
             raise ValueError("D2 / D9 in (a, b), D13 in (a, b, c)")
@@ -149,7 +171,8 @@ class Decisions:
         return {k: MARGIN_L[k] for k in keys}
 
 
-RECORDED = Decisions(d5="b", d5_requirement="i", d6="a")    # PLAN.md 사용자 결정 기록, 2026-10-21
+RECORDED = Decisions(d5="b", d5_requirement="i", d6="a",    # PLAN.md 사용자 결정 기록, 2026-10-21
+                     seed_mode=SEED_MODE)                    # "단일 seed 실행과 판정"
 
 
 # --- seed values and tests ------------------------------------------------------------------
@@ -204,6 +227,48 @@ def seed_paired(xa: Mapping[int, float], xb: Mapping[int, float], level: float =
     return {"seeds": common, **st22.paired([xa[s] - xb[s] for s in common], level)}
 
 
+def chain_seeds(vals: Values, arm: str, pairs: Sequence[str] = PAIRS) -> dict[str, int] | None:
+    """Single-seed mode: pair -> the seed of the arm's one chain in it (the caller keeps only the
+    chosen chain per pair); None when a pair holds no value (no surviving chain: "판정 없음");
+    ValueError with more than one seed in a pair."""
+    out = {}
+    for p in pairs:
+        s = sorted({k[1] for k in vals if k[0] == p and k[2] == arm})
+        if len(s) > 1:
+            raise ValueError(f"{arm} {p}: seeds {s}; single-seed mode keeps one chain per pair")
+        if not s:
+            return None
+        out[p] = s[0]
+    return out
+
+
+def single_value(vals: Values, arm: str, pairs: Sequence[str] = PAIRS) -> float | None:
+    """Single-seed mode: the arm's pair mean (None without a chain in every pair)."""
+    sd = chain_seeds(vals, arm, pairs)
+    return None if sd is None else float(np.mean([vals[(p, sd[p], arm)] for p in pairs]))
+
+
+def boot_p(diffs: np.ndarray) -> dict:
+    """Two-sided bootstrap p of the resampled differences (PLAN.md "단일 seed 실행과 판정"):
+    min(1, 2 (min(n_<=0, n_>=0) + 1) / (R + 1)); NaN without resamples."""
+    x = np.asarray(diffs, dtype=np.float64)
+    if not len(x):
+        return {"n_le0": 0, "n_ge0": 0, "p": math.nan}
+    n_le, n_ge = int(np.sum(x <= 0)), int(np.sum(x >= 0))
+    return {"n_le0": n_le, "n_ge0": n_ge,
+            "p": float(min(1.0, 2 * (min(n_le, n_ge) + 1) / (len(x) + 1)))}
+
+
+def boot_test(boot: Mapping | None, level: float = T_LEVEL) -> dict:
+    """A contrast's test from its video bootstrap: the bootstrap p and the percentile interval
+    at ``level`` (NaN when absent)."""
+    if not boot or "p" not in boot:
+        return {"p": math.nan, "ci": [math.nan, math.nan], "level": level}
+    return {"p": float(boot["p"]), "ci": st22.interval(boot, level), "level": level,
+            "n_le0": boot.get("n_le0"), "n_ge0": boot.get("n_ge0"), "R": boot.get("R"),
+            "boot_resample0": boot.get("resample0")}
+
+
 def holm(p: Mapping[str, float]) -> dict[str, float]:
     return st20.holm(p)
 
@@ -227,12 +292,36 @@ def key(arm: str, dataset: str) -> str:
     return f"{arm}/{dataset}"
 
 
+def single_row(vals: Values, a: str, b: str, boot: Mapping | None, *, level: float = T_LEVEL,
+               pairs: Sequence[str] = PAIRS) -> dict:
+    """Single-seed mode: one contrast a - b of one dataset, the difference of the two arms' pair
+    means with the bootstrap p and ``level`` interval of ``boot`` (the video bootstrap of this
+    contrast); "no_verdict" when an arm has no chain in a pair (p NaN). ValueError when both
+    arms hold values but ``boot`` has no p."""
+    sa, sb = chain_seeds(vals, a, pairs), chain_seeds(vals, b, pairs)
+    va, vb = single_value(vals, a, pairs), single_value(vals, b, pairs)
+    short = [x for x, s in ((a, sa), (b, sb)) if s is None]
+    row = {"a": a, "b": b, "seeds_a": sa, "seeds_b": sb, "value_a": va, "value_b": vb,
+           "mean": math.nan if short else va - vb, "test": "video bootstrap"}
+    if short:
+        row |= boot_test(None, level)
+    elif not boot or "p" not in boot:
+        raise ValueError(f"no video bootstrap of {a} - {b}")
+    else:
+        row |= boot_test(boot, level)
+    row["no_verdict"] = f"{NO_VERDICT}: {', '.join(short)}" if short else None
+    return row
+
+
 def contrast_row(vals: Values, a: str, b: str, *, kind: str = "welch", level: float = T_LEVEL,
                  min_complete: int = MIN_COMPLETE, pairs: Sequence[str] = PAIRS,
-                 seeds: Sequence[int] = SEEDS) -> dict:
+                 seeds: Sequence[int] = SEEDS, boot: Mapping | None = None) -> dict:
     """One contrast a - b of one dataset: Welch (each arm's complete seeds), seed-paired t
     ('paired') or Mann-Whitney U ('mwu'); "no_verdict" when an arm has fewer than
-    ``min_complete`` complete seeds (its p is then NaN)."""
+    ``min_complete`` complete seeds (its p is then NaN); 'boot' (single-seed mode,
+    ``single_row``): the video bootstrap ``boot`` of the contrast."""
+    if kind == "boot":
+        return single_row(vals, a, b, boot, level=level, pairs=pairs)
     xa, xb = pair_means(vals, a, pairs, seeds), pair_means(vals, b, pairs, seeds)
     row = {"a": a, "b": b, "seeds_a": list(xa), "seeds_b": list(xb),
            "values_a": list(xa.values()), "values_b": list(xb.values())}
@@ -246,7 +335,7 @@ def contrast_row(vals: Values, a: str, b: str, *, kind: str = "welch", level: fl
         row["mean"] = (float(np.mean(row["values_a"])) - float(np.mean(row["values_b"]))
                        if xa and xb else math.nan)
     else:
-        raise ValueError(f"unknown test {kind!r} (welch, paired, mwu)")
+        raise ValueError(f"unknown test {kind!r} (welch, paired, mwu, boot)")
     row["no_verdict"] = f"{NO_VERDICT}: {', '.join(short)}" if short else None
     if short:
         row["p"] = math.nan
@@ -256,11 +345,14 @@ def contrast_row(vals: Values, a: str, b: str, *, kind: str = "welch", level: fl
 def family(vals_by_d: ByDataset, arms: Sequence[str], c: str = "C", *, kind: str = "welch",
            alpha: float = ALPHA, level: float = T_LEVEL, margins: Mapping[str, float] | None,
            min_complete: int = MIN_COMPLETE, pairs: Sequence[str] = PAIRS,
-           seeds: Sequence[int] = SEEDS) -> dict:
+           seeds: Sequence[int] = SEEDS,
+           boot: Mapping[str, Mapping[str, Mapping]] | None = None) -> dict:
     """C - B for every arm and dataset ('<arm>/<dataset>'), Holm over the whole family at
-    ``alpha`` (a "no_verdict" contrast stays in it with p = NaN), conclusions and grades."""
+    ``alpha`` (a "no_verdict" contrast stays in it with p = NaN), conclusions and grades
+    (``kind`` 'boot': ``boot`` dataset -> arm -> the video bootstrap of C - arm)."""
     rows = {key(b, d): contrast_row(vals, c, b, kind=kind, level=level,
-                                    min_complete=min_complete, pairs=pairs, seeds=seeds)
+                                    min_complete=min_complete, pairs=pairs, seeds=seeds,
+                                    boot=((boot or {}).get(d) or {}).get(b))
             for d, vals in vals_by_d.items() for b in arms}
     adj = holm({k: r["p"] for k, r in rows.items()})
     for k, r in rows.items():
@@ -268,19 +360,29 @@ def family(vals_by_d: ByDataset, arms: Sequence[str], c: str = "C", *, kind: str
         r["dataset"] = d
         r["p_holm"] = adj[k]
         r["conclusion"] = conclusion(adj[k], r["mean"], alpha) if not r["no_verdict"] else "none"
-        if kind == "welch":
+        if kind in ("welch", "boot"):
             r["grade"] = INC if r["no_verdict"] else grade(
                 adj[k], r["mean"], r["ci"], None if margins is None else margins[d], alpha=alpha)
     return rows
 
 
 def strongest(vals_by_d: ByDataset, arms: Sequence[str], *, min_complete: int = MIN_COMPLETE,
-              pairs: Sequence[str] = PAIRS, seeds: Sequence[int] = SEEDS) -> dict:
+              pairs: Sequence[str] = PAIRS, seeds: Sequence[int] = SEEDS,
+              kind: str = "welch") -> dict:
     """B*_d per dataset: the arm (>= ``min_complete`` complete seeds) with the highest seed mean
-    of L; ties: the smaller seed SD, then the name."""
+    of L; ties: the smaller seed SD, then the name. ``kind`` 'boot' (single-seed mode): the arm
+    with a value of the highest L; ties: the name."""
     out = {}
     for d, vals in vals_by_d.items():
         cand = {}
+        if kind == "boot":
+            for b in arms:
+                v = single_value(vals, b, pairs)
+                if v is not None:
+                    cand[b] = {"n": 1, "mean": v, "seeds": chain_seeds(vals, b, pairs)}
+            best = min(cand, key=lambda b: (-cand[b]["mean"], b)) if cand else None
+            out[d] = {"arm": best, "candidates": cand}
+            continue
         for b in arms:
             x = list(pair_means(vals, b, pairs, seeds).values())
             if len(x) >= min_complete:
@@ -294,15 +396,18 @@ def strongest(vals_by_d: ByDataset, arms: Sequence[str], *, min_complete: int = 
 def bstar_test(vals_by_d: ByDataset, bstar: Mapping[str, Mapping], c: str = "C", *,
                alpha: float = ALPHA, level: float = T_LEVEL,
                min_complete: int = MIN_COMPLETE, pairs: Sequence[str] = PAIRS,
-               seeds: Sequence[int] = SEEDS) -> dict:
-    """C - B*_d by Welch per dataset, Holm over the datasets."""
+               seeds: Sequence[int] = SEEDS, kind: str = "welch",
+               boot: Mapping[str, Mapping[str, Mapping]] | None = None) -> dict:
+    """C - B*_d by Welch (``kind`` 'boot': its video bootstrap, ``boot`` dataset -> arm) per
+    dataset, Holm over the datasets."""
     rows = {}
     for d, vals in vals_by_d.items():
         b = bstar[d]["arm"]
         rows[d] = ({"b": None, "p": math.nan, "mean": math.nan, "no_verdict": NO_VERDICT}
-                   if b is None else contrast_row(vals, c, b, level=level,
+                   if b is None else contrast_row(vals, c, b, kind=kind, level=level,
                                                   min_complete=min_complete, pairs=pairs,
-                                                  seeds=seeds))
+                                                  seeds=seeds,
+                                                  boot=((boot or {}).get(d) or {}).get(b)))
     adj = holm({d: r["p"] for d, r in rows.items()})
     for d, r in rows.items():
         r["p_holm"] = adj[d]
@@ -338,12 +443,15 @@ def category(grades: Mapping[str, str], no_verdict: Sequence[str], bstar_row: Ma
 
 def main_test(l_by_d: ByDataset, arms: Sequence[str], c: str = "C", *,
               margins: Mapping[str, float] | None, alpha: float = ALPHA,
-              level: float = T_LEVEL, min_complete: int = MIN_COMPLETE) -> dict:
-    """The 8 contrasts C - B_k of L (Welch, Holm), B*_d, C - B*_d and S_d."""
+              level: float = T_LEVEL, min_complete: int = MIN_COMPLETE, kind: str = "welch",
+              boot: Mapping[str, Mapping[str, Mapping]] | None = None) -> dict:
+    """The 8 contrasts C - B_k of L (Welch, Holm; ``kind`` 'boot': the L video bootstraps
+    ``boot``, dataset -> arm -> C - arm), B*_d, C - B*_d and S_d."""
     fam = family(l_by_d, arms, c, alpha=alpha, level=level, margins=margins,
-                 min_complete=min_complete)
-    bs = strongest(l_by_d, arms, min_complete=min_complete)
-    bt = bstar_test(l_by_d, bs, c, alpha=alpha, level=level, min_complete=min_complete)
+                 min_complete=min_complete, kind=kind, boot=boot)
+    bs = strongest(l_by_d, arms, min_complete=min_complete, kind=kind)
+    bt = bstar_test(l_by_d, bs, c, alpha=alpha, level=level, min_complete=min_complete,
+                    kind=kind, boot=boot)
     cats = {}
     for d in l_by_d:
         grades = {fam[key(b, d)]["b"]: fam[key(b, d)]["grade"] for b in arms}
@@ -448,13 +556,13 @@ def pooled_wording(row: Mapping, boot_lower: float, margin: float, flagged: bool
 def condition_3(pooled_by_d: ByDataset, arms: Sequence[str], c: str = "C", *,
                 boot: Mapping[str, Mapping[str, Mapping]], alpha: float = ALPHA,
                 level: float = T_LEVEL, margins: Mapping[str, float] = MARGIN_POOLED,
-                min_complete: int = MIN_COMPLETE) -> dict:
+                min_complete: int = MIN_COMPLETE, kind: str = "welch") -> dict:
     """Condition (3), a check (not a gate): Welch over the 8 contrasts of the pooled main metric
     (Holm, alpha), substantive inferiority, the flag "합산 지표 열세", the wording of each
     contrast (``boot``: dataset -> arm -> pooled bootstrap of C - arm) and the 98% lower
-    bounds."""
+    bounds; ``kind`` 'boot' (single-seed mode): p and the 98% interval from ``boot`` too."""
     fam = family(pooled_by_d, arms, c, alpha=alpha, level=level, margins=margins,
-                 min_complete=min_complete)
+                 min_complete=min_complete, kind=kind, boot=boot if kind == "boot" else None)
     inferior, flagged, wording, lowers98 = [], [], {}, {}
     for k, r in fam.items():
         m = margins[r["dataset"]]
@@ -486,13 +594,21 @@ MECHANISM = {"M1": ("C", "C.L20"), "M1.last": ("C.last", "C.L20.last")}
 
 
 def mechanism(l_by_d: ByDataset, *, alpha: float = ALPHA, level: float = T_LEVEL,
-              pairs: Sequence[str] = PAIRS, seeds: Sequence[int] = SEEDS) -> dict:
-    """M1 = C - C.L20 and M1.last = C.last - C.L20.last of L, seed-paired t on the pair means,
-    Holm over the 4 contrasts; the wording per dataset (both positive: raised; M1 negative:
-    lowered; else not established)."""
+              pairs: Sequence[str] = PAIRS, seeds: Sequence[int] = SEEDS,
+              kind: str = "paired", boot: Mapping[str, Mapping[str, Mapping]] | None = None
+              ) -> dict:
+    """M1 = C - C.L20 and M1.last = C.last - C.L20.last of L, seed-paired t on the pair means
+    (``kind`` 'boot', single-seed mode: the L video bootstrap ``boot``, dataset -> "M1" /
+    "M1.last"), Holm over the 4 contrasts; the wording per dataset (both positive: raised; M1
+    negative: lowered; else not established)."""
     rows = {}
     for name, (a, b) in MECHANISM.items():
         for d, vals in l_by_d.items():
+            if kind == "boot":
+                r = single_row(vals, a, b, ((boot or {}).get(d) or {}).get(name), level=level,
+                               pairs=pairs)
+                rows[f"{name}/{d}"] = {**r, "dataset": d}
+                continue
             kept, diffs = st22.seed_combination(vals, {a: 1, b: -1}, pairs, seeds)
             rows[f"{name}/{d}"] = {"a": a, "b": b, "dataset": d, "seeds": kept,
                                    "diffs": diffs, **st22.paired(diffs, level)}
@@ -526,15 +642,18 @@ def _rename(rows: Mapping[str, Mapping], suffix: str) -> dict:
 
 def setting_family(vals_by_d: ByDataset, arms: Sequence[str], c: str = "C", *,
                    alpha: float = ALPHA, level: float = T_LEVEL,
-                   min_complete: int = MIN_COMPLETE) -> dict:
-    """C - B per setting (dataset / pair; each pair's own seed values), Welch, Holm over all
+                   min_complete: int = MIN_COMPLETE, kind: str = "welch",
+                   boot: Mapping[str, Mapping[str, Mapping]] | None = None) -> dict:
+    """C - B per setting (dataset / pair; each pair's own seed values), Welch (``kind`` 'boot':
+    the setting's L video bootstrap, ``boot`` dataset -> '<arm>/<pair>'), Holm over all
     (4 settings x 4 methods = 16)."""
     rows = {}
     for d, vals in vals_by_d.items():
         for p in PAIRS:
             for b in arms:
-                rows[f"{b}/{d}/{p}"] = contrast_row(vals, c, b, level=level,
-                                                    min_complete=min_complete, pairs=(p,))
+                rows[f"{b}/{d}/{p}"] = contrast_row(
+                    vals, c, b, kind=kind, level=level, min_complete=min_complete, pairs=(p,),
+                    boot=((boot or {}).get(d) or {}).get(f"{b}/{p}"))
     adj = holm({k: r["p"] for k, r in rows.items()})
     for k, r in rows.items():
         r["p_holm"] = adj[k]
@@ -570,7 +689,8 @@ def degenerate(constant_share: Mapping[tuple[str, str, int, str], float],
 
 
 def flags(*, main: Mapping, arms: Sequence[str], l_sigma_main: Mapping,
-          l_logit_rule_main: Mapping, mwu: Mapping, paired_t: Mapping, settings: Mapping,
+          l_logit_rule_main: Mapping, mwu: Mapping | None, paired_t: Mapping | None,
+          settings: Mapping,
           last_rule_main: Mapping, boot: Mapping[str, Mapping[str, Mapping]],
           used_in_condition_2: Mapping[str, Sequence[str]] | None, x32_main: Mapping | None,
           x32_reference: Mapping | None, opposite_main: Mapping, condition3: Mapping,
@@ -582,7 +702,8 @@ def flags(*, main: Mapping, arms: Sequence[str], l_sigma_main: Mapping,
     readout_sensitive           G_kd changes with the comparison method's sigma-fp32 readout L
     selection_readout_sensitive G_kd changes with its logit-best checkpoint
     distribution_sensitive      Mann-Whitney U or the seed-number paired t (each Holm over 8)
-                                significant where Welch is not, or the reverse
+                                significant where Welch is not, or the reverse (``mwu`` /
+                                ``paired_t`` None, single-seed mode: NOT_COMPUTED)
     checkpoint_rule_dependent   C.last - B.last grades differ
     sensitive_to_test_video_sample   a positive or negative grade whose 99% L bootstrap holds 0,
                                 among the contrasts not used by condition (2) (per D5 option
@@ -599,7 +720,7 @@ def flags(*, main: Mapping, arms: Sequence[str], l_sigma_main: Mapping,
                                        if r["conclusion"] == "negative"),
            "readout_sensitive": _changed(fam, l_sigma_main),
            "selection_readout_sensitive": _changed(fam, _rename(l_logit_rule_main, ".logit")),
-           "distribution_sensitive": sorted(
+           "distribution_sensitive": NOT_COMPUTED if mwu is None or paired_t is None else sorted(
                k for k in fam if not fam[k]["no_verdict"] and (
                    (mwu[k]["p_holm"] < alpha) != sig[k]
                    or (paired_t[k]["p_holm"] < alpha) != sig[k])),
@@ -628,6 +749,8 @@ def flags(*, main: Mapping, arms: Sequence[str], l_sigma_main: Mapping,
 
 
 def raised(flag) -> bool:
+    if flag == NOT_COMPUTED:                     # single-seed mode: not computed, not raised
+        return False
     if isinstance(flag, Mapping):
         return any(bool(v) for v in flag.values())
     return bool(flag)
@@ -685,32 +808,42 @@ def claims(main_by_d6: Mapping, cond2: Mapping, cond3: Mapping) -> dict:
 
 # --- the whole judgement ----------------------------------------------------------------------
 
+BootFn = Callable[[str, str, str, str, Sequence[str]], Mapping | None]
+BOOT_VARIANTS = ("L", "L_sigma", "L_opposite", "pooled")
+
+
 def _flags_of(main: Mapping, fam: Sequence[str], x32_arms: Mapping[str, str], l_logit: ByDataset,
               l_sigma: ByDataset, l_opposite: ByDataset, margins: Mapping[str, float] | None,
               shared: Mapping, boot_l: Mapping, cond3: Mapping, decisions: Decisions,
-              degenerate_rows: Mapping, weak: Sequence[str], alpha: float) -> dict:
-    """The flags under one D6 option (its margins grade every comparison)."""
-    def graded(vals, arms, c="C"):
-        return family(vals, arms, c, alpha=alpha, margins=margins)
+              degenerate_rows: Mapping, weak: Sequence[str], alpha: float,
+              boot_fn: BootFn | None = None) -> dict:
+    """The flags under one D6 option (its margins grade every comparison); single-seed mode
+    (``boot_fn``): every graded family by the video bootstrap of its own contrasts."""
+    def graded(vals, arms, c="C", variant="L"):
+        if boot_fn is None:
+            return family(vals, arms, c, alpha=alpha, margins=margins)
+        boot = {d: {b: boot_fn(variant, d, c, b, PAIRS) for b in arms} for d in vals}
+        return family(vals, arms, c, alpha=alpha, margins=margins, kind="boot", boot=boot)
     x32_main = None
     if x32_arms:
         rows = graded(l_logit, list(x32_arms))
         x32_main = {key(x32_arms[r["b"]], r["dataset"]): r for r in rows.values()}
-    return flags(main=main, arms=fam, l_sigma_main=graded(l_sigma, fam),
+    return flags(main=main, arms=fam, l_sigma_main=graded(l_sigma, fam, variant="L_sigma"),
                  l_logit_rule_main=graded(l_logit, [f"{a}.logit" for a in fam]),
                  mwu=shared["mwu"], paired_t=shared["paired_t"], settings=shared["settings"],
                  last_rule_main=graded(l_logit, [f"{a}.last" for a in fam], "C.last"),
                  boot=boot_l, used_in_condition_2=used_contrasts(main, decisions.d5),
                  x32_main=x32_main, x32_reference=main["contrasts"] if x32_arms else None,
-                 opposite_main=graded(l_opposite, fam), condition3=cond3,
+                 opposite_main=graded(l_opposite, fam, variant="L_opposite"), condition3=cond3,
                  degenerate_rows=degenerate_rows, weak=weak, alpha=alpha)
 
 
 def evaluate(*, l_logit: ByDataset, l_sigma: ByDataset, l_opposite: ByDataset,
              pooled: ByDataset, family_arms: Sequence[str], x32_arms: Mapping[str, str],
-             boot_l: Mapping[str, Mapping[str, Mapping]],
+             boot_l: Mapping[str, Mapping[str, Mapping]] | None = None,
              boot_l_bstar: Mapping[str, Mapping[str, Mapping]] | None = None,
-             boot_pooled: Mapping[str, Mapping[str, Mapping]],
+             boot_pooled: Mapping[str, Mapping[str, Mapping]] | None = None,
+             boot_fn: BootFn | None = None,
              degenerate_rows: Mapping | None = None, weak: Sequence[str] = (),
              gates_ok: bool, decisions: Decisions = RECORDED,
              alpha: float = ALPHA) -> dict:
@@ -724,38 +857,85 @@ def evaluate(*, l_logit: ByDataset, l_sigma: ByDataset, l_opposite: ByDataset,
     x32_arms    X.32 arm -> its main-family arm (URDMU.32 -> URDMU)
     boot_l      dataset -> arm -> L bootstrap of C - arm (main family)
     boot_l_bstar   dataset -> {"bstar": the L bootstrap of C - B*_d} (defaults to boot_l)
-    boot_pooled dataset -> arm -> pooled bootstrap of C - arm"""
+    boot_pooled dataset -> arm -> pooled bootstrap of C - arm
+    boot_fn     single-seed mode (``decisions.seed_mode`` "single"; required there):
+                (variant, dataset, a, b, pairs) -> the video bootstrap of a - b over ``pairs``
+                (variant "L", "L_sigma" (b's sigma readout, C's logit L), "L_opposite",
+                "pooled"; None when an arm has no chain); the values hold only the chosen
+                chains. boot_l and boot_pooled are then built from it."""
     fam = list(family_arms)
-    mains = {d6: main_test(l_logit, fam, margins=MARGIN_L[d6], alpha=alpha)
+    single = decisions.seed_mode == SINGLE
+    kind = "boot" if single else "welch"
+    if single:
+        if boot_fn is None:
+            raise ValueError("single-seed mode needs boot_fn (the video bootstraps)")
+        boot_l = {d: {b: boot_fn("L", d, "C", b, PAIRS) for b in fam} for d in l_logit}
+        boot_pooled = {d: {b: boot_fn("pooled", d, "C", b, PAIRS) for b in fam}
+                       for d in pooled}
+    elif boot_l is None or boot_pooled is None:
+        raise ValueError("the multi-seed mode needs boot_l and boot_pooled")
+    mains = {d6: main_test(l_logit, fam, margins=MARGIN_L[d6], alpha=alpha, kind=kind,
+                           boot=boot_l if single else None)
              for d6 in decisions.margin_options()}
     first = next(iter(mains.values()))
     bstar_boot = {d: ((boot_l_bstar or {}).get(d) or {}).get("bstar")
                   or (boot_l.get(d) or {}).get(first["strongest"][d]["arm"])
                   for d in l_logit}
     cond2 = condition_2(mains, boot_l, bstar_boot, decisions=decisions, gates_ok=gates_ok)
-    cond3 = condition_3(pooled, fam, boot=boot_pooled, alpha=alpha)
-    mech = mechanism(l_logit, alpha=alpha)
+    cond3 = condition_3(pooled, fam, boot=boot_pooled, alpha=alpha, kind=kind)
+    if single:
+        mech = mechanism(l_logit, alpha=alpha, kind="boot", boot={
+            d: {n: boot_fn("L", d, a, b, PAIRS) for n, (a, b) in MECHANISM.items()}
+            for d in l_logit})
+    else:
+        mech = mechanism(l_logit, alpha=alpha)
     # the readout flag changes the comparison methods' readout only: C keeps its logit L
     sigma = {d: {**dict(l_sigma.get(d) or {}), **{k: v for k, v in l_logit[d].items()
                                                   if k[2] == "C"}} for d in l_logit}
-    shared = {"mwu": family(l_logit, fam, kind="mwu", alpha=alpha, margins=None),
-              "paired_t": family(l_logit, fam, kind="paired", alpha=alpha, margins=None),
-              "settings": setting_family(l_logit, fam, alpha=alpha)}
+    if single:
+        shared = {"mwu": None, "paired_t": None,
+                  "settings": setting_family(l_logit, fam, alpha=alpha, kind="boot", boot={
+                      d: {f"{b}/{p}": boot_fn("L", d, "C", b, (p,)) for b in fam
+                          for p in PAIRS} for d in l_logit})}
+    else:
+        shared = {"mwu": family(l_logit, fam, kind="mwu", alpha=alpha, margins=None),
+                  "paired_t": family(l_logit, fam, kind="paired", alpha=alpha, margins=None),
+                  "settings": setting_family(l_logit, fam, alpha=alpha)}
     flag_sets = {d6: _flags_of(main, fam, x32_arms, l_logit, sigma, l_opposite, MARGIN_L[d6],
                                shared, boot_l, cond3, decisions, degenerate_rows or {}, weak,
-                               alpha)
+                               alpha, boot_fn if single else None)
                  for d6, main in mains.items()}
     step = next_step(cond2, mech, cond3, decisions=decisions)
     return {"decisions": {"d2": decisions.d2, "d5": decisions.d5,
                           "d5_requirement": decisions.d5_requirement, "d6": decisions.d6,
-                          "d9": decisions.d9, "d13": decisions.d13},
+                          "d9": decisions.d9, "d13": decisions.d13,
+                          "seed_mode": decisions.seed_mode},
+            "seed_mode": seed_mode_record(decisions.seed_mode),
             "alpha": alpha, "t_level": T_LEVEL, "boot_level": BOOT_LEVEL,
             "margins_pooled": MARGIN_POOLED, "margins_l": decisions.margin_options(),
             "main": mains, "condition_2": cond2, "condition_3": cond3, "mechanism": mech,
             "flags": flag_sets,
             "flags_raised_plan": {d6: [FLAG_NAMES[k] for k, v in f.items() if raised(v)]
                                   for d6, f in flag_sets.items()},
+            "flags_not_computed": {d6: [FLAG_NAMES[k] for k, v in f.items()
+                                        if v == NOT_COMPUTED] for d6, f in flag_sets.items()},
             "next_step": step, "claims": claims(mains, cond2, cond3)}
+
+
+def seed_mode_record(mode: str) -> dict:
+    """The recorded seed mode and its test (summary)."""
+    if mode == SINGLE:
+        return {"mode": SINGLE, "seeds": list(SINGLE_SEEDS),
+                "rule": "PLAN.md 단일 seed 실행과 판정: per chain the first seed of 42, 123, 777 "
+                        "that neither collapsed nor failed numerically (validation, before "
+                        "access (A)); none: 판정 없음",
+                "test": "paired video bootstrap of each contrast (R 5000, default_rng(20261019)); "
+                        "p = min(1, 2 (min(n_le0, n_ge0) + 1) / (R + 1)); 98% percentile "
+                        "interval for the grades, 99% lower bounds for the gates",
+                "not_computed": NOT_COMPUTED,
+                "limitation": "seed variation is not reflected; video-sample uncertainty only"}
+    return {"mode": MULTI, "seeds": list(SEEDS), "min_complete": MIN_COMPLETE,
+            "test": "Welch t (conditions (2), (3)), seed-paired t (mechanism)"}
 
 
 # --- video bootstraps -------------------------------------------------------------------------
@@ -798,14 +978,16 @@ def _summary(diff: np.ndarray, levels: Sequence[float], meta: dict) -> dict:
     intervals = {k: st22.percentile_interval(diff[1:], x) for k, x in keys.items()}
     return meta | {"R": int(len(diff) - 1), "resample0": float(diff[0]),
                    "mean": float(diff[1:].mean()), "intervals": intervals,
-                   "contains_0": {k: bool(v[0] <= 0 <= v[1]) for k, v in intervals.items()}}
+                   "contains_0": {k: bool(v[0] <= 0 <= v[1]) for k, v in intervals.items()},
+                   **boot_p(diff[1:])}
 
 
 def _empty(levels: Sequence[float], meta: dict) -> dict:
     keys = [st22.level_key(x) for x in levels]
     return meta | {"resample0": math.nan, "mean": math.nan,
                    "intervals": dict.fromkeys(keys, [math.nan, math.nan]),
-                   "contains_0": dict.fromkeys(keys, False), "point_check_max_abs_diff": math.nan}
+                   "contains_0": dict.fromkeys(keys, False), "point_check_max_abs_diff": math.nan,
+                   **boot_p(np.zeros(0))}
 
 
 def l_bootstrap(per_video: Mapping[tuple[str, int, str], np.ndarray], weights: np.ndarray,
@@ -870,3 +1052,77 @@ def pooled_bootstrap(atoms: Mapping[tuple[str, int, str], st20.Atoms | Callable[
                     check = max(check, d) if math.isfinite(d) else math.inf
     return _summary(_combine(per, a, b, seeds_a, seeds_b, pairs), levels, meta) | {
         "point_check_max_abs_diff": check}
+
+
+def _single_keys(a: str, b: str, seeds_a: Mapping[str, int], seeds_b: Mapping[str, int],
+                 pairs: Sequence[str]) -> list[tuple[str, int, str]]:
+    return [(p, int(seeds_a[p]), a) for p in pairs] + [(p, int(seeds_b[p]), b) for p in pairs]
+
+
+def _single_summary(per: Mapping[tuple[str, int, str], np.ndarray], a: str, b: str,
+                    seeds_a: Mapping[str, int], seeds_b: Mapping[str, int],
+                    pairs: Sequence[str], levels: Sequence[float], meta: dict,
+                    check: float) -> dict:
+    diff = np.mean([per[(p, int(seeds_a[p]), a)] - per[(p, int(seeds_b[p]), b)]
+                    for p in pairs], axis=0)
+    return _summary(diff, levels, meta) | {"point_check_max_abs_diff": check}
+
+
+def l_bootstrap_single(per_video: Mapping[tuple[str, int, str], np.ndarray],
+                       weights: np.ndarray, a: str, b: str,
+                       seeds_a: Mapping[str, int] | None, seeds_b: Mapping[str, int] | None, *,
+                       levels: Sequence[float] = BOOT_LEVELS_SINGLE,
+                       point: Mapping[tuple[str, int, str], float] | None = None,
+                       pairs: Sequence[str] = PAIRS, cache: dict | None = None) -> dict:
+    """Single-seed mode: the video bootstrap of the L contrast a - b, each arm one chain per pair
+    (``seeds_a`` / ``seeds_b``: pair -> its chosen seed, ``chain_seeds``; None: no chain, an
+    empty result); the difference of the pair means on every resample (the same resamples for
+    every arm), its percentile intervals at ``levels`` and the bootstrap p (``boot_p``)."""
+    meta = {"metric": "L", "contrast": f"{a}_minus_{b}", "seeds_a": seeds_a,
+            "seeds_b": seeds_b, "levels": [float(x) for x in levels], "seed": BOOT_SEED,
+            "pairs": list(pairs), "seed_mode": SINGLE}
+    if not seeds_a or not seeds_b:
+        return _empty(levels, meta)
+    cache = {} if cache is None else cache
+    per, check = {}, 0.0
+    for k in _single_keys(a, b, seeds_a, seeds_b, pairs):
+        if k not in cache:
+            cache[k] = l_resampled(per_video[k], weights)
+        per[k] = cache[k]
+        if point is not None:
+            d = abs(float(per[k][0]) - float(point[k]))
+            check = max(check, d) if math.isfinite(d) else math.inf
+    return _single_summary(per, a, b, seeds_a, seeds_b, pairs, levels, meta, check)
+
+
+def pooled_bootstrap_single(atoms: Mapping[tuple[str, int, str],
+                                           st20.Atoms | Callable[[], st20.Atoms]],
+                            weights: np.ndarray, metric: str, a: str, b: str,
+                            seeds_a: Mapping[str, int] | None,
+                            seeds_b: Mapping[str, int] | None, *,
+                            levels: Sequence[float] = BOOT_LEVELS_SINGLE,
+                            point: Mapping[tuple[str, int, str], float] | None = None,
+                            pairs: Sequence[str] = PAIRS, cache: dict | None = None,
+                            chunk: int = st20.BOOT_CHUNK) -> dict:
+    """Single-seed mode: the video bootstrap of the pooled contrast a - b (E022's form,
+    anomalous and normal videos resampled separately: e020_stats.bootstrap_weights), each arm
+    one chain per pair, with the bootstrap p (``l_bootstrap_single``)."""
+    if metric not in ("frame_auc", "frame_ap"):
+        raise ValueError(f"unknown metric {metric!r}")
+    meta = {"metric": metric, "contrast": f"{a}_minus_{b}", "seeds_a": seeds_a,
+            "seeds_b": seeds_b, "levels": [float(x) for x in levels], "seed": BOOT_SEED,
+            "pairs": list(pairs), "seed_mode": SINGLE}
+    if not seeds_a or not seeds_b:
+        return _empty(levels, meta)
+    pick = 0 if metric == "frame_auc" else 1
+    cache = {} if cache is None else cache
+    per, check = {}, 0.0
+    for k in _single_keys(a, b, seeds_a, seeds_b, pairs):
+        if k not in cache:
+            at = atoms[k]() if callable(atoms[k]) else atoms[k]
+            cache[k] = st20.weighted_auc_ap(at, weights, chunk)[pick]
+        per[k] = cache[k]
+        if point is not None:
+            d = abs(float(per[k][0]) - float(point[k]))
+            check = max(check, d) if math.isfinite(d) else math.inf
+    return _single_summary(per, a, b, seeds_a, seeds_b, pairs, levels, meta, check)

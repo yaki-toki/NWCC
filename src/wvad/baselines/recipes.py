@@ -51,9 +51,14 @@ points' sigma W-readout validation V-AUCs, then the mean over the 3 seeds (``d4_
 the highest score by strict >; a float64 tie with the official value keeps the official value;
 other ties take the value closer to the official one (|log multiplier|), and an equal distance
 the smaller multiplier (``d4_pick``). Eligibility (PLAN.md "실패 처리" "붕괴 제외", user
-2026-10-20): a value takes part in the choice only when at least 2 of its development seeds did
-not collapse (selected sigma V-AUC >= 0.60; the score is over those seeds); with no eligible
-value nothing is chosen.
+2026-10-20): a value takes part in the choice only when at least ``min_surviving`` of its
+development seeds did not collapse (selected sigma V-AUC >= 0.60; the score is over those seeds);
+with no eligible value nothing is chosen. Seed mode (PLAN.md "단일 seed 실행과 판정", user
+2026-10-21): ``seed_mode`` "single" (the default, ``D4``) scores each value on its first
+development seed in the order of ``seeds`` (0, then 1, then 2) that neither collapsed nor scored
+non-finite, with ``min_surviving`` 1 (derived and enforced); when no value is eligible the
+official value is used and recorded (the caller, PLAN.md "세부 규칙"); "multi" (the 3-seed rule
+above, ``min_surviving`` 2, derived and enforced) is restored at the revision.
 """
 
 from __future__ import annotations
@@ -393,6 +398,9 @@ def parse_mult(text: str | float) -> float:
     return v
 
 
+MIN_SURVIVING = {"single": 1, "multi": 2}        # the seed mode fixes the eligibility rule
+
+
 @dataclass(frozen=True)
 class D4Grid:
     lr_mults: tuple[str, ...] = ("1/3", "1", "3")
@@ -403,16 +411,28 @@ class D4Grid:
     top: int = 5
     readout: str = "sigma"
     official: str = "1"
-    min_surviving: int = 2                       # development seeds left after "붕괴 제외"
+    min_surviving: int | None = None             # development seeds left after "붕괴 제외"
+    seed_mode: str = "single"                    # PLAN.md "단일 seed 실행과 판정" (2026-10-21)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "widen", _frozen(self.widen))
+        if self.seed_mode not in MIN_SURVIVING:
+            raise ValueError(f"seed mode {self.seed_mode!r} (single, multi)")
+        want = MIN_SURVIVING[self.seed_mode]
+        if self.min_surviving is None:
+            object.__setattr__(self, "min_surviving", want)
+        elif self.min_surviving != want:
+            raise ValueError(f"the {self.seed_mode}-seed D4 needs min_surviving {want}")
 
     def to_json(self) -> dict:
         return {"lr_mults": list(self.lr_mults), "widen": dict(self.widen),
                 "scale_mults": list(self.scale_mults), "seeds": list(self.seeds),
                 "eval_points": self.eval_points, "top": self.top, "readout": self.readout,
                 "official": self.official, "min_surviving": self.min_surviving,
+                "seed_mode": self.seed_mode,
+                "seeds_used": "the first development seed of the list that did not collapse "
+                              "(PLAN.md 단일 seed 실행과 판정)" if self.seed_mode == "single"
+                              else "every development seed that did not collapse",
                 "score": f"per seed the mean of the {self.top} highest of the "
                          f"{self.eval_points} evaluation points' {self.readout} W-readout "
                          "validation V-AUCs, then the mean over the seeds",
@@ -423,8 +443,10 @@ class D4Grid:
                             "constants are not widened",
                 "eligibility": f"a value takes part in the choice only with at least "
                                f"{self.min_surviving} development seeds that did not collapse "
-                               "(selected sigma V-AUC >= 0.60, PLAN.md 붕괴 제외); none "
-                               "eligible: no choice"}
+                               "(selected sigma V-AUC >= 0.60, PLAN.md 붕괴 제외) or fail "
+                               "numerically (a non-finite V-AUC); none eligible: "
+                               + ("the official value (recorded)" if self.seed_mode == "single"
+                                  else "no choice")}
 
 
 D4 = D4Grid()
