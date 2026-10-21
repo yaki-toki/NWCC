@@ -49,9 +49,11 @@ __pycache__/
 .venv/
 venv/
 
-# Manuscript: kept local until submission (user 2026-10-21); only paper/README.md is tracked
+# Manuscript and its figure / number generators: kept local until submission
+# (user 2026-10-21); only paper/README.md is tracked
 /paper/*
 !/paper/README.md
+/src/wvad/paper/
 
 # Editors / OS / local agent state
 .vscode/
