@@ -1,0 +1,2461 @@
+{
+ "check": "E023 (3b) recipes",
+ "code": {
+  "commit": "cc8d5c2456e0448324e587877d8d22c32bf435f7",
+  "source": "git",
+  "dirty": false
+ },
+ "methods": {
+  "mil": {
+   "recipe": {
+    "method": "mil",
+    "official_unit": 32,
+    "units": {
+     "32": {
+      "variant": "d16m32l2",
+      "test_sequence": "whole"
+     }
+    },
+    "optimizer": {
+     "kind": "adagrad",
+     "lr": 0.01,
+     "weight_decay": 0.0,
+     "betas": null,
+     "eps": 1e-08,
+     "momentum": null
+    },
+    "schedule": {
+     "kind": "constant",
+     "unit": "step",
+     "milestones": [],
+     "gamma": 1.0
+    },
+    "iterations": 20000,
+    "iteration_unit": "step",
+    "sampler": "mil_permutation",
+    "sampler_params": {
+     "batch_abnormal": 30,
+     "batch_normal": 30
+    },
+    "loss_weights": {
+     "ranking": 1.0,
+     "sparsity": 8e-05,
+     "smoothness": 8e-05,
+     "weight_l2": 0.001
+    },
+    "scale_constants": {},
+    "precision": "fp32",
+    "input_table": [
+     {
+      "item": "features",
+      "official": "C3D fc6, 4096-d, one row per 16-frame clip",
+      "here": "frozen VLM dense snippets (16 frames), single crop, 1792 (XCB+XCL) / 1920 (XCB+SigLIP)",
+      "status": "adapt",
+      "source": "Save_C3DFeatures_32Segments.m L29-L36; TrainingAnomalyDetector_public.py L31"
+     },
+     {
+      "item": "clip_normalisation",
+      "official": "paper Sec. 5.1: l2 per 16-frame clip, then the segment mean; the official MATLAB script instead l2-normalises each segment mean (no per-clip l2)",
+      "here": "the paper's rule as implemented: l2 per snippet and encoder before the window mean (derive_n d16m32l2), the same l2 at validation and test (InputPipeline); this follows the paper, not the official code, which l2-normalises the segment means (disclosed; PLAN.md \uae30\ub85d 2026-10-19)",
+      "status": "adapt",
+      "source": "Save_C3DFeatures_32Segments.m L84-L88 (code); paper Sec. 5.1"
+     },
+     {
+      "item": "sampler_and_length",
+      "official": "32 segments per video (MATLAB round(linspace(1, n, 33)), last clip left out); 30 anomalous + 30 normal videos per iteration by np.random.permutation(N)[N - 30:]",
+      "here": "32 windows of derive_n kind m (np.linspace(0, n_v, 33, dtype=int64), empty window: snippet r[i]); sampler mil_permutation = the official draw over the training-part pools",
+      "status": "adapt",
+      "source": "Save_C3DFeatures_32Segments.m L64-L99; TrainingAnomalyDetector_public.py L92-L103"
+     },
+     {
+      "item": "scale_match",
+      "official": "none",
+      "here": "scale match of the window-mean input, refitted on the training part (derive_n), the same map at validation and test",
+      "status": "adapt",
+      "source": "PLAN.md"
+     },
+     {
+      "item": "input_normalisation",
+      "official": "none",
+      "here": "input LayerNorm for XCB+SigLIP only (common.input_ln, diagnostic P7)",
+      "status": "adapt",
+      "source": "PLAN.md"
+     },
+     {
+      "item": "scale_constants",
+      "official": "none (the hinge margin 1 acts on sigmoid scores, not on feature norms)",
+      "here": "none",
+      "status": "keep",
+      "source": "TrainingAnomalyDetector_public.py L267"
+     },
+     {
+      "item": "text_branch",
+      "official": "none",
+      "here": "none",
+      "status": "keep",
+      "source": ""
+     },
+     {
+      "item": "top_k",
+      "official": "max over the 32 segments of a video (k = 1)",
+      "here": "the same",
+      "status": "keep",
+      "source": "TrainingAnomalyDetector_public.py L222, L262-L267"
+     },
+     {
+      "item": "checkpoint_selection",
+      "official": "none (weights saved every 1,000 iterations and at the end)",
+      "here": "validation V-AUC, sigma W readout, 30 evaluation points",
+      "status": "adapt",
+      "source": "TrainingAnomalyDetector_public.py L313-L318"
+     },
+     {
+      "item": "precision",
+      "official": "float32 (Theano floatX float32 on the GPU)",
+      "here": "fp32 (float64 only in the (q1b) check)",
+      "status": "keep",
+      "source": "TrainingAnomalyDetector_public.py L26; model.json input_dtype"
+     }
+    ],
+    "sources": {
+     "optimizer": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L276-L278",
+      "note": "Adagrad(lr=0.01, epsilon=1e-08); Keras 1.1.0 optimizers.py L251-L278 (decay 0)"
+     },
+     "lr": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L276",
+      "note": "code value 0.01 followed; the paper (Sec. 5.1) states 0.001 (x1/10; closest D4 value: the widened x1/9, base grid x1/3)"
+     },
+     "weight_decay": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L31-L35",
+      "note": "W_regularizer=l2(0.001) on every Dense weight: a loss term (loss_weights.weight_l2), not optimizer decay; code followed, the paper (Sec. 5.1) states an unweighted Frobenius norm"
+     },
+     "schedule": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L276, L301-L306",
+      "note": "constant lr, one batch per iteration"
+     },
+     "iterations": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L296",
+      "note": "num_iters = 20000"
+     },
+     "batch": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L92-L93, L182-L193",
+      "note": "batchsize=60, n_exp=30; anomalous videos first"
+     },
+     "sampler": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L100-L103",
+      "note": "np.random.permutation per iteration, anomalous draw first"
+     },
+     "loss_weights": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L267-L271, L31-L35",
+      "note": "ranking mean, 0.00008 sparsity, 0.00008 smoothness; l2(0.001)"
+     },
+     "unit": {
+      "repo": "mil",
+      "file": "TrainingAnomalyDetector_public.py",
+      "lines": "L204",
+      "note": "n_seg = 32; Save_C3DFeatures_32Segments.m L64-L99"
+     },
+     "test_sequence": {
+      "repo": "mil",
+      "file": "Test_Anomaly_Detector_public.py",
+      "lines": "L117-L121",
+      "note": "predict_on_batch on one video's rows (row-wise network)"
+     }
+    },
+    "notes": "Re-implementation (no licence). Adaptations: see the wvad.baselines.mil docstring. No scale constant (D4 checks the lr only). Paper vs code: the official code is followed (lr 0.01 at T L276, l2(0.001) at T L31-L35); the paper (Sec. 5.1) states lr 0.001 and an unweighted Frobenius norm; the paper lr is x1/10 of the code value (closest D4 value: the widened x1/9, base grid x1/3)."
+   },
+   "datasets": {
+    "ucf": {
+     "method": "mil",
+     "official_unit": 32,
+     "units": {
+      "32": {
+       "variant": "d16m32l2",
+       "test_sequence": "whole"
+      }
+     },
+     "optimizer": {
+      "kind": "adagrad",
+      "lr": 0.01,
+      "weight_decay": 0.0,
+      "betas": null,
+      "eps": 1e-08,
+      "momentum": null
+     },
+     "schedule": {
+      "kind": "constant",
+      "unit": "step",
+      "milestones": [],
+      "gamma": 1.0
+     },
+     "iterations": 20000,
+     "iteration_unit": "step",
+     "sampler": "mil_permutation",
+     "sampler_params": {
+      "batch_abnormal": 30,
+      "batch_normal": 30
+     },
+     "loss_weights": {
+      "ranking": 1.0,
+      "sparsity": 8e-05,
+      "smoothness": 8e-05,
+      "weight_l2": 0.001
+     },
+     "scale_constants": {},
+     "precision": "fp32",
+     "input_table": [
+      {
+       "item": "features",
+       "official": "C3D fc6, 4096-d, one row per 16-frame clip",
+       "here": "frozen VLM dense snippets (16 frames), single crop, 1792 (XCB+XCL) / 1920 (XCB+SigLIP)",
+       "status": "adapt",
+       "source": "Save_C3DFeatures_32Segments.m L29-L36; TrainingAnomalyDetector_public.py L31"
+      },
+      {
+       "item": "clip_normalisation",
+       "official": "paper Sec. 5.1: l2 per 16-frame clip, then the segment mean; the official MATLAB script instead l2-normalises each segment mean (no per-clip l2)",
+       "here": "the paper's rule as implemented: l2 per snippet and encoder before the window mean (derive_n d16m32l2), the same l2 at validation and test (InputPipeline); this follows the paper, not the official code, which l2-normalises the segment means (disclosed; PLAN.md \uae30\ub85d 2026-10-19)",
+       "status": "adapt",
+       "source": "Save_C3DFeatures_32Segments.m L84-L88 (code); paper Sec. 5.1"
+      },
+      {
+       "item": "sampler_and_length",
+       "official": "32 segments per video (MATLAB round(linspace(1, n, 33)), last clip left out); 30 anomalous + 30 normal videos per iteration by np.random.permutation(N)[N - 30:]",
+       "here": "32 windows of derive_n kind m (np.linspace(0, n_v, 33, dtype=int64), empty window: snippet r[i]); sampler mil_permutation = the official draw over the training-part pools",
+       "status": "adapt",
+       "source": "Save_C3DFeatures_32Segments.m L64-L99; TrainingAnomalyDetector_public.py L92-L103"
+      },
+      {
+       "item": "scale_match",
+       "official": "none",
+       "here": "scale match of the window-mean input, refitted on the training part (derive_n), the same map at validation and test",
+       "status": "adapt",
+       "source": "PLAN.md"
+      },
+      {
+       "item": "input_normalisation",
+       "official": "none",
+       "here": "input LayerNorm for XCB+SigLIP only (common.input_ln, diagnostic P7)",
+       "status": "adapt",
+       "source": "PLAN.md"
+      },
+      {
+       "item": "scale_constants",
+       "official": "none (the hinge margin 1 acts on sigmoid scores, not on feature norms)",
+       "here": "none",
+       "status": "keep",
+       "source": "TrainingAnomalyDetector_public.py L267"
+      },
+      {
+       "item": "text_branch",
+       "official": "none",
+       "here": "none",
+       "status": "keep",
+       "source": ""
+      },
+      {
+       "item": "top_k",
+       "official": "max over the 32 segments of a video (k = 1)",
+       "here": "the same",
+       "status": "keep",
+       "source": "TrainingAnomalyDetector_public.py L222, L262-L267"
+      },
+      {
+       "item": "checkpoint_selection",
+       "official": "none (weights saved every 1,000 iterations and at the end)",
+       "here": "validation V-AUC, sigma W readout, 30 evaluation points",
+       "status": "adapt",
+       "source": "TrainingAnomalyDetector_public.py L313-L318"
+      },
+      {
+       "item": "precision",
+       "official": "float32 (Theano floatX float32 on the GPU)",
+       "here": "fp32 (float64 only in the (q1b) check)",
+       "status": "keep",
+       "source": "TrainingAnomalyDetector_public.py L26; model.json input_dtype"
+      }
+     ],
+     "sources": {
+      "optimizer": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L276-L278",
+       "note": "Adagrad(lr=0.01, epsilon=1e-08); Keras 1.1.0 optimizers.py L251-L278 (decay 0)"
+      },
+      "lr": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L276",
+       "note": "code value 0.01 followed; the paper (Sec. 5.1) states 0.001 (x1/10; closest D4 value: the widened x1/9, base grid x1/3)"
+      },
+      "weight_decay": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L31-L35",
+       "note": "W_regularizer=l2(0.001) on every Dense weight: a loss term (loss_weights.weight_l2), not optimizer decay; code followed, the paper (Sec. 5.1) states an unweighted Frobenius norm"
+      },
+      "schedule": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L276, L301-L306",
+       "note": "constant lr, one batch per iteration"
+      },
+      "iterations": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L296",
+       "note": "num_iters = 20000"
+      },
+      "batch": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L92-L93, L182-L193",
+       "note": "batchsize=60, n_exp=30; anomalous videos first"
+      },
+      "sampler": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L100-L103",
+       "note": "np.random.permutation per iteration, anomalous draw first"
+      },
+      "loss_weights": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L267-L271, L31-L35",
+       "note": "ranking mean, 0.00008 sparsity, 0.00008 smoothness; l2(0.001)"
+      },
+      "unit": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L204",
+       "note": "n_seg = 32; Save_C3DFeatures_32Segments.m L64-L99"
+      },
+      "test_sequence": {
+       "repo": "mil",
+       "file": "Test_Anomaly_Detector_public.py",
+       "lines": "L117-L121",
+       "note": "predict_on_batch on one video's rows (row-wise network)"
+      }
+     },
+     "notes": "Re-implementation (no licence). Adaptations: see the wvad.baselines.mil docstring. No scale constant (D4 checks the lr only). Paper vs code: the official code is followed (lr 0.01 at T L276, l2(0.001) at T L31-L35); the paper (Sec. 5.1) states lr 0.001 and an unweighted Frobenius norm; the paper lr is x1/10 of the code value (closest D4 value: the widened x1/9, base grid x1/3)."
+    },
+    "xdv": {
+     "method": "mil",
+     "official_unit": 32,
+     "units": {
+      "32": {
+       "variant": "d16m32l2",
+       "test_sequence": "whole"
+      }
+     },
+     "optimizer": {
+      "kind": "adagrad",
+      "lr": 0.01,
+      "weight_decay": 0.0,
+      "betas": null,
+      "eps": 1e-08,
+      "momentum": null
+     },
+     "schedule": {
+      "kind": "constant",
+      "unit": "step",
+      "milestones": [],
+      "gamma": 1.0
+     },
+     "iterations": 20000,
+     "iteration_unit": "step",
+     "sampler": "mil_permutation",
+     "sampler_params": {
+      "batch_abnormal": 30,
+      "batch_normal": 30
+     },
+     "loss_weights": {
+      "ranking": 1.0,
+      "sparsity": 8e-05,
+      "smoothness": 8e-05,
+      "weight_l2": 0.001
+     },
+     "scale_constants": {},
+     "precision": "fp32",
+     "input_table": [
+      {
+       "item": "features",
+       "official": "C3D fc6, 4096-d, one row per 16-frame clip",
+       "here": "frozen VLM dense snippets (16 frames), single crop, 1792 (XCB+XCL) / 1920 (XCB+SigLIP)",
+       "status": "adapt",
+       "source": "Save_C3DFeatures_32Segments.m L29-L36; TrainingAnomalyDetector_public.py L31"
+      },
+      {
+       "item": "clip_normalisation",
+       "official": "paper Sec. 5.1: l2 per 16-frame clip, then the segment mean; the official MATLAB script instead l2-normalises each segment mean (no per-clip l2)",
+       "here": "the paper's rule as implemented: l2 per snippet and encoder before the window mean (derive_n d16m32l2), the same l2 at validation and test (InputPipeline); this follows the paper, not the official code, which l2-normalises the segment means (disclosed; PLAN.md \uae30\ub85d 2026-10-19)",
+       "status": "adapt",
+       "source": "Save_C3DFeatures_32Segments.m L84-L88 (code); paper Sec. 5.1"
+      },
+      {
+       "item": "sampler_and_length",
+       "official": "32 segments per video (MATLAB round(linspace(1, n, 33)), last clip left out); 30 anomalous + 30 normal videos per iteration by np.random.permutation(N)[N - 30:]",
+       "here": "32 windows of derive_n kind m (np.linspace(0, n_v, 33, dtype=int64), empty window: snippet r[i]); sampler mil_permutation = the official draw over the training-part pools",
+       "status": "adapt",
+       "source": "Save_C3DFeatures_32Segments.m L64-L99; TrainingAnomalyDetector_public.py L92-L103"
+      },
+      {
+       "item": "scale_match",
+       "official": "none",
+       "here": "scale match of the window-mean input, refitted on the training part (derive_n), the same map at validation and test",
+       "status": "adapt",
+       "source": "PLAN.md"
+      },
+      {
+       "item": "input_normalisation",
+       "official": "none",
+       "here": "input LayerNorm for XCB+SigLIP only (common.input_ln, diagnostic P7)",
+       "status": "adapt",
+       "source": "PLAN.md"
+      },
+      {
+       "item": "scale_constants",
+       "official": "none (the hinge margin 1 acts on sigmoid scores, not on feature norms)",
+       "here": "none",
+       "status": "keep",
+       "source": "TrainingAnomalyDetector_public.py L267"
+      },
+      {
+       "item": "text_branch",
+       "official": "none",
+       "here": "none",
+       "status": "keep",
+       "source": ""
+      },
+      {
+       "item": "top_k",
+       "official": "max over the 32 segments of a video (k = 1)",
+       "here": "the same",
+       "status": "keep",
+       "source": "TrainingAnomalyDetector_public.py L222, L262-L267"
+      },
+      {
+       "item": "checkpoint_selection",
+       "official": "none (weights saved every 1,000 iterations and at the end)",
+       "here": "validation V-AUC, sigma W readout, 30 evaluation points",
+       "status": "adapt",
+       "source": "TrainingAnomalyDetector_public.py L313-L318"
+      },
+      {
+       "item": "precision",
+       "official": "float32 (Theano floatX float32 on the GPU)",
+       "here": "fp32 (float64 only in the (q1b) check)",
+       "status": "keep",
+       "source": "TrainingAnomalyDetector_public.py L26; model.json input_dtype"
+      }
+     ],
+     "sources": {
+      "optimizer": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L276-L278",
+       "note": "Adagrad(lr=0.01, epsilon=1e-08); Keras 1.1.0 optimizers.py L251-L278 (decay 0)"
+      },
+      "lr": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L276",
+       "note": "code value 0.01 followed; the paper (Sec. 5.1) states 0.001 (x1/10; closest D4 value: the widened x1/9, base grid x1/3)"
+      },
+      "weight_decay": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L31-L35",
+       "note": "W_regularizer=l2(0.001) on every Dense weight: a loss term (loss_weights.weight_l2), not optimizer decay; code followed, the paper (Sec. 5.1) states an unweighted Frobenius norm"
+      },
+      "schedule": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L276, L301-L306",
+       "note": "constant lr, one batch per iteration"
+      },
+      "iterations": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L296",
+       "note": "num_iters = 20000"
+      },
+      "batch": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L92-L93, L182-L193",
+       "note": "batchsize=60, n_exp=30; anomalous videos first"
+      },
+      "sampler": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L100-L103",
+       "note": "np.random.permutation per iteration, anomalous draw first"
+      },
+      "loss_weights": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L267-L271, L31-L35",
+       "note": "ranking mean, 0.00008 sparsity, 0.00008 smoothness; l2(0.001)"
+      },
+      "unit": {
+       "repo": "mil",
+       "file": "TrainingAnomalyDetector_public.py",
+       "lines": "L204",
+       "note": "n_seg = 32; Save_C3DFeatures_32Segments.m L64-L99"
+      },
+      "test_sequence": {
+       "repo": "mil",
+       "file": "Test_Anomaly_Detector_public.py",
+       "lines": "L117-L121",
+       "note": "predict_on_batch on one video's rows (row-wise network)"
+      }
+     },
+     "notes": "Re-implementation (no licence). Adaptations: see the wvad.baselines.mil docstring. No scale constant (D4 checks the lr only). Paper vs code: the official code is followed (lr 0.01 at T L276, l2(0.001) at T L31-L35); the paper (Sec. 5.1) states lr 0.001 and an unweighted Frobenius norm; the paper lr is x1/10 of the code value (closest D4 value: the widened x1/9, base grid x1/3)."
+    }
+   },
+   "per_dataset_configuration": false,
+   "module": "src/wvad/baselines/mil.py",
+   "module_sha256": "97ebd30e4f18617c2c632dbd71495691029d3992923187f7a07b8c39a67d2000",
+   "licences": {
+    "mil": {
+     "url": "https://github.com/WaqasSultani/AnomalyDetectionCVPR2018",
+     "role": "main family",
+     "commit": "8aa957cdaa7eac821e07115fe63920c3b07da59d",
+     "commit_date": "2023-01-12",
+     "licence_file": null,
+     "licence_sha256": null,
+     "licence_type": "none detected (no LICENSE file in the repository)",
+     "port": "re-implementation; official code used only outside the repository for equivalence checks"
+    }
+   }
+  },
+  "rtfm": {
+   "recipe": {
+    "method": "rtfm",
+    "official_unit": 32,
+    "units": {
+     "32": {
+      "variant": "d16m32",
+      "test_sequence": "whole"
+     }
+    },
+    "optimizer": {
+     "kind": "adam",
+     "lr": 0.001,
+     "weight_decay": 0.005,
+     "betas": null,
+     "eps": null,
+     "momentum": null
+    },
+    "schedule": {
+     "kind": "constant",
+     "unit": "step",
+     "milestones": [],
+     "gamma": 1.0
+    },
+    "iterations": 15000,
+    "iteration_unit": "step",
+    "sampler": "window_mean",
+    "sampler_params": {
+     "batch_normal": 32,
+     "batch_abnormal": 32,
+     "reset": "per_pool",
+     "order": "normal_first",
+     "eager": false
+    },
+    "loss_weights": {
+     "alpha": 0.0001,
+     "smooth": 0.0008,
+     "sparsity": 0.008
+    },
+    "scale_constants": {
+     "margin": 100.0
+    },
+    "precision": "fp32",
+    "input_table": [
+     {
+      "item": "features",
+      "official": "10-crop I3D (ResNet-50) snippet features, 2048-d",
+      "here": "frozen VLM dense snippets, single crop, 1792 (XCB+XCL) / 1920 (XCB+SigLIP)",
+      "status": "adapt",
+      "source": "README.md; option.py L5"
+     },
+     {
+      "item": "clip_normalisation",
+      "official": "none (raw snippet features)",
+      "here": "none, as officially",
+      "status": "keep",
+      "source": "dataset.py L58-L59"
+     },
+     {
+      "item": "sampler_and_length",
+      "official": "32 windows per video by process_feat (np.linspace bounds, window mean, empty window: its first snippet); one shuffled drop_last loader per class, 32 + 32 videos per step, each re-created when exhausted, normal first",
+      "here": "d16m32 (the same windows, precomputed) and the window_mean sampler (per_pool, normal_first)",
+      "status": "keep",
+      "source": "utils.py L32-L41; dataset.py L67-L72; main.py L20-L25, L57-L63; train.py L86-L89"
+     },
+     {
+      "item": "scale_match",
+      "official": "none",
+      "here": "the d16m32 scale map refitted on the training part (window-mean training input), the same map as the validation / test input layer",
+      "status": "adapt",
+      "source": "PLAN.md \uac80\uc99d\u00b7\uc2dc\ud5d8 \uc785\ub825"
+     },
+     {
+      "item": "input_normalisation",
+      "official": "none",
+      "here": "input LayerNorm for XCB+SigLIP only (the C rule, diagnostic P7)",
+      "status": "adapt",
+      "source": "PLAN.md \uc785\ub825 \ucc98\ub9ac \ud45c"
+     },
+     {
+      "item": "scale_constants",
+      "official": "RTFM_loss margin 100 (I3D feature norms)",
+      "here": "official 100; D4 validation check x{1/10, 1, 10}",
+      "status": "adapt",
+      "source": "train.py L71, L102"
+     },
+     {
+      "item": "text_branch",
+      "official": "none",
+      "here": "none",
+      "status": "keep",
+      "source": "model.py"
+     },
+     {
+      "item": "top_k",
+      "official": "k = num_segments // 10 = 3 snippets of largest feature magnitude (dropout 0.7 on the selection mask), abnormal and normal",
+      "here": "the same, T = 32",
+      "status": "keep",
+      "source": "model.py L177-L179, L231-L268"
+     },
+     {
+      "item": "checkpoint_selection",
+      "official": "test-set AUC every 5 steps after step 200",
+      "here": "validation V-AUC (sigma W readout) at 30 evaluation points",
+      "status": "adapt",
+      "source": "main.py L65-L74"
+     },
+     {
+      "item": "precision",
+      "official": "fp32",
+      "here": "fp32",
+      "status": "keep",
+      "source": "main.py; model.py L4"
+     }
+    ],
+    "sources": {
+     "optimizer": {
+      "repo": "rtfm",
+      "file": "main.py",
+      "lines": "L40-L41",
+      "note": "optim.Adam(model.parameters(), lr=config.lr[0], weight_decay=0.005)"
+     },
+     "lr": {
+      "repo": "rtfm",
+      "file": "option.py",
+      "lines": "L11",
+      "note": "--lr default '[0.001]*15000' (config.py L6 eval)"
+     },
+     "weight_decay": {
+      "repo": "rtfm",
+      "file": "main.py",
+      "lines": "L41",
+      "note": ""
+     },
+     "schedule": {
+      "repo": "rtfm",
+      "file": "main.py",
+      "lines": "L53-L55",
+      "note": "per-step lr list, constant 0.001 (option.py L11)"
+     },
+     "iterations": {
+      "repo": "rtfm",
+      "file": "option.py",
+      "lines": "L19",
+      "note": "--max-epoch 15000; one optimizer step per 'epoch' (main.py L48-L63)"
+     },
+     "batch": {
+      "repo": "rtfm",
+      "file": "option.py",
+      "lines": "L12",
+      "note": "--batch-size 32 per class loader (main.py L20-L25); normal batch first (train.py L86-L89)"
+     },
+     "sampler": {
+      "repo": "rtfm",
+      "file": "main.py",
+      "lines": "L20-L25, L57-L61",
+      "note": "shuffle=True, drop_last=True, num_workers=0; each loader re-created at (step - 1) % len == 0"
+     },
+     "loss_weights": {
+      "repo": "rtfm",
+      "file": "train.py",
+      "lines": "L77, L102-L105",
+      "note": "RTFM_loss(alpha=0.0001, margin=100), sparsity 8e-3, smooth 8e-4; the BCE term has weight 1 (no constant)"
+     },
+     "unit": {
+      "repo": "rtfm",
+      "file": "dataset.py",
+      "lines": "L70",
+      "note": "process_feat(feature, 32); model.py L177 num_segments = 32"
+     },
+     "test_sequence": {
+      "repo": "rtfm",
+      "file": "test_10crop.py",
+      "lines": "L11-L19",
+      "note": "each test video whole (loader batch 1), snippet scores"
+     },
+     "scale_constants": {
+      "repo": "rtfm",
+      "file": "train.py",
+      "lines": "L71, L102",
+      "note": "margin 100"
+     }
+    },
+    "notes": "RTFM official defaults (option.py) for both datasets: the repository has no XD-Violence configuration. Official unit 32, so there is no X.32 arm. The margin is the only scale constant (D4 x{1/10, 1, 10}); alpha, smooth and sparsity weights are loss weights. See the module docstring for the adaptations. Paper vs code (the code at cf938f4c is followed): the paper (arXiv 2101.10030 Sec. 4.2) states Adam weight decay 0.0005, lr 0.001 (ShanghaiTech, UCF-Crime) and 0.0001 (XD-Violence), batch 64 for 50 epochs; the code uses weight decay 0.005, lr 0.001 for every dataset and 15000 steps; the paper's XD lr is x1/10 of the code value (closest D4 value: the widened x1/9, base grid x1/3). The code's magnitude loss (|m - ||f_a||| + ||f_n||)^2 differs from the paper's hinge (Eq. 6), and the code drops out the top-k selection mask. Loss parts mag_abnormal / mag_normal: batch means of the top-k feature magnitudes (diagnostics, not in the cost)."
+   },
+   "datasets": {
+    "ucf": {
+     "method": "rtfm",
+     "official_unit": 32,
+     "units": {
+      "32": {
+       "variant": "d16m32",
+       "test_sequence": "whole"
+      }
+     },
+     "optimizer": {
+      "kind": "adam",
+      "lr": 0.001,
+      "weight_decay": 0.005,
+      "betas": null,
+      "eps": null,
+      "momentum": null
+     },
+     "schedule": {
+      "kind": "constant",
+      "unit": "step",
+      "milestones": [],
+      "gamma": 1.0
+     },
+     "iterations": 15000,
+     "iteration_unit": "step",
+     "sampler": "window_mean",
+     "sampler_params": {
+      "batch_normal": 32,
+      "batch_abnormal": 32,
+      "reset": "per_pool",
+      "order": "normal_first",
+      "eager": false
+     },
+     "loss_weights": {
+      "alpha": 0.0001,
+      "smooth": 0.0008,
+      "sparsity": 0.008
+     },
+     "scale_constants": {
+      "margin": 100.0
+     },
+     "precision": "fp32",
+     "input_table": [
+      {
+       "item": "features",
+       "official": "10-crop I3D (ResNet-50) snippet features, 2048-d",
+       "here": "frozen VLM dense snippets, single crop, 1792 (XCB+XCL) / 1920 (XCB+SigLIP)",
+       "status": "adapt",
+       "source": "README.md; option.py L5"
+      },
+      {
+       "item": "clip_normalisation",
+       "official": "none (raw snippet features)",
+       "here": "none, as officially",
+       "status": "keep",
+       "source": "dataset.py L58-L59"
+      },
+      {
+       "item": "sampler_and_length",
+       "official": "32 windows per video by process_feat (np.linspace bounds, window mean, empty window: its first snippet); one shuffled drop_last loader per class, 32 + 32 videos per step, each re-created when exhausted, normal first",
+       "here": "d16m32 (the same windows, precomputed) and the window_mean sampler (per_pool, normal_first)",
+       "status": "keep",
+       "source": "utils.py L32-L41; dataset.py L67-L72; main.py L20-L25, L57-L63; train.py L86-L89"
+      },
+      {
+       "item": "scale_match",
+       "official": "none",
+       "here": "the d16m32 scale map refitted on the training part (window-mean training input), the same map as the validation / test input layer",
+       "status": "adapt",
+       "source": "PLAN.md \uac80\uc99d\u00b7\uc2dc\ud5d8 \uc785\ub825"
+      },
+      {
+       "item": "input_normalisation",
+       "official": "none",
+       "here": "input LayerNorm for XCB+SigLIP only (the C rule, diagnostic P7)",
+       "status": "adapt",
+       "source": "PLAN.md \uc785\ub825 \ucc98\ub9ac \ud45c"
+      },
+      {
+       "item": "scale_constants",
+       "official": "RTFM_loss margin 100 (I3D feature norms)",
+       "here": "official 100; D4 validation check x{1/10, 1, 10}",
+       "status": "adapt",
+       "source": "train.py L71, L102"
+      },
+      {
+       "item": "text_branch",
+       "official": "none",
+       "here": "none",
+       "status": "keep",
+       "source": "model.py"
+      },
+      {
+       "item": "top_k",
+       "official": "k = num_segments // 10 = 3 snippets of largest feature magnitude (dropout 0.7 on the selection mask), abnormal and normal",
+       "here": "the same, T = 32",
+       "status": "keep",
+       "source": "model.py L177-L179, L231-L268"
+      },
+      {
+       "item": "checkpoint_selection",
+       "official": "test-set AUC every 5 steps after step 200",
+       "here": "validation V-AUC (sigma W readout) at 30 evaluation points",
+       "status": "adapt",
+       "source": "main.py L65-L74"
+      },
+      {
+       "item": "precision",
+       "official": "fp32",
+       "here": "fp32",
+       "status": "keep",
+       "source": "main.py; model.py L4"
+      }
+     ],
+     "sources": {
+      "optimizer": {
+       "repo": "rtfm",
+       "file": "main.py",
+       "lines": "L40-L41",
+       "note": "optim.Adam(model.parameters(), lr=config.lr[0], weight_decay=0.005)"
+      },
+      "lr": {
+       "repo": "rtfm",
+       "file": "option.py",
+       "lines": "L11",
+       "note": "--lr default '[0.001]*15000' (config.py L6 eval)"
+      },
+      "weight_decay": {
+       "repo": "rtfm",
+       "file": "main.py",
+       "lines": "L41",
+       "note": ""
+      },
+      "schedule": {
+       "repo": "rtfm",
+       "file": "main.py",
+       "lines": "L53-L55",
+       "note": "per-step lr list, constant 0.001 (option.py L11)"
+      },
+      "iterations": {
+       "repo": "rtfm",
+       "file": "option.py",
+       "lines": "L19",
+       "note": "--max-epoch 15000; one optimizer step per 'epoch' (main.py L48-L63)"
+      },
+      "batch": {
+       "repo": "rtfm",
+       "file": "option.py",
+       "lines": "L12",
+       "note": "--batch-size 32 per class loader (main.py L20-L25); normal batch first (train.py L86-L89)"
+      },
+      "sampler": {
+       "repo": "rtfm",
+       "file": "main.py",
+       "lines": "L20-L25, L57-L61",
+       "note": "shuffle=True, drop_last=True, num_workers=0; each loader re-created at (step - 1) % len == 0"
+      },
+      "loss_weights": {
+       "repo": "rtfm",
+       "file": "train.py",
+       "lines": "L77, L102-L105",
+       "note": "RTFM_loss(alpha=0.0001, margin=100), sparsity 8e-3, smooth 8e-4; the BCE term has weight 1 (no constant)"
+      },
+      "unit": {
+       "repo": "rtfm",
+       "file": "dataset.py",
+       "lines": "L70",
+       "note": "process_feat(feature, 32); model.py L177 num_segments = 32"
+      },
+      "test_sequence": {
+       "repo": "rtfm",
+       "file": "test_10crop.py",
+       "lines": "L11-L19",
+       "note": "each test video whole (loader batch 1), snippet scores"
+      },
+      "scale_constants": {
+       "repo": "rtfm",
+       "file": "train.py",
+       "lines": "L71, L102",
+       "note": "margin 100"
+      }
+     },
+     "notes": "RTFM official defaults (option.py) for both datasets: the repository has no XD-Violence configuration. Official unit 32, so there is no X.32 arm. The margin is the only scale constant (D4 x{1/10, 1, 10}); alpha, smooth and sparsity weights are loss weights. See the module docstring for the adaptations. Paper vs code (the code at cf938f4c is followed): the paper (arXiv 2101.10030 Sec. 4.2) states Adam weight decay 0.0005, lr 0.001 (ShanghaiTech, UCF-Crime) and 0.0001 (XD-Violence), batch 64 for 50 epochs; the code uses weight decay 0.005, lr 0.001 for every dataset and 15000 steps; the paper's XD lr is x1/10 of the code value (closest D4 value: the widened x1/9, base grid x1/3). The code's magnitude loss (|m - ||f_a||| + ||f_n||)^2 differs from the paper's hinge (Eq. 6), and the code drops out the top-k selection mask. Loss parts mag_abnormal / mag_normal: batch means of the top-k feature magnitudes (diagnostics, not in the cost)."
+    },
+    "xdv": {
+     "method": "rtfm",
+     "official_unit": 32,
+     "units": {
+      "32": {
+       "variant": "d16m32",
+       "test_sequence": "whole"
+      }
+     },
+     "optimizer": {
+      "kind": "adam",
+      "lr": 0.001,
+      "weight_decay": 0.005,
+      "betas": null,
+      "eps": null,
+      "momentum": null
+     },
+     "schedule": {
+      "kind": "constant",
+      "unit": "step",
+      "milestones": [],
+      "gamma": 1.0
+     },
+     "iterations": 15000,
+     "iteration_unit": "step",
+     "sampler": "window_mean",
+     "sampler_params": {
+      "batch_normal": 32,
+      "batch_abnormal": 32,
+      "reset": "per_pool",
+      "order": "normal_first",
+      "eager": false
+     },
+     "loss_weights": {
+      "alpha": 0.0001,
+      "smooth": 0.0008,
+      "sparsity": 0.008
+     },
+     "scale_constants": {
+      "margin": 100.0
+     },
+     "precision": "fp32",
+     "input_table": [
+      {
+       "item": "features",
+       "official": "10-crop I3D (ResNet-50) snippet features, 2048-d",
+       "here": "frozen VLM dense snippets, single crop, 1792 (XCB+XCL) / 1920 (XCB+SigLIP)",
+       "status": "adapt",
+       "source": "README.md; option.py L5"
+      },
+      {
+       "item": "clip_normalisation",
+       "official": "none (raw snippet features)",
+       "here": "none, as officially",
+       "status": "keep",
+       "source": "dataset.py L58-L59"
+      },
+      {
+       "item": "sampler_and_length",
+       "official": "32 windows per video by process_feat (np.linspace bounds, window mean, empty window: its first snippet); one shuffled drop_last loader per class, 32 + 32 videos per step, each re-created when exhausted, normal first",
+       "here": "d16m32 (the same windows, precomputed) and the window_mean sampler (per_pool, normal_first)",
+       "status": "keep",
+       "source": "utils.py L32-L41; dataset.py L67-L72; main.py L20-L25, L57-L63; train.py L86-L89"
+      },
+      {
+       "item": "scale_match",
+       "official": "none",
+       "here": "the d16m32 scale map refitted on the training part (window-mean training input), the same map as the validation / test input layer",
+       "status": "adapt",
+       "source": "PLAN.md \uac80\uc99d\u00b7\uc2dc\ud5d8 \uc785\ub825"
+      },
+      {
+       "item": "input_normalisation",
+       "official": "none",
+       "here": "input LayerNorm for XCB+SigLIP only (the C rule, diagnostic P7)",
+       "status": "adapt",
+       "source": "PLAN.md \uc785\ub825 \ucc98\ub9ac \ud45c"
+      },
+      {
+       "item": "scale_constants",
+       "official": "RTFM_loss margin 100 (I3D feature norms)",
+       "here": "official 100; D4 validation check x{1/10, 1, 10}",
+       "status": "adapt",
+       "source": "train.py L71, L102"
+      },
+      {
+       "item": "text_branch",
+       "official": "none",
+       "here": "none",
+       "status": "keep",
+       "source": "model.py"
+      },
+      {
+       "item": "top_k",
+       "official": "k = num_segments // 10 = 3 snippets of largest feature magnitude (dropout 0.7 on the selection mask), abnormal and normal",
+       "here": "the same, T = 32",
+       "status": "keep",
+       "source": "model.py L177-L179, L231-L268"
+      },
+      {
+       "item": "checkpoint_selection",
+       "official": "test-set AUC every 5 steps after step 200",
+       "here": "validation V-AUC (sigma W readout) at 30 evaluation points",
+       "status": "adapt",
+       "source": "main.py L65-L74"
+      },
+      {
+       "item": "precision",
+       "official": "fp32",
+       "here": "fp32",
+       "status": "keep",
+       "source": "main.py; model.py L4"
+      }
+     ],
+     "sources": {
+      "optimizer": {
+       "repo": "rtfm",
+       "file": "main.py",
+       "lines": "L40-L41",
+       "note": "optim.Adam(model.parameters(), lr=config.lr[0], weight_decay=0.005)"
+      },
+      "lr": {
+       "repo": "rtfm",
+       "file": "option.py",
+       "lines": "L11",
+       "note": "--lr default '[0.001]*15000' (config.py L6 eval)"
+      },
+      "weight_decay": {
+       "repo": "rtfm",
+       "file": "main.py",
+       "lines": "L41",
+       "note": ""
+      },
+      "schedule": {
+       "repo": "rtfm",
+       "file": "main.py",
+       "lines": "L53-L55",
+       "note": "per-step lr list, constant 0.001 (option.py L11)"
+      },
+      "iterations": {
+       "repo": "rtfm",
+       "file": "option.py",
+       "lines": "L19",
+       "note": "--max-epoch 15000; one optimizer step per 'epoch' (main.py L48-L63)"
+      },
+      "batch": {
+       "repo": "rtfm",
+       "file": "option.py",
+       "lines": "L12",
+       "note": "--batch-size 32 per class loader (main.py L20-L25); normal batch first (train.py L86-L89)"
+      },
+      "sampler": {
+       "repo": "rtfm",
+       "file": "main.py",
+       "lines": "L20-L25, L57-L61",
+       "note": "shuffle=True, drop_last=True, num_workers=0; each loader re-created at (step - 1) % len == 0"
+      },
+      "loss_weights": {
+       "repo": "rtfm",
+       "file": "train.py",
+       "lines": "L77, L102-L105",
+       "note": "RTFM_loss(alpha=0.0001, margin=100), sparsity 8e-3, smooth 8e-4; the BCE term has weight 1 (no constant)"
+      },
+      "unit": {
+       "repo": "rtfm",
+       "file": "dataset.py",
+       "lines": "L70",
+       "note": "process_feat(feature, 32); model.py L177 num_segments = 32"
+      },
+      "test_sequence": {
+       "repo": "rtfm",
+       "file": "test_10crop.py",
+       "lines": "L11-L19",
+       "note": "each test video whole (loader batch 1), snippet scores"
+      },
+      "scale_constants": {
+       "repo": "rtfm",
+       "file": "train.py",
+       "lines": "L71, L102",
+       "note": "margin 100"
+      }
+     },
+     "notes": "RTFM official defaults (option.py) for both datasets: the repository has no XD-Violence configuration. Official unit 32, so there is no X.32 arm. The margin is the only scale constant (D4 x{1/10, 1, 10}); alpha, smooth and sparsity weights are loss weights. See the module docstring for the adaptations. Paper vs code (the code at cf938f4c is followed): the paper (arXiv 2101.10030 Sec. 4.2) states Adam weight decay 0.0005, lr 0.001 (ShanghaiTech, UCF-Crime) and 0.0001 (XD-Violence), batch 64 for 50 epochs; the code uses weight decay 0.005, lr 0.001 for every dataset and 15000 steps; the paper's XD lr is x1/10 of the code value (closest D4 value: the widened x1/9, base grid x1/3). The code's magnitude loss (|m - ||f_a||| + ||f_n||)^2 differs from the paper's hinge (Eq. 6), and the code drops out the top-k selection mask. Loss parts mag_abnormal / mag_normal: batch means of the top-k feature magnitudes (diagnostics, not in the cost)."
+    }
+   },
+   "per_dataset_configuration": false,
+   "module": "src/wvad/baselines/rtfm.py",
+   "module_sha256": "546f3f83f9e9d9677c70682cfe345fa0cbb6e63b49a0b9216bb267a786037934",
+   "licences": {
+    "rtfm": {
+     "url": "https://github.com/tianyu0207/RTFM",
+     "role": "main family",
+     "commit": "cf938f4c38c908ba19936ecfc60d54de7da0d8b9",
+     "commit_date": "2025-10-28",
+     "licence_file": null,
+     "licence_sha256": null,
+     "licence_type": "none detected (no LICENSE file in the repository)",
+     "port": "re-implementation; official code used only outside the repository for equivalence checks"
+    }
+   }
+  },
+  "urdmu": {
+   "recipe": {
+    "method": "urdmu",
+    "official_unit": 200,
+    "units": {
+     "32": {
+      "variant": "d16m",
+      "test_sequence": "whole"
+     },
+     "200": {
+      "variant": "d16m200",
+      "test_sequence": "whole"
+     }
+    },
+    "optimizer": {
+     "kind": "adam",
+     "lr": 0.0001,
+     "weight_decay": 5e-05,
+     "betas": [
+      0.9,
+      0.999
+     ],
+     "eps": null,
+     "momentum": null
+    },
+    "schedule": {
+     "kind": "constant",
+     "unit": "step",
+     "milestones": [],
+     "gamma": 1.0
+    },
+    "iterations": 3000,
+    "iteration_unit": "step",
+    "sampler": "window_mean",
+    "sampler_params": {
+     "batch_normal": 64,
+     "batch_abnormal": 64,
+     "reset": "per_pool",
+     "order": "normal_first",
+     "eager": false
+    },
+    "loss_weights": {
+     "att_loss": 1.0,
+     "A_loss": 0.1,
+     "N_Aatt": 0.1,
+     "N_loss": 0.1,
+     "A_Nloss": 0.1,
+     "triplet": 0.1,
+     "kl_loss": 0.001,
+     "distance": 0.0001
+    },
+    "scale_constants": {
+     "distance_margin": 100.0
+    },
+    "precision": "fp32",
+    "input_table": [
+     {
+      "item": "features",
+      "official": "I3D 1024-d, UCF 10-crop / XD 5-crop, every crop a separate training item; the test averages the crops",
+      "here": "frozen VLM dense snippets, single crop, 1792 / 1920-d; one item per video, no crop mean",
+      "status": "adapt",
+      "source": "ucf_main.py L28; list/UCF_Train.list; ucf_test.py L37-L40; xd_test.py L32"
+     },
+     {
+      "item": "clip_normalisation",
+      "official": "none (I3D features as extracted)",
+      "here": "none",
+      "status": "keep",
+      "source": "dataset_loader.py L46, L113"
+     },
+     {
+      "item": "sampler_and_length",
+      "official": "200 window means (UCF np.linspace int, XD random_perturb uint16: the same boundaries), paired loaders 64 + 64, per-pool re-creation, normal first",
+      "here": "d16m200 (derive_n kind m) through the window_mean sampler; X.32: E021 d16m",
+      "status": "keep",
+      "source": "ucf_main.py L32-L41, L67-L72; dataset_loader.py L53-L60, L115-L124; utils.py L42-L44; train.py L58-L61"
+     },
+     {
+      "item": "scale_match",
+      "official": "none",
+      "here": "training-part scale match of the window means (and the same map on validation / test snippets)",
+      "status": "adapt",
+      "source": ""
+     },
+     {
+      "item": "input_normalisation",
+      "official": "none",
+      "here": "input LayerNorm for XCB+SigLIP only (C rule, diagnostic P7)",
+      "status": "adapt",
+      "source": ""
+     },
+     {
+      "item": "scale_constants",
+      "official": "distance hinge margin 100 on the norms of the memory-augmented latent features",
+      "here": "official 100, D4 check x{1/10, 1, 10}",
+      "status": "adapt",
+      "source": "model.py L97"
+     },
+     {
+      "item": "text_branch",
+      "official": "none",
+      "here": "none",
+      "status": "keep",
+      "source": ""
+     },
+     {
+      "item": "top_k",
+      "official": "k = t // 16 + 1 (13 at T = 200) for the video score, the memory and the triplet selections; memory read k = nums // 16 + 1 = 4",
+      "here": "official formula at the training length (X.32: 3)",
+      "status": "keep",
+      "source": "train.py L29-L35; model.py L72-L79; memory.py L24"
+     },
+     {
+      "item": "checkpoint_selection",
+      "official": "test-set AUC (UCF) / AP (XD) every 10 steps after step 10",
+      "here": "validation V-AUC at 30 evaluation points (sigma W readout)",
+      "status": "adapt",
+      "source": "ucf_main.py L73-L84; xd_main.py L72-L83"
+     },
+     {
+      "item": "precision",
+      "official": "fp32",
+      "here": "fp32",
+      "status": "keep",
+      "source": "ucf_main.py (no autocast)"
+     }
+    ],
+    "sources": {
+     "optimizer": {
+      "repo": "urdmu",
+      "file": "ucf_main.py",
+      "lines": "L54-L55",
+      "note": "xd_main.py L53-L54; Adam, betas (0.9, 0.999)"
+     },
+     "lr": {
+      "repo": "urdmu",
+      "file": "options.py",
+      "lines": "L13",
+      "note": "default '[0.0001]*3000'; config.py L6 eval"
+     },
+     "weight_decay": {
+      "repo": "urdmu",
+      "file": "ucf_main.py",
+      "lines": "L55",
+      "note": "weight_decay = 0.00005; xd_main.py L54"
+     },
+     "schedule": {
+      "repo": "urdmu",
+      "file": "ucf_main.py",
+      "lines": "L64-L66",
+      "note": "the lr of step s is config.lr[s - 1], constant for the default list; xd_main.py L63-L65"
+     },
+     "iterations": {
+      "repo": "urdmu",
+      "file": "config.py",
+      "lines": "L7",
+      "note": "num_iters = len(lr) = 3000"
+     },
+     "batch": {
+      "repo": "urdmu",
+      "file": "ucf_main.py",
+      "lines": "L32-L41",
+      "note": "batch_size 64 per class, drop_last; train.py L58-L61 torch.cat((normal, abnormal)); xd_main.py L31-L40"
+     },
+     "sampler": {
+      "repo": "urdmu",
+      "file": "ucf_main.py",
+      "lines": "L67-L72",
+      "note": "each loader re-created at (step - 1) % len == 0; UCF windows dataset_loader.py L53-L60; XD windows dataset_loader.py L115-L124 + utils.py L42-L44"
+     },
+     "loss_weights": {
+      "repo": "urdmu",
+      "file": "train.py",
+      "lines": "L41",
+      "note": "cost = anomaly + 0.1 (A + panomaly + N + A_N) + 0.1 triplet + 0.001 kl + 0.0001 distance; triplet margin 1 at model.py L37"
+     },
+     "unit": {
+      "repo": "urdmu",
+      "file": "ucf_main.py",
+      "lines": "L33, L38",
+      "note": "num_segments = 200; xd_main.py L32, L37"
+     },
+     "test_sequence": {
+      "repo": "urdmu",
+      "file": "ucf_test.py",
+      "lines": "L35-L47",
+      "note": "the whole video (Test mode keeps every snippet, dataset_loader.py L52, L115); xd_test.py L30-L38"
+     },
+     "scale_constants": {
+      "repo": "urdmu",
+      "file": "model.py",
+      "lines": "L97",
+      "note": "relu(100 - ||negative|| + ||anchor||)"
+     }
+    },
+    "notes": "UR-DMU copied with attribution (MIT); adaptations in the module docstring. The UCF and XD official scripts share the model, AD_Loss, optimizer, schedule, batch and unit; they differ in the window code (same boundaries), the test crops and the test metric."
+   },
+   "datasets": {
+    "ucf": {
+     "method": "urdmu",
+     "official_unit": 200,
+     "units": {
+      "32": {
+       "variant": "d16m",
+       "test_sequence": "whole"
+      },
+      "200": {
+       "variant": "d16m200",
+       "test_sequence": "whole"
+      }
+     },
+     "optimizer": {
+      "kind": "adam",
+      "lr": 0.0001,
+      "weight_decay": 5e-05,
+      "betas": [
+       0.9,
+       0.999
+      ],
+      "eps": null,
+      "momentum": null
+     },
+     "schedule": {
+      "kind": "constant",
+      "unit": "step",
+      "milestones": [],
+      "gamma": 1.0
+     },
+     "iterations": 3000,
+     "iteration_unit": "step",
+     "sampler": "window_mean",
+     "sampler_params": {
+      "batch_normal": 64,
+      "batch_abnormal": 64,
+      "reset": "per_pool",
+      "order": "normal_first",
+      "eager": false
+     },
+     "loss_weights": {
+      "att_loss": 1.0,
+      "A_loss": 0.1,
+      "N_Aatt": 0.1,
+      "N_loss": 0.1,
+      "A_Nloss": 0.1,
+      "triplet": 0.1,
+      "kl_loss": 0.001,
+      "distance": 0.0001
+     },
+     "scale_constants": {
+      "distance_margin": 100.0
+     },
+     "precision": "fp32",
+     "input_table": [
+      {
+       "item": "features",
+       "official": "I3D 1024-d, UCF 10-crop / XD 5-crop, every crop a separate training item; the test averages the crops",
+       "here": "frozen VLM dense snippets, single crop, 1792 / 1920-d; one item per video, no crop mean",
+       "status": "adapt",
+       "source": "ucf_main.py L28; list/UCF_Train.list; ucf_test.py L37-L40; xd_test.py L32"
+      },
+      {
+       "item": "clip_normalisation",
+       "official": "none (I3D features as extracted)",
+       "here": "none",
+       "status": "keep",
+       "source": "dataset_loader.py L46, L113"
+      },
+      {
+       "item": "sampler_and_length",
+       "official": "200 window means (UCF np.linspace int, XD random_perturb uint16: the same boundaries), paired loaders 64 + 64, per-pool re-creation, normal first",
+       "here": "d16m200 (derive_n kind m) through the window_mean sampler; X.32: E021 d16m",
+       "status": "keep",
+       "source": "ucf_main.py L32-L41, L67-L72; dataset_loader.py L53-L60, L115-L124; utils.py L42-L44; train.py L58-L61"
+      },
+      {
+       "item": "scale_match",
+       "official": "none",
+       "here": "training-part scale match of the window means (and the same map on validation / test snippets)",
+       "status": "adapt",
+       "source": ""
+      },
+      {
+       "item": "input_normalisation",
+       "official": "none",
+       "here": "input LayerNorm for XCB+SigLIP only (C rule, diagnostic P7)",
+       "status": "adapt",
+       "source": ""
+      },
+      {
+       "item": "scale_constants",
+       "official": "distance hinge margin 100 on the norms of the memory-augmented latent features",
+       "here": "official 100, D4 check x{1/10, 1, 10}",
+       "status": "adapt",
+       "source": "model.py L97"
+      },
+      {
+       "item": "text_branch",
+       "official": "none",
+       "here": "none",
+       "status": "keep",
+       "source": ""
+      },
+      {
+       "item": "top_k",
+       "official": "k = t // 16 + 1 (13 at T = 200) for the video score, the memory and the triplet selections; memory read k = nums // 16 + 1 = 4",
+       "here": "official formula at the training length (X.32: 3)",
+       "status": "keep",
+       "source": "train.py L29-L35; model.py L72-L79; memory.py L24"
+      },
+      {
+       "item": "checkpoint_selection",
+       "official": "test-set AUC (UCF) / AP (XD) every 10 steps after step 10",
+       "here": "validation V-AUC at 30 evaluation points (sigma W readout)",
+       "status": "adapt",
+       "source": "ucf_main.py L73-L84; xd_main.py L72-L83"
+      },
+      {
+       "item": "precision",
+       "official": "fp32",
+       "here": "fp32",
+       "status": "keep",
+       "source": "ucf_main.py (no autocast)"
+      }
+     ],
+     "sources": {
+      "optimizer": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L54-L55",
+       "note": "xd_main.py L53-L54; Adam, betas (0.9, 0.999)"
+      },
+      "lr": {
+       "repo": "urdmu",
+       "file": "options.py",
+       "lines": "L13",
+       "note": "default '[0.0001]*3000'; config.py L6 eval"
+      },
+      "weight_decay": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L55",
+       "note": "weight_decay = 0.00005; xd_main.py L54"
+      },
+      "schedule": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L64-L66",
+       "note": "the lr of step s is config.lr[s - 1], constant for the default list; xd_main.py L63-L65"
+      },
+      "iterations": {
+       "repo": "urdmu",
+       "file": "config.py",
+       "lines": "L7",
+       "note": "num_iters = len(lr) = 3000"
+      },
+      "batch": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L32-L41",
+       "note": "batch_size 64 per class, drop_last; train.py L58-L61 torch.cat((normal, abnormal)); xd_main.py L31-L40"
+      },
+      "sampler": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L67-L72",
+       "note": "each loader re-created at (step - 1) % len == 0; UCF windows dataset_loader.py L53-L60; XD windows dataset_loader.py L115-L124 + utils.py L42-L44"
+      },
+      "loss_weights": {
+       "repo": "urdmu",
+       "file": "train.py",
+       "lines": "L41",
+       "note": "cost = anomaly + 0.1 (A + panomaly + N + A_N) + 0.1 triplet + 0.001 kl + 0.0001 distance; triplet margin 1 at model.py L37"
+      },
+      "unit": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L33, L38",
+       "note": "num_segments = 200; xd_main.py L32, L37"
+      },
+      "test_sequence": {
+       "repo": "urdmu",
+       "file": "ucf_test.py",
+       "lines": "L35-L47",
+       "note": "the whole video (Test mode keeps every snippet, dataset_loader.py L52, L115); xd_test.py L30-L38"
+      },
+      "scale_constants": {
+       "repo": "urdmu",
+       "file": "model.py",
+       "lines": "L97",
+       "note": "relu(100 - ||negative|| + ||anchor||)"
+      }
+     },
+     "notes": "UR-DMU copied with attribution (MIT); adaptations in the module docstring. The UCF and XD official scripts share the model, AD_Loss, optimizer, schedule, batch and unit; they differ in the window code (same boundaries), the test crops and the test metric."
+    },
+    "xdv": {
+     "method": "urdmu",
+     "official_unit": 200,
+     "units": {
+      "32": {
+       "variant": "d16m",
+       "test_sequence": "whole"
+      },
+      "200": {
+       "variant": "d16m200",
+       "test_sequence": "whole"
+      }
+     },
+     "optimizer": {
+      "kind": "adam",
+      "lr": 0.0001,
+      "weight_decay": 5e-05,
+      "betas": [
+       0.9,
+       0.999
+      ],
+      "eps": null,
+      "momentum": null
+     },
+     "schedule": {
+      "kind": "constant",
+      "unit": "step",
+      "milestones": [],
+      "gamma": 1.0
+     },
+     "iterations": 3000,
+     "iteration_unit": "step",
+     "sampler": "window_mean",
+     "sampler_params": {
+      "batch_normal": 64,
+      "batch_abnormal": 64,
+      "reset": "per_pool",
+      "order": "normal_first",
+      "eager": false
+     },
+     "loss_weights": {
+      "att_loss": 1.0,
+      "A_loss": 0.1,
+      "N_Aatt": 0.1,
+      "N_loss": 0.1,
+      "A_Nloss": 0.1,
+      "triplet": 0.1,
+      "kl_loss": 0.001,
+      "distance": 0.0001
+     },
+     "scale_constants": {
+      "distance_margin": 100.0
+     },
+     "precision": "fp32",
+     "input_table": [
+      {
+       "item": "features",
+       "official": "I3D 1024-d, UCF 10-crop / XD 5-crop, every crop a separate training item; the test averages the crops",
+       "here": "frozen VLM dense snippets, single crop, 1792 / 1920-d; one item per video, no crop mean",
+       "status": "adapt",
+       "source": "ucf_main.py L28; list/UCF_Train.list; ucf_test.py L37-L40; xd_test.py L32"
+      },
+      {
+       "item": "clip_normalisation",
+       "official": "none (I3D features as extracted)",
+       "here": "none",
+       "status": "keep",
+       "source": "dataset_loader.py L46, L113"
+      },
+      {
+       "item": "sampler_and_length",
+       "official": "200 window means (UCF np.linspace int, XD random_perturb uint16: the same boundaries), paired loaders 64 + 64, per-pool re-creation, normal first",
+       "here": "d16m200 (derive_n kind m) through the window_mean sampler; X.32: E021 d16m",
+       "status": "keep",
+       "source": "ucf_main.py L32-L41, L67-L72; dataset_loader.py L53-L60, L115-L124; utils.py L42-L44; train.py L58-L61"
+      },
+      {
+       "item": "scale_match",
+       "official": "none",
+       "here": "training-part scale match of the window means (and the same map on validation / test snippets)",
+       "status": "adapt",
+       "source": ""
+      },
+      {
+       "item": "input_normalisation",
+       "official": "none",
+       "here": "input LayerNorm for XCB+SigLIP only (C rule, diagnostic P7)",
+       "status": "adapt",
+       "source": ""
+      },
+      {
+       "item": "scale_constants",
+       "official": "distance hinge margin 100 on the norms of the memory-augmented latent features",
+       "here": "official 100, D4 check x{1/10, 1, 10}",
+       "status": "adapt",
+       "source": "model.py L97"
+      },
+      {
+       "item": "text_branch",
+       "official": "none",
+       "here": "none",
+       "status": "keep",
+       "source": ""
+      },
+      {
+       "item": "top_k",
+       "official": "k = t // 16 + 1 (13 at T = 200) for the video score, the memory and the triplet selections; memory read k = nums // 16 + 1 = 4",
+       "here": "official formula at the training length (X.32: 3)",
+       "status": "keep",
+       "source": "train.py L29-L35; model.py L72-L79; memory.py L24"
+      },
+      {
+       "item": "checkpoint_selection",
+       "official": "test-set AUC (UCF) / AP (XD) every 10 steps after step 10",
+       "here": "validation V-AUC at 30 evaluation points (sigma W readout)",
+       "status": "adapt",
+       "source": "ucf_main.py L73-L84; xd_main.py L72-L83"
+      },
+      {
+       "item": "precision",
+       "official": "fp32",
+       "here": "fp32",
+       "status": "keep",
+       "source": "ucf_main.py (no autocast)"
+      }
+     ],
+     "sources": {
+      "optimizer": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L54-L55",
+       "note": "xd_main.py L53-L54; Adam, betas (0.9, 0.999)"
+      },
+      "lr": {
+       "repo": "urdmu",
+       "file": "options.py",
+       "lines": "L13",
+       "note": "default '[0.0001]*3000'; config.py L6 eval"
+      },
+      "weight_decay": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L55",
+       "note": "weight_decay = 0.00005; xd_main.py L54"
+      },
+      "schedule": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L64-L66",
+       "note": "the lr of step s is config.lr[s - 1], constant for the default list; xd_main.py L63-L65"
+      },
+      "iterations": {
+       "repo": "urdmu",
+       "file": "config.py",
+       "lines": "L7",
+       "note": "num_iters = len(lr) = 3000"
+      },
+      "batch": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L32-L41",
+       "note": "batch_size 64 per class, drop_last; train.py L58-L61 torch.cat((normal, abnormal)); xd_main.py L31-L40"
+      },
+      "sampler": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L67-L72",
+       "note": "each loader re-created at (step - 1) % len == 0; UCF windows dataset_loader.py L53-L60; XD windows dataset_loader.py L115-L124 + utils.py L42-L44"
+      },
+      "loss_weights": {
+       "repo": "urdmu",
+       "file": "train.py",
+       "lines": "L41",
+       "note": "cost = anomaly + 0.1 (A + panomaly + N + A_N) + 0.1 triplet + 0.001 kl + 0.0001 distance; triplet margin 1 at model.py L37"
+      },
+      "unit": {
+       "repo": "urdmu",
+       "file": "ucf_main.py",
+       "lines": "L33, L38",
+       "note": "num_segments = 200; xd_main.py L32, L37"
+      },
+      "test_sequence": {
+       "repo": "urdmu",
+       "file": "ucf_test.py",
+       "lines": "L35-L47",
+       "note": "the whole video (Test mode keeps every snippet, dataset_loader.py L52, L115); xd_test.py L30-L38"
+      },
+      "scale_constants": {
+       "repo": "urdmu",
+       "file": "model.py",
+       "lines": "L97",
+       "note": "relu(100 - ||negative|| + ||anchor||)"
+      }
+     },
+     "notes": "UR-DMU copied with attribution (MIT); adaptations in the module docstring. The UCF and XD official scripts share the model, AD_Loss, optimizer, schedule, batch and unit; they differ in the window code (same boundaries), the test crops and the test metric."
+    }
+   },
+   "per_dataset_configuration": false,
+   "module": "src/wvad/baselines/urdmu.py",
+   "module_sha256": "af61c644a766648b7fb0e70f638979bb4093ba82d1964ecc9553b1116776deae",
+   "licences": {
+    "urdmu": {
+     "url": "https://github.com/henrryzh1/UR-DMU",
+     "role": "main family",
+     "commit": "40cfdf5f8bebbc3b59373935f9d6ca00e2f32bbc",
+     "commit_date": "2025-01-06",
+     "licence_file": "LICENSE",
+     "licence_sha256": "c658ad8c9781a8e1c7dd0e149a0ecf886ca888e7322cf302d1ce8a0c6aceab99",
+     "licence_type": "MIT",
+     "port": "copy with attribution (permissive licence)"
+    }
+   }
+  },
+  "vadclip_v": {
+   "recipe": {
+    "method": "vadclip_v",
+    "official_unit": 256,
+    "units": {
+     "32": {
+      "variant": "d16m",
+      "test_sequence": "chunk:32"
+     },
+     "256": {
+      "variant": "d16p256",
+      "test_sequence": "chunk:256"
+     }
+    },
+    "optimizer": {
+     "kind": "adamw",
+     "lr": 2e-05,
+     "weight_decay": 0.01,
+     "betas": [
+      0.9,
+      0.999
+     ],
+     "eps": 1e-08,
+     "momentum": null
+    },
+    "schedule": {
+     "kind": "multistep",
+     "unit": "epoch",
+     "milestones": [
+      4,
+      8
+     ],
+     "gamma": 0.1
+    },
+    "iterations": 10,
+    "iteration_unit": "epoch",
+    "sampler": "window_mean",
+    "sampler_params": {
+     "batch_normal": 64,
+     "batch_abnormal": 64,
+     "reset": "per_epoch",
+     "order": "normal_first",
+     "crops": 10
+    },
+    "loss_weights": {
+     "clas2": 1.0
+    },
+    "scale_constants": {},
+    "precision": "fp32",
+    "input_table": [
+     {
+      "item": "features",
+      "official": "CLIP ViT-B/16 frame features (512-d), 10 crops per video, each crop a separate training item (list/*_CLIP_rgb.csv)",
+      "here": "frozen VLM dense snippets, single crop, D = 1792 (XCB+XCL) / 1920 (XCB+SigLIP); visual_width = D",
+      "status": "adapt",
+      "source": "src/utils/dataset.py L7-L54, src/ucf_option.py L8"
+     },
+     {
+      "item": "clip_normalisation",
+      "official": "none (raw CLIP features)",
+      "here": "none",
+      "status": "keep",
+      "source": "src/utils/dataset.py L24-L33, L45-L54"
+     },
+     {
+      "item": "sampler_and_length",
+      "official": "UCF: two shuffled drop_last loaders (64 normal + 64 anomalous rows) re-created every epoch, min(len) steps; XD: one shuffled loader of 96 rows; each list holds 10 crop rows per video, so an epoch passes over every video 10 times; process_feat to 256 (uniform_extract window mean when longer, zero padding + length otherwise)",
+      "here": "the same loaders (samplers window_mean per_epoch / vadclip_v_xd) over every training video repeated 10 times in a row (crops 10: the official steps per epoch and milestones; each row carries the single-crop input), on the derived d16p256 cache (derive_n kind p = process_feat without random extract)",
+      "status": "keep",
+      "source": "src/ucf_train.py L62-L71, L136-L139, src/utils/tools.py L60-L73, L82-L90, list/ucf_CLIP_rgb.csv"
+     },
+     {
+      "item": "scale_match",
+      "official": "none",
+      "here": "the d16p256 rows scale-matched on the training part (derive_n); the same map is the fixed input layer at validation and test",
+      "status": "adapt",
+      "source": "-"
+     },
+     {
+      "item": "input_normalisation",
+      "official": "none",
+      "here": "XCB+SigLIP only: nn.LayerNorm(D) on the valid rows first (padding stays zero); XCB+XCL: none",
+      "status": "adapt",
+      "source": "-"
+     },
+     {
+      "item": "scale_constants",
+      "official": "no feature-norm constant (adj4 cosine threshold 0.7, top-k divisor 16, DistanceAdj exp(-|i-j|/e) are norm-free)",
+      "here": "the same",
+      "status": "keep",
+      "source": "src/model.py L137-L159, src/utils/layers.py L165-L179, src/ucf_train.py L27-L39"
+     },
+     {
+      "item": "text_branch",
+      "official": "A branch: CLIP text encoder with learnable prompts, mlp1 visual-prompt fusion, logits2 with CLASM (loss2) and loss3",
+      "here": "removed (C branch only: LGT-Adapter + classifier, CLAS2); CLAS2 (sigmoid, then BCE on the probabilities) has an absorbing saturated state: once the fp32 sigmoid of the top-k logits rounds to 1 for a normal video (0 for an anomalous one) the loss is clamped at 100 and its gradient is exactly zero; in official VadCLIP the loss2 gradient (CLASM on logits2) and the per-epoch reload of the best checkpoint counter it, VCV has neither, which explains the seed collapses (excluded by the plan's collapse rule, PLAN.md \ubd95\uad34 \uc81c\uc678); the loss is not changed",
+      "status": "adapt",
+      "source": "src/model.py L185-L223, src/ucf_train.py L15-L25, L78-L93"
+     },
+     {
+      "item": "top_k",
+      "official": "CLAS2: mean of the top int(len / 16 + 1) sigmoid scores of the valid rows, BCE",
+      "here": "the same at the training length",
+      "status": "keep",
+      "source": "src/ucf_train.py L27-L39"
+     },
+     {
+      "item": "checkpoint_selection",
+      "official": "the test list during training (UCF AUC every 10 iterations, XD AP every epoch) and the best test checkpoint reloaded at every epoch end (each epoch restarts from the best test point so far)",
+      "here": "validation V-AUC after training; no reload, so training continues from the current weights at every epoch end (a different training trajectory; the reload needs the test set; without it a chain in CLAS2's saturated state stays there, see text_branch); evaluation isolated from the global generator (the official test() iterators advance it)",
+      "status": "adapt",
+      "source": "src/ucf_train.py L98-L120"
+     },
+     {
+      "item": "precision",
+      "official": "fp32",
+      "here": "fp32",
+      "status": "keep",
+      "source": "src/model.py L162"
+     }
+    ],
+    "sources": {
+     "optimizer": {
+      "repo": "vcv",
+      "file": "src/ucf_train.py",
+      "lines": "L47",
+      "note": "torch.optim.AdamW(model.parameters(), lr=args.lr): betas, eps and weight decay are the torch defaults"
+     },
+     "lr": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L27",
+      "note": "the official value at visual_width 512, not adjusted for the port's width D (1792 / 1920)"
+     },
+     "weight_decay": {
+      "repo": "vcv",
+      "file": "src/ucf_train.py",
+      "lines": "L47",
+      "note": "torch.optim.AdamW default 0.01"
+     },
+     "schedule": {
+      "repo": "vcv",
+      "file": "src/ucf_train.py",
+      "lines": "L48, L113",
+      "note": "MultiStepLR([4, 8], 0.1) stepped per epoch; src/ucf_option.py L28-L29"
+     },
+     "iterations": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L16",
+      "note": "max-epoch 10; an epoch is one pass over the 10-crop list (crops)"
+     },
+     "crops": {
+      "repo": "vcv",
+      "file": "list/ucf_CLIP_rgb.csv",
+      "lines": "L2-L16101",
+      "note": "10 rows per video (<video>__0.npy ... __9.npy), each a separate item"
+     },
+     "batch": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L20",
+      "note": "UCF: batch-size per class loader, normal first (ucf_train.py L73)"
+     },
+     "sampler": {
+      "repo": "vcv",
+      "file": "src/ucf_train.py",
+      "lines": "L62-L71, L137-L139",
+      "note": "per-epoch paired loaders"
+     },
+     "loss_weights": {
+      "repo": "vcv",
+      "file": "src/ucf_train.py",
+      "lines": "L80-L93",
+      "note": "loss = loss1 + loss2 + loss3; loss2 and loss3 belong to the removed text branch"
+     },
+     "unit": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L7",
+      "note": "visual-length 256; src/utils/tools.py L82-L90 process_feat"
+     },
+     "test_sequence": {
+      "repo": "vcv",
+      "file": "src/ucf_test.py",
+      "lines": "L23-L51",
+      "note": "process_split (src/utils/tools.py L92-L106) pieces of visual_length, last one padded, the length loop"
+     },
+     "visual_layers": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L10",
+      "note": ""
+     },
+     "attn_window": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L11",
+      "note": ""
+     },
+     "visual_head": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L9",
+      "note": ""
+     },
+     "visual_width": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L8",
+      "note": "512 (CLIP); adapted to D"
+     },
+     "embed_dim": {
+      "repo": "vcv",
+      "file": "src/ucf_option.py",
+      "lines": "L6",
+      "note": "the text branch's width (removed)"
+     },
+     "model": {
+      "repo": "vcv",
+      "file": "src/model.py",
+      "lines": "L60-L223",
+      "note": ""
+     }
+    },
+    "notes": "VadCLIP visual branch, ucf configuration: visual_layers 2, attn_window 8, visual_head 1, visual_length = unit (256; 32 for VCV.32), visual_width = D, embed_dim 512 (removed text branch). Schedule in official optimizer steps: 10 epochs, an epoch = one pass over the training videos repeated crops = 10 times (the official 10-crop list rows), MultiStepLR [4, 8] x0.1 on those epoch boundaries. Text branch, CLASM loss2 and loss3 removed. The official per-epoch test evaluation and the reload of the best test checkpoint at every epoch end are removed: the official trajectory restarts each epoch from the best test point so far, here training continues from the current weights (selection on validation after training). CLAS2 (sigmoid, then BCE on the probabilities) has an absorbing saturated state: once the fp32 sigmoid of the top-k logits rounds to 1 for a normal video (0 for an anomalous one) the loss is clamped at 100 and its gradient is exactly zero; in official VadCLIP the loss2 gradient (CLASM on logits2) and the per-epoch reload of the best checkpoint counter it, VCV has neither, which explains the seed collapses (excluded by the plan's collapse rule, PLAN.md \ubd95\uad34 \uc81c\uc678); the loss is not changed. The lr is the official value at visual_width 512, not adjusted for the port's width D (1792 / 1920). See the module docstring 'Adaptations:'."
+   },
+   "datasets": {
+    "ucf": {
+     "method": "vadclip_v",
+     "official_unit": 256,
+     "units": {
+      "32": {
+       "variant": "d16m",
+       "test_sequence": "chunk:32"
+      },
+      "256": {
+       "variant": "d16p256",
+       "test_sequence": "chunk:256"
+      }
+     },
+     "optimizer": {
+      "kind": "adamw",
+      "lr": 2e-05,
+      "weight_decay": 0.01,
+      "betas": [
+       0.9,
+       0.999
+      ],
+      "eps": 1e-08,
+      "momentum": null
+     },
+     "schedule": {
+      "kind": "multistep",
+      "unit": "epoch",
+      "milestones": [
+       4,
+       8
+      ],
+      "gamma": 0.1
+     },
+     "iterations": 10,
+     "iteration_unit": "epoch",
+     "sampler": "window_mean",
+     "sampler_params": {
+      "batch_normal": 64,
+      "batch_abnormal": 64,
+      "reset": "per_epoch",
+      "order": "normal_first",
+      "crops": 10
+     },
+     "loss_weights": {
+      "clas2": 1.0
+     },
+     "scale_constants": {},
+     "precision": "fp32",
+     "input_table": [
+      {
+       "item": "features",
+       "official": "CLIP ViT-B/16 frame features (512-d), 10 crops per video, each crop a separate training item (list/*_CLIP_rgb.csv)",
+       "here": "frozen VLM dense snippets, single crop, D = 1792 (XCB+XCL) / 1920 (XCB+SigLIP); visual_width = D",
+       "status": "adapt",
+       "source": "src/utils/dataset.py L7-L54, src/ucf_option.py L8"
+      },
+      {
+       "item": "clip_normalisation",
+       "official": "none (raw CLIP features)",
+       "here": "none",
+       "status": "keep",
+       "source": "src/utils/dataset.py L24-L33, L45-L54"
+      },
+      {
+       "item": "sampler_and_length",
+       "official": "UCF: two shuffled drop_last loaders (64 normal + 64 anomalous rows) re-created every epoch, min(len) steps; XD: one shuffled loader of 96 rows; each list holds 10 crop rows per video, so an epoch passes over every video 10 times; process_feat to 256 (uniform_extract window mean when longer, zero padding + length otherwise)",
+       "here": "the same loaders (samplers window_mean per_epoch / vadclip_v_xd) over every training video repeated 10 times in a row (crops 10: the official steps per epoch and milestones; each row carries the single-crop input), on the derived d16p256 cache (derive_n kind p = process_feat without random extract)",
+       "status": "keep",
+       "source": "src/ucf_train.py L62-L71, L136-L139, src/utils/tools.py L60-L73, L82-L90, list/ucf_CLIP_rgb.csv"
+      },
+      {
+       "item": "scale_match",
+       "official": "none",
+       "here": "the d16p256 rows scale-matched on the training part (derive_n); the same map is the fixed input layer at validation and test",
+       "status": "adapt",
+       "source": "-"
+      },
+      {
+       "item": "input_normalisation",
+       "official": "none",
+       "here": "XCB+SigLIP only: nn.LayerNorm(D) on the valid rows first (padding stays zero); XCB+XCL: none",
+       "status": "adapt",
+       "source": "-"
+      },
+      {
+       "item": "scale_constants",
+       "official": "no feature-norm constant (adj4 cosine threshold 0.7, top-k divisor 16, DistanceAdj exp(-|i-j|/e) are norm-free)",
+       "here": "the same",
+       "status": "keep",
+       "source": "src/model.py L137-L159, src/utils/layers.py L165-L179, src/ucf_train.py L27-L39"
+      },
+      {
+       "item": "text_branch",
+       "official": "A branch: CLIP text encoder with learnable prompts, mlp1 visual-prompt fusion, logits2 with CLASM (loss2) and loss3",
+       "here": "removed (C branch only: LGT-Adapter + classifier, CLAS2); CLAS2 (sigmoid, then BCE on the probabilities) has an absorbing saturated state: once the fp32 sigmoid of the top-k logits rounds to 1 for a normal video (0 for an anomalous one) the loss is clamped at 100 and its gradient is exactly zero; in official VadCLIP the loss2 gradient (CLASM on logits2) and the per-epoch reload of the best checkpoint counter it, VCV has neither, which explains the seed collapses (excluded by the plan's collapse rule, PLAN.md \ubd95\uad34 \uc81c\uc678); the loss is not changed",
+       "status": "adapt",
+       "source": "src/model.py L185-L223, src/ucf_train.py L15-L25, L78-L93"
+      },
+      {
+       "item": "top_k",
+       "official": "CLAS2: mean of the top int(len / 16 + 1) sigmoid scores of the valid rows, BCE",
+       "here": "the same at the training length",
+       "status": "keep",
+       "source": "src/ucf_train.py L27-L39"
+      },
+      {
+       "item": "checkpoint_selection",
+       "official": "the test list during training (UCF AUC every 10 iterations, XD AP every epoch) and the best test checkpoint reloaded at every epoch end (each epoch restarts from the best test point so far)",
+       "here": "validation V-AUC after training; no reload, so training continues from the current weights at every epoch end (a different training trajectory; the reload needs the test set; without it a chain in CLAS2's saturated state stays there, see text_branch); evaluation isolated from the global generator (the official test() iterators advance it)",
+       "status": "adapt",
+       "source": "src/ucf_train.py L98-L120"
+      },
+      {
+       "item": "precision",
+       "official": "fp32",
+       "here": "fp32",
+       "status": "keep",
+       "source": "src/model.py L162"
+      }
+     ],
+     "sources": {
+      "optimizer": {
+       "repo": "vcv",
+       "file": "src/ucf_train.py",
+       "lines": "L47",
+       "note": "torch.optim.AdamW(model.parameters(), lr=args.lr): betas, eps and weight decay are the torch defaults"
+      },
+      "lr": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L27",
+       "note": "the official value at visual_width 512, not adjusted for the port's width D (1792 / 1920)"
+      },
+      "weight_decay": {
+       "repo": "vcv",
+       "file": "src/ucf_train.py",
+       "lines": "L47",
+       "note": "torch.optim.AdamW default 0.01"
+      },
+      "schedule": {
+       "repo": "vcv",
+       "file": "src/ucf_train.py",
+       "lines": "L48, L113",
+       "note": "MultiStepLR([4, 8], 0.1) stepped per epoch; src/ucf_option.py L28-L29"
+      },
+      "iterations": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L16",
+       "note": "max-epoch 10; an epoch is one pass over the 10-crop list (crops)"
+      },
+      "crops": {
+       "repo": "vcv",
+       "file": "list/ucf_CLIP_rgb.csv",
+       "lines": "L2-L16101",
+       "note": "10 rows per video (<video>__0.npy ... __9.npy), each a separate item"
+      },
+      "batch": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L20",
+       "note": "UCF: batch-size per class loader, normal first (ucf_train.py L73)"
+      },
+      "sampler": {
+       "repo": "vcv",
+       "file": "src/ucf_train.py",
+       "lines": "L62-L71, L137-L139",
+       "note": "per-epoch paired loaders"
+      },
+      "loss_weights": {
+       "repo": "vcv",
+       "file": "src/ucf_train.py",
+       "lines": "L80-L93",
+       "note": "loss = loss1 + loss2 + loss3; loss2 and loss3 belong to the removed text branch"
+      },
+      "unit": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L7",
+       "note": "visual-length 256; src/utils/tools.py L82-L90 process_feat"
+      },
+      "test_sequence": {
+       "repo": "vcv",
+       "file": "src/ucf_test.py",
+       "lines": "L23-L51",
+       "note": "process_split (src/utils/tools.py L92-L106) pieces of visual_length, last one padded, the length loop"
+      },
+      "visual_layers": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L10",
+       "note": ""
+      },
+      "attn_window": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L11",
+       "note": ""
+      },
+      "visual_head": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L9",
+       "note": ""
+      },
+      "visual_width": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L8",
+       "note": "512 (CLIP); adapted to D"
+      },
+      "embed_dim": {
+       "repo": "vcv",
+       "file": "src/ucf_option.py",
+       "lines": "L6",
+       "note": "the text branch's width (removed)"
+      },
+      "model": {
+       "repo": "vcv",
+       "file": "src/model.py",
+       "lines": "L60-L223",
+       "note": ""
+      }
+     },
+     "notes": "VadCLIP visual branch, ucf configuration: visual_layers 2, attn_window 8, visual_head 1, visual_length = unit (256; 32 for VCV.32), visual_width = D, embed_dim 512 (removed text branch). Schedule in official optimizer steps: 10 epochs, an epoch = one pass over the training videos repeated crops = 10 times (the official 10-crop list rows), MultiStepLR [4, 8] x0.1 on those epoch boundaries. Text branch, CLASM loss2 and loss3 removed. The official per-epoch test evaluation and the reload of the best test checkpoint at every epoch end are removed: the official trajectory restarts each epoch from the best test point so far, here training continues from the current weights (selection on validation after training). CLAS2 (sigmoid, then BCE on the probabilities) has an absorbing saturated state: once the fp32 sigmoid of the top-k logits rounds to 1 for a normal video (0 for an anomalous one) the loss is clamped at 100 and its gradient is exactly zero; in official VadCLIP the loss2 gradient (CLASM on logits2) and the per-epoch reload of the best checkpoint counter it, VCV has neither, which explains the seed collapses (excluded by the plan's collapse rule, PLAN.md \ubd95\uad34 \uc81c\uc678); the loss is not changed. The lr is the official value at visual_width 512, not adjusted for the port's width D (1792 / 1920). See the module docstring 'Adaptations:'."
+    },
+    "xdv": {
+     "method": "vadclip_v",
+     "official_unit": 256,
+     "units": {
+      "32": {
+       "variant": "d16m",
+       "test_sequence": "chunk:32"
+      },
+      "256": {
+       "variant": "d16p256",
+       "test_sequence": "chunk:256"
+      }
+     },
+     "optimizer": {
+      "kind": "adamw",
+      "lr": 1e-05,
+      "weight_decay": 0.01,
+      "betas": [
+       0.9,
+       0.999
+      ],
+      "eps": 1e-08,
+      "momentum": null
+     },
+     "schedule": {
+      "kind": "multistep",
+      "unit": "epoch",
+      "milestones": [
+       3,
+       6,
+       10
+      ],
+      "gamma": 0.1
+     },
+     "iterations": 10,
+     "iteration_unit": "epoch",
+     "sampler": "vadclip_v_xd",
+     "sampler_params": {
+      "batch": 96,
+      "crops": 10
+     },
+     "loss_weights": {
+      "clas2": 1.0
+     },
+     "scale_constants": {},
+     "precision": "fp32",
+     "input_table": [
+      {
+       "item": "features",
+       "official": "CLIP ViT-B/16 frame features (512-d), 10 crops per video, each crop a separate training item (list/*_CLIP_rgb.csv)",
+       "here": "frozen VLM dense snippets, single crop, D = 1792 (XCB+XCL) / 1920 (XCB+SigLIP); visual_width = D",
+       "status": "adapt",
+       "source": "src/utils/dataset.py L7-L54, src/ucf_option.py L8"
+      },
+      {
+       "item": "clip_normalisation",
+       "official": "none (raw CLIP features)",
+       "here": "none",
+       "status": "keep",
+       "source": "src/utils/dataset.py L24-L33, L45-L54"
+      },
+      {
+       "item": "sampler_and_length",
+       "official": "UCF: two shuffled drop_last loaders (64 normal + 64 anomalous rows) re-created every epoch, min(len) steps; XD: one shuffled loader of 96 rows; each list holds 10 crop rows per video, so an epoch passes over every video 10 times; process_feat to 256 (uniform_extract window mean when longer, zero padding + length otherwise)",
+       "here": "the same loaders (samplers window_mean per_epoch / vadclip_v_xd) over every training video repeated 10 times in a row (crops 10: the official steps per epoch and milestones; each row carries the single-crop input), on the derived d16p256 cache (derive_n kind p = process_feat without random extract)",
+       "status": "keep",
+       "source": "src/xd_train.py L63-L67, L130-L131, src/utils/tools.py L60-L73, L82-L90, list/xd_CLIP_rgb.csv"
+      },
+      {
+       "item": "scale_match",
+       "official": "none",
+       "here": "the d16p256 rows scale-matched on the training part (derive_n); the same map is the fixed input layer at validation and test",
+       "status": "adapt",
+       "source": "-"
+      },
+      {
+       "item": "input_normalisation",
+       "official": "none",
+       "here": "XCB+SigLIP only: nn.LayerNorm(D) on the valid rows first (padding stays zero); XCB+XCL: none",
+       "status": "adapt",
+       "source": "-"
+      },
+      {
+       "item": "scale_constants",
+       "official": "no feature-norm constant (adj4 cosine threshold 0.7, top-k divisor 16, DistanceAdj exp(-|i-j|/e) are norm-free)",
+       "here": "the same",
+       "status": "keep",
+       "source": "src/model.py L137-L159, src/utils/layers.py L165-L179, src/xd_train.py L27-L39"
+      },
+      {
+       "item": "text_branch",
+       "official": "A branch: CLIP text encoder with learnable prompts, mlp1 visual-prompt fusion, logits2 with CLASM (loss2) and loss3",
+       "here": "removed (C branch only: LGT-Adapter + classifier, CLAS2); CLAS2 (sigmoid, then BCE on the probabilities) has an absorbing saturated state: once the fp32 sigmoid of the top-k logits rounds to 1 for a normal video (0 for an anomalous one) the loss is clamped at 100 and its gradient is exactly zero; in official VadCLIP the loss2 gradient (CLASM on logits2) and the per-epoch reload of the best checkpoint counter it, VCV has neither, which explains the seed collapses (excluded by the plan's collapse rule, PLAN.md \ubd95\uad34 \uc81c\uc678); the loss is not changed",
+       "status": "adapt",
+       "source": "src/model.py L185-L223, src/xd_train.py L15-L25, L74-L89"
+      },
+      {
+       "item": "top_k",
+       "official": "CLAS2: mean of the top int(len / 16 + 1) sigmoid scores of the valid rows, BCE",
+       "here": "the same at the training length",
+       "status": "keep",
+       "source": "src/xd_train.py L27-L39"
+      },
+      {
+       "item": "checkpoint_selection",
+       "official": "the test list during training (UCF AUC every 10 iterations, XD AP every epoch) and the best test checkpoint reloaded at every epoch end (each epoch restarts from the best test point so far)",
+       "here": "validation V-AUC after training; no reload, so training continues from the current weights at every epoch end (a different training trajectory; the reload needs the test set; without it a chain in CLAS2's saturated state stays there, see text_branch); evaluation isolated from the global generator (the official test() iterators advance it)",
+       "status": "adapt",
+       "source": "src/xd_train.py L98-L114"
+      },
+      {
+       "item": "precision",
+       "official": "fp32",
+       "here": "fp32",
+       "status": "keep",
+       "source": "src/model.py L162"
+      }
+     ],
+     "sources": {
+      "optimizer": {
+       "repo": "vcv",
+       "file": "src/xd_train.py",
+       "lines": "L48",
+       "note": "torch.optim.AdamW(model.parameters(), lr=args.lr): betas, eps and weight decay are the torch defaults"
+      },
+      "lr": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L27",
+       "note": "the official value at visual_width 512, not adjusted for the port's width D (1792 / 1920)"
+      },
+      "weight_decay": {
+       "repo": "vcv",
+       "file": "src/xd_train.py",
+       "lines": "L48",
+       "note": "torch.optim.AdamW default 0.01"
+      },
+      "schedule": {
+       "repo": "vcv",
+       "file": "src/xd_train.py",
+       "lines": "L49, L98",
+       "note": "MultiStepLR([3, 6, 10], 0.1) stepped per epoch; src/xd_option.py L28-L29"
+      },
+      "iterations": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L16",
+       "note": "max-epoch 10; an epoch is one pass over the 10-crop list (crops)"
+      },
+      "crops": {
+       "repo": "vcv",
+       "file": "list/xd_CLIP_rgb.csv",
+       "lines": "L2-L39541",
+       "note": "10 rows per video (<video>__0.npy ... __9.npy), each a separate item"
+      },
+      "batch": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L20",
+       "note": "XD: one mixed loader (xd_train.py L131)"
+      },
+      "sampler": {
+       "repo": "vcv",
+       "file": "src/xd_train.py",
+       "lines": "L63-L67, L131",
+       "note": "per-epoch single loader, shuffle=True, drop_last=False"
+      },
+      "loss_weights": {
+       "repo": "vcv",
+       "file": "src/xd_train.py",
+       "lines": "L76-L89",
+       "note": "loss = loss1 + loss2 + loss3; loss2 and loss3 belong to the removed text branch"
+      },
+      "unit": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L7",
+       "note": "visual-length 256; src/utils/tools.py L82-L90 process_feat"
+      },
+      "test_sequence": {
+       "repo": "vcv",
+       "file": "src/xd_test.py",
+       "lines": "L23-L51",
+       "note": "process_split (src/utils/tools.py L92-L106) pieces of visual_length, last one padded, the length loop"
+      },
+      "visual_layers": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L10",
+       "note": ""
+      },
+      "attn_window": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L11",
+       "note": ""
+      },
+      "visual_head": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L9",
+       "note": ""
+      },
+      "visual_width": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L8",
+       "note": "512 (CLIP); adapted to D"
+      },
+      "embed_dim": {
+       "repo": "vcv",
+       "file": "src/xd_option.py",
+       "lines": "L6",
+       "note": "the text branch's width (removed)"
+      },
+      "model": {
+       "repo": "vcv",
+       "file": "src/model.py",
+       "lines": "L60-L223",
+       "note": ""
+      }
+     },
+     "notes": "VadCLIP visual branch, xdv configuration: visual_layers 1, attn_window 64, visual_head 1, visual_length = unit (256; 32 for VCV.32), visual_width = D, embed_dim 512 (removed text branch). Schedule in official optimizer steps: 10 epochs, an epoch = one pass over the training videos repeated crops = 10 times (the official 10-crop list rows), MultiStepLR [3, 6, 10] x0.1 on those epoch boundaries. Text branch, CLASM loss2 and loss3 removed. The official per-epoch test evaluation and the reload of the best test checkpoint at every epoch end are removed: the official trajectory restarts each epoch from the best test point so far, here training continues from the current weights (selection on validation after training). CLAS2 (sigmoid, then BCE on the probabilities) has an absorbing saturated state: once the fp32 sigmoid of the top-k logits rounds to 1 for a normal video (0 for an anomalous one) the loss is clamped at 100 and its gradient is exactly zero; in official VadCLIP the loss2 gradient (CLASM on logits2) and the per-epoch reload of the best checkpoint counter it, VCV has neither, which explains the seed collapses (excluded by the plan's collapse rule, PLAN.md \ubd95\uad34 \uc81c\uc678); the loss is not changed. The lr is the official value at visual_width 512, not adjusted for the port's width D (1792 / 1920). See the module docstring 'Adaptations:'."
+    }
+   },
+   "per_dataset_configuration": true,
+   "module": "src/wvad/baselines/vadclip_v.py",
+   "module_sha256": "a6db716e75f83d37abe3dc3087f7f5ca6ffe6af9e9d419bed45dbfdd6f083d8d",
+   "licences": {
+    "vcv": {
+     "url": "https://github.com/nwpu-zxr/VadCLIP",
+     "role": "main family (visual branch only)",
+     "commit": "c41067f07d252efcda18008bea367886070c33b0",
+     "commit_date": "2024-03-10",
+     "licence_file": "LICENSE",
+     "licence_sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6",
+     "licence_type": "Apache-2.0",
+     "port": "copy with attribution (permissive licence)"
+    }
+   }
+  }
+ },
+ "d4": {
+  "lr_mults": [
+   "1/3",
+   "1",
+   "3"
+  ],
+  "widen": {
+   "1/3": "1/9",
+   "3": "9"
+  },
+  "scale_mults": [
+   "1/10",
+   "1",
+   "10"
+  ],
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "eval_points": 30,
+  "top": 5,
+  "readout": "sigma",
+  "official": "1",
+  "min_surviving": 1,
+  "seed_mode": "single",
+  "seeds_used": "the first development seed of the list that did not collapse (PLAN.md \ub2e8\uc77c seed \uc2e4\ud589\uacfc \ud310\uc815)",
+  "score": "per seed the mean of the 5 highest of the 30 evaluation points' sigma W-readout validation V-AUCs, then the mean over the seeds",
+  "choice": "strict > on the score; a float64 tie with the official value keeps it; other ties: closer to the official value (|log m|), then the smaller multiplier",
+  "widening": "lr only, once, in the direction of a winning end value; scale constants are not widened",
+  "eligibility": "a value takes part in the choice only with at least 1 development seeds that did not collapse (selected sigma V-AUC >= 0.60, PLAN.md \ubd95\uad34 \uc81c\uc678) or fail numerically (a non-finite V-AUC); none eligible: the official value (recorded)"
+ },
+ "units": [
+  32,
+  200,
+  256
+ ]
+}

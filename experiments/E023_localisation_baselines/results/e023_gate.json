@@ -1,0 +1,233 @@
+{
+ "status": {
+  "prefreeze_q2": true,
+  "prefreeze_q3": true,
+  "prefreeze_q5": true,
+  "prefreeze_q6": true,
+  "prefreeze_q7": true,
+  "prefreeze_q1d": true
+ },
+ "code": {
+  "commit": "343bfcd143dd9afe2eef42de502f57445662cbdf",
+  "source": "git",
+  "dirty": true
+ },
+ "prefreeze": {
+  "q2": {
+   "methods": {
+    "mil": {
+     "present": true,
+     "complete": true,
+     "copied": false,
+     "permissive": false,
+     "ok": true
+    },
+    "rtfm": {
+     "present": true,
+     "complete": true,
+     "copied": false,
+     "permissive": false,
+     "ok": true
+    },
+    "urdmu": {
+     "present": true,
+     "complete": true,
+     "copied": true,
+     "permissive": true,
+     "ok": true
+    },
+    "vadclip_v": {
+     "present": true,
+     "complete": true,
+     "copied": true,
+     "permissive": true,
+     "ok": true
+    },
+    "mgfn": {
+     "present": true,
+     "complete": true,
+     "copied": false,
+     "permissive": false,
+     "ok": true
+    },
+    "clip_tsa": {
+     "present": true,
+     "complete": true,
+     "copied": false,
+     "permissive": false,
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "q3": {
+   "methods": {
+    "mil": {
+     "recipe_equal": true,
+     "datasets": {
+      "ucf": true,
+      "xdv": true
+     },
+     "defaults": {
+      "lr_mult": "1",
+      "scale_mult": "1"
+     },
+     "defaults_ok": true,
+     "ok": true
+    },
+    "rtfm": {
+     "recipe_equal": true,
+     "datasets": {
+      "ucf": true,
+      "xdv": true
+     },
+     "defaults": {
+      "lr_mult": "1",
+      "scale_mult": "1"
+     },
+     "defaults_ok": true,
+     "ok": true
+    },
+    "urdmu": {
+     "recipe_equal": true,
+     "datasets": {
+      "ucf": true,
+      "xdv": true
+     },
+     "defaults": {
+      "lr_mult": "1",
+      "scale_mult": "1"
+     },
+     "defaults_ok": true,
+     "ok": true
+    },
+    "vadclip_v": {
+     "recipe_equal": true,
+     "datasets": {
+      "ucf": true,
+      "xdv": true
+     },
+     "defaults": {
+      "lr_mult": "1",
+      "scale_mult": "1"
+     },
+     "defaults_ok": true,
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "q5": {
+   "chains": {
+    "mil": {
+     "losses_equal": true,
+     "last_weights_equal": true,
+     "ok": true
+    },
+    "rtfm": {
+     "losses_equal": true,
+     "last_weights_equal": true,
+     "ok": true
+    },
+    "urdmu": {
+     "losses_equal": true,
+     "last_weights_equal": true,
+     "ok": true
+    },
+    "vadclip_v": {
+     "losses_equal": true,
+     "last_weights_equal": true,
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "q6": {
+   "n_chunk": 4096,
+   "datasets": {
+    "ucf": {
+     "targets": 2,
+     "recorded": 2,
+     "ok": true,
+     "pieces": {
+      "videos": 290,
+      "cut_videos": 2,
+      "max_snippets": 6750,
+      "short": {
+       "rtfm_lt3": {
+        "snippets_below": 3,
+        "cut_last_pieces": 0,
+        "whole_videos": 0
+       },
+       "urdmu_lt16": {
+        "snippets_below": 16,
+        "cut_last_pieces": 0,
+        "whole_videos": 3
+       }
+      }
+     }
+    },
+    "xdv": {
+     "targets": 0,
+     "recorded": 0,
+     "ok": true,
+     "pieces": {
+      "videos": 800,
+      "cut_videos": 0,
+      "max_snippets": 2075,
+      "short": {
+       "rtfm_lt3": {
+        "snippets_below": 3,
+        "cut_last_pieces": 0,
+        "whole_videos": 0
+       },
+       "urdmu_lt16": {
+        "snippets_below": 16,
+        "cut_last_pieces": 0,
+        "whole_videos": 3
+       }
+      }
+     }
+    }
+   },
+   "same_function": {
+    "train": true,
+    "e023_score": true
+   },
+   "ok": true
+  },
+  "q7": {
+   "methods": {
+    "mil": {
+     "present": true,
+     "jev": 0.89,
+     "ok": true
+    },
+    "rtfm": {
+     "present": true,
+     "jev": 0.89,
+     "ok": true
+    },
+    "urdmu": {
+     "present": true,
+     "jev": 0.89,
+     "ok": true
+    },
+    "vadclip_v": {
+     "present": true,
+     "jev": 0.89,
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "q1d": {
+   "recorded": true,
+   "complete": true,
+   "missing_methods": [],
+   "flagged": [],
+   "ok": true
+  },
+  "ok": true
+ }
+}
