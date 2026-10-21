@@ -107,7 +107,7 @@ import torch
 
 from wvad.baselines import common as bc
 from wvad.baselines import train as bt
-from wvad.baselines.recipes import D4Grid, d4_pick, d4_score, d4_widen
+from wvad.baselines.recipes import D4Grid, behaviour, d4_pick, d4_score, d4_widen
 from wvad.data import dense_test as dt
 from wvad.data import load_split, split_file
 from wvad.data.catalog import ENCODER_PAIRS, dense_dir
@@ -171,7 +171,7 @@ def chain_method(resolver: Resolver, name: str, cfg: Mapping) -> bc.BaselineMeth
     (common.dataset_method), checked against the chain's recorded recipe (config.json)."""
     method = bc.dataset_method(resolver(name), str(cfg["dataset"]))
     rec = cfg.get("recipe")
-    if rec is not None and dict(rec) != method.recipe.to_json():
+    if rec is not None and behaviour(dict(rec)) != behaviour(method.recipe.to_json()):
         raise SystemExit(f"{name} on {cfg['dataset']}: the chain's recorded recipe is not the "
                          "dataset configuration's (another configuration was trained)")
     return method
@@ -444,11 +444,13 @@ def q1d_chain_ok(cfg: Mapping, resolver: Resolver, method: str, unit: int, datas
                  seed: int) -> bool:
     """Whether a development chain's config.json is the official-recipe chain its path names:
     the method, unit, dataset and seed, XCB+XCL, lr x1, scale x1, no iterations override and the
-    dataset's official recipe (gate (a)'s comparison for these keys)."""
+    dataset's official recipe without its documentation fields (recipes.DOC_KEYS; gate (a)'s
+    comparison for these keys)."""
     want = {"method": method, "unit": unit, "dataset": dataset, "pair": gt.Q1D_PAIR,
             "seed": seed, "lr_mult": "1", "scale_mult": "1", "iterations": None}
     recipe = bc.dataset_method(resolver(method), dataset).recipe.to_json()
-    return all(cfg.get(k) == v for k, v in want.items()) and cfg.get("recipe") == recipe
+    return (all(cfg.get(k) == v for k, v in want.items())
+            and behaviour(cfg.get("recipe")) == behaviour(recipe))
 
 
 def q1d_values(runs: Path, family: Sequence[str], resolver: Resolver = bc.get_method

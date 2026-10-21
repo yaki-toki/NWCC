@@ -42,7 +42,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from wvad.baselines.recipes import dataset_recipe
+from wvad.baselines.recipes import behaviour, dataset_recipe
 from wvad.data import dense_test as dt
 from wvad.diagnostics import e022_gates as g22
 from wvad.diagnostics import e023_access as ea
@@ -471,7 +471,7 @@ def gate_a(configs: Mapping[str, Mapping], arms: Mapping[str, Arm], devlr: Mappi
         if (cfg.get("deterministic_mode") or {}).get("deterministic") is not True:
             bad.append("deterministic_mode")
         rec = dataset_recipe((recipes.get("methods") or {}).get(arm.method) or {}, d)
-        if rec is None or cfg.get("recipe") != rec:
+        if rec is None or behaviour(cfg.get("recipe")) != behaviour(rec):
             bad.append("recipe")
         rows[label] = {"different": bad, "ok": not bad}
     for members in groups.values():

@@ -220,6 +220,18 @@ class Recipe:
                 "notes": self.notes}
 
 
+# Documentation fields of Recipe.to_json(): text that a review may correct without changing what
+# a chain trains (PLAN.md 기록 2026-10-21, Jev 1.00). Recorded recipes are compared without them.
+DOC_KEYS = ("input_table", "sources", "notes")
+
+
+def behaviour(recipe: Mapping[str, Any] | None) -> dict | None:
+    """A recorded recipe (Recipe.to_json()) without its documentation fields (DOC_KEYS)."""
+    if recipe is None:
+        return None
+    return {k: v for k, v in recipe.items() if k not in DOC_KEYS}
+
+
 def _jsonable(value):
     if isinstance(value, Mapping):
         return {str(k): _jsonable(v) for k, v in value.items()}
