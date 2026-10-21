@@ -49,15 +49,9 @@ __pycache__/
 .venv/
 venv/
 
-# LaTeX build products
-paper/**/*.aux
-paper/**/*.bbl
-paper/**/*.blg
-paper/**/*.out
-paper/**/*.synctex.gz
-paper/**/*.fdb_latexmk
-paper/**/*.fls
-paper/main.pdf
+# Manuscript: kept local until submission (user 2026-10-21); only paper/README.md is tracked
+/paper/*
+!/paper/README.md
 
 # Editors / OS / local agent state
 .vscode/
