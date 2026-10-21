@@ -1342,6 +1342,14 @@ ssh <server> 'rm -f ~/wvad_runs/e023/*/*/ckpt_eval_*.pt'       # D14 checkpoints
 ```
 Then `REPORT.md` (whatever the result; the third read, the post-hoc choice of the problem and every raised flag are reported).
 
+## Paper
+The manuscript is in [`paper/`](paper/README.md). Figures and number macros are generated, never edited by hand:
+```bash
+python -m wvad.paper.figures                 # paper/figs/*.pdf (+ .png previews); --only metric,method
+python -m wvad.paper.numbers                 # paper/generated/numbers.tex from experiments/*/results
+cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main
+```
+
 ## Local checks (not tracked)
 ```bash
 pytest            # unit tests in tests/
