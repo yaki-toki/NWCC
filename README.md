@@ -1388,6 +1388,7 @@ python -m wvad.diagnostics.e024_stage0 gate-b --a $RUNS/ucf_xcb_xcl_s0/urdmu_u20
 python -m wvad.diagnostics.e024_stage0 gate-h --runs $RUNS --e023_runs ~/wvad_runs/e023 --out $RUNS/gate_h.json
 # local: the runs without checkpoints (tar -h: e024 is a link), the analysis
 ssh <server> 'tar -chf - --exclude="*.pt" -C ~/wvad_runs e024/stage0' | tar -xf - -C <local runs root>
+export PYTHONUTF8=1      # Windows: the freeze check reads the Korean seal line through `git show`
 python -m wvad.diagnostics.e024_stage0 analyze --e021_scores <local runs root>/e021_scores \
     --runs <local runs root>/e024/stage0      # + --infra_failed <ds>_<pair>_s<seed> for a chain missing after its rerun
 git add $E/e024_stage0a.json $E/e024_stage0a_runs.csv && git commit
