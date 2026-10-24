@@ -19,10 +19,14 @@
   "n": true,
   "collapse": true,
   "v3": true,
-  "k": true
+  "k": true,
+  "records": true,
+  "h": true,
+  "h2": true,
+  "d1": true
  },
  "code": {
-  "commit": "2b9634c68ba313cbbdc79f6d6c8ad0b0ed8306cb",
+  "commit": "4dc116194c7c16c9d615aae668f77c06c8b51a51",
   "source": "git",
   "dirty": true
  },
@@ -3361,6 +3365,124 @@
   "loaded": 600,
   "blocked_loaded": 0,
   "files": [],
+  "ok": true
+ },
+ "records": {
+  "gate_committed": true,
+  "v3_k_passed": true,
+  "scores_list_committed": true,
+  "scores_list_equal": true,
+  "selection_committed": true,
+  "collapse_record": true,
+  "e022_lists_committed": true,
+  "q1d_recorded": true,
+  "ok": true
+ },
+ "h": {
+  "files": 80,
+  "mismatched": [],
+  "list_sha256": "822a33bb46732278bb7055bc09001a543c1678bc24ef471ddcf0a01239b273f0",
+  "ok": true
+ },
+ "h2": {
+  "rows": {
+   "ucf/xcb_xcl/C/L": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "ucf/xcb_xcl/C/frame_auc": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "ucf/xcb_xcl/C.last/L": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "ucf/xcb_xcl/C.last/frame_auc": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "ucf/xcb_siglip/C/L": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "ucf/xcb_siglip/C/frame_auc": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "ucf/xcb_siglip/C.last/L": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "ucf/xcb_siglip/C.last/frame_auc": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "xdv/xcb_xcl/C/L": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "xdv/xcb_xcl/C/frame_ap": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "xdv/xcb_xcl/C.last/L": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "xdv/xcb_xcl/C.last/frame_ap": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "xdv/xcb_siglip/C/L": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "xdv/xcb_siglip/C/frame_ap": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "xdv/xcb_siglip/C.last/L": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   },
+   "xdv/xcb_siglip/C.last/frame_ap": {
+    "n": 10,
+    "max_abs_diff": 0.0,
+    "ok": true
+   }
+  },
+  "max_abs_diff": 0.0,
+  "tol": 1e-09,
+  "ok": true
+ },
+ "d1": {
+  "runs": 92,
+  "max_abs_residual": 1.1102230246251565e-16,
+  "failed": [],
+  "tol": 1e-12,
+  "auc_vs_evaluator": {
+   "runs": 46,
+   "max_abs_diff": 1.1102230246251565e-16,
+   "failed": [],
+   "tol": 1e-12,
+   "checked": true
+  },
   "ok": true
  }
 }
