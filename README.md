@@ -1356,6 +1356,44 @@ ssh <server> 'rm -f ~/wvad_runs/e023/*/*/ckpt_eval_*.pt'       # D14 checkpoints
 ```
 Then `REPORT.md` (whatever the result; the third read, the post-hoc choice of the problem and every raised flag are reported).
 
+### Stage F — E024 new method cycle, stage 0a ([plan](experiments/E024_localisation_method/PLAN.md), [stage 0](experiments/E024_localisation_method/stage0/PLAN.md))
+Validation only; no test file is read (`wvad.diagnostics.e024_stage0` refuses test paths). Stage 0a asks whether the UR-DMU − C localisation gap of E023 is visible on validation: U (UR-DMU, official default lr and scale, unit 200, `--deterministic`, development seeds 0-2, 12 new chains) against C32-L20 (the E021 `hb_l20` score files, E022 C's W-readout selection). The primary metric is the glance-point GP of the validation anomalous videos (user decision D3), the UCA-proxy within-video AUC (UCF) secondary; seeds are averaged and the videos resampled (R 2000); a collapsed or numerically failed run is left out with its reason; a missing run stops the analysis unless it is named with `--infra_failed` after its one rerun. Before the freeze, `pins` records the inputs' sha256 and counts once (no metric; the C32 files checked against E021's `stage2/scores.sha256`), committed with the plan and the module after the unit tests pass (gate (t); the JUnit file stays outside the repository); `freeze` writes `stage0/PLAN.sha256`, committed alone. The server deploys the freeze commit (the E023 deployment steps). `analyze` needs a clean tree, the freeze commit and the pins as committed before it.
+```bash
+E=experiments/E024_localisation_method/results      # both machines
+export RUNS=~/wvad_runs/e024/stage0                  # server; xargs children read it
+export CUBLAS_WORKSPACE_CONFIG=:4096:8               # --deterministic
+# local, before the freeze
+pytest tests --junitxml=<local runs root>/e024_local/e024s0_pytest.xml          # gate (t)
+python -m wvad.diagnostics.e024_stage0 pins --e021_scores <local runs root>/e021_scores      # once
+git add $E/e024_stage0a_inputs.json experiments/E024_localisation_method/stage0/PLAN.md \
+    src/wvad/diagnostics/e024_stage0.py README.md data/README.md && git commit
+python -m wvad.diagnostics.e024_stage0 freeze
+git add experiments/E024_localisation_method/stage0/PLAN.sha256 && git commit       # the freeze commit
+# server (deploy the freeze commit first): the runs folder in /data2, the 12 U chains
+mkdir -p /data2/jhkim/wvad_runs/e024 && ln -sfn /data2/jhkim/wvad_runs/e024 ~/wvad_runs/e024
+mkdir -p $RUNS
+for ds in ucf xdv; do for pair in xcb_xcl xcb_siglip; do for seed in 0 1 2; do
+  echo $ds $pair $seed; done; done; done > $RUNS/jobs_u.txt
+setsid nohup xargs -P 4 -L 1 bash -c 'd=$RUNS/${0}_${1}_s${2}/urdmu_u200; mkdir -p $(dirname $d)
+  python -m wvad.baselines.train --method urdmu --unit 200 --dataset $0 --pair $1 --seed $2 \
+      --lr_mult 1 --scale_mult 1 --n_chunk 4096 --deterministic --out_dir $d > $d.log 2>&1
+' < $RUNS/jobs_u.txt > $RUNS/queue_u.log 2>&1 &
+pgrep -fc "wvad[.]baselines[.]train"                 # 0 before the gates
+ls $RUNS/*/urdmu_u200/selection.json | wc -l          # 12
+# gate (b): one repeat; gate (h): inputs = E023's urdmu_u200 records
+d=$RUNS/repeat/ucf_xcb_xcl_s0/urdmu_u200; mkdir -p $(dirname $d)
+python -m wvad.baselines.train --method urdmu --unit 200 --dataset ucf --pair xcb_xcl --seed 0 \
+    --lr_mult 1 --scale_mult 1 --n_chunk 4096 --deterministic --out_dir $d > $d.log 2>&1
+python -m wvad.diagnostics.e024_stage0 gate-b --a $RUNS/ucf_xcb_xcl_s0/urdmu_u200 --b $d --out $RUNS/gate_b.json
+python -m wvad.diagnostics.e024_stage0 gate-h --runs $RUNS --e023_runs ~/wvad_runs/e023 --out $RUNS/gate_h.json
+# local: the runs without checkpoints (tar -h: e024 is a link), the analysis
+ssh <server> 'tar -chf - --exclude="*.pt" -C ~/wvad_runs e024/stage0' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e024_stage0 analyze --e021_scores <local runs root>/e021_scores \
+    --runs <local runs root>/e024/stage0      # + --infra_failed <ds>_<pair>_s<seed> for a chain missing after its rerun
+git add $E/e024_stage0a.json $E/e024_stage0a_runs.csv && git commit
+```
+Stage 0b (the diagnostic arms) runs only on a dataset where Δ_gap32 is positive, under its own frozen plan.
+
 ## Paper
 The manuscript, its figure and number generators and their commands are kept local until submission ([`paper/README.md`](paper/README.md)).
 

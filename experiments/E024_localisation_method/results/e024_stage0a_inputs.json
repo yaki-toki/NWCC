@@ -1,0 +1,58 @@
+{
+ "stage": "E024 stage 0a inputs (stage0/PLAN.md 0a, gate (p))",
+ "c32_files": {
+  "ucf_xcb_xcl_s0/hb_l20.npz": "07aeb9ef828be918d4a2419476da4f0ee12efffc6001192a9d7144b06b02d942",
+  "ucf_xcb_xcl_s1/hb_l20.npz": "1bb047e217517eb71fa8baa9704baf07c9ec4359cb0ac2b091af675dbc8f9ea4",
+  "ucf_xcb_xcl_s2/hb_l20.npz": "83492ca61f5e84cd8d9fe4d910f780bc0336d7edb0576eb4bbd2a255f2a98f26",
+  "ucf_xcb_siglip_s0/hb_l20.npz": "bcc120e0505fa9e6a90113c79bf614d704224a0beca77eecb0a082d1d31d56af",
+  "ucf_xcb_siglip_s1/hb_l20.npz": "53d8c69730b19eb3ea84ebe63a36dbcee532848447270fc0052d5ff1d8f3efd9",
+  "ucf_xcb_siglip_s2/hb_l20.npz": "32499895ac9f53090e5ce683562bd457a66491b28c29acb097bbd9830959e828",
+  "xdv_xcb_xcl_s0/hb_l20.npz": "13c9412f94c199a652db623a36370fac6766be8c16ffcbae8673a7af2187e534",
+  "xdv_xcb_xcl_s1/hb_l20.npz": "40b6161e6a77825e11f7bcd66230dfe982ff8e6a34b073d08126d39139f019c5",
+  "xdv_xcb_xcl_s2/hb_l20.npz": "bdd3bcae3de7cafc69021d1b40c97b09c387491165510908b9e25840c3050396",
+  "xdv_xcb_siglip_s0/hb_l20.npz": "ea929d0f50a13a0ffda7224460e4b7480a33a3a3c75bfb1f2758738471ae6b3a",
+  "xdv_xcb_siglip_s1/hb_l20.npz": "c33d78e8b78796fc6edeea71325ef5c5633aae6f07464730875800082cb68790",
+  "xdv_xcb_siglip_s2/hb_l20.npz": "e3fde2d11bdb46a5308dc3b41ebed249ecc7257b7170a42091947b999a434818"
+ },
+ "e021_list": {
+  "file": "stage2/scores.sha256",
+  "sha256": "f384730182dc210c927b7176bb249d8a432855b08f124d1340dbb7168360f062",
+  "c32_files_listed": 12
+ },
+ "splits": {
+  "ucf": "f4c7924239f2ef59463c42e7e22a5c346fbab97ce2c6780ae3a39aa1f9189b9f",
+  "xdv": "aadb33dcad97aff291c1eddfedd207195d63ea4dfa401b413067a737170da6d8"
+ },
+ "glance": {
+  "ucf": {
+   "dataset": "ucf",
+   "sha256": "c8c06b24468f6dc3fad9e699d10cf609711d3af612815eccb709e2fefb0fc6b7",
+   "n_validation": 241,
+   "n_anomalous": 121,
+   "n_normal": 120,
+   "n_points": 295,
+   "points_per_video_median": 2.0,
+   "points_per_video_max": 6,
+   "min_point": 52,
+   "min_frames_after_last_point": 45
+  },
+  "xdv": {
+   "dataset": "xdv",
+   "sha256": "46bfa2269b5dcc81f9407d8e2c958b0c13372105753753c32c3cd9656dbd2283",
+   "n_validation": 592,
+   "n_anomalous": 285,
+   "n_normal": 307,
+   "n_points": 639,
+   "points_per_video_median": 2.0,
+   "points_per_video_max": 6,
+   "min_point": 9,
+   "min_frames_after_last_point": 21
+  }
+ },
+ "uca": {
+  "file": "data/annotations/ucf_train_uca_proxy.json",
+  "sha256": "5cd90212748f2d47a93bcfeb441e008427d77d8695feaa27ed27bc3b2fb07def",
+  "variant": "M2A",
+  "videos": 73
+ }
+}
