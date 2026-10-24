@@ -54,7 +54,9 @@ the frozen wvad.train, E021's HB L20 command plus --save_epoch_ckpts), developme
         re-scored on the validation videos (gate (s)), S/val/<chain>/<run>.npz; every C.L20
         chain's 30 stage-2 epoch checkpoints on its 32-unit and dense validation inputs
         (e021_score.score_run: eval mode, fp32, autocast off, the E021 d16m map) and its
-        ckpt_last.pt on the dense validation snippets, S/val/<chain>/hb_l20.npz
+        ckpt_last.pt on the dense validation snippets, S/val/<chain>/hb_l20.npz. Val and test:
+        a comparison-method chain's forward path runs in its recorded training mode
+        (chain_numerics; on CUDA CUBLAS_WORKSPACE_CONFIG=:4096:8, else refused first)
     select --runs_root R --scores S [--family ...] [--infra_failed ..] [--out ..] [--all_ckpts ..]
         per chain the evaluation point of the highest full-validation V-AUC of the W readout
         (sigma: max fp32 sigma(u_k), logit: max u_k; no offset), strict >, earliest point on
@@ -92,6 +94,7 @@ sha256 right after writing it, the loaded checkpoints (gate (k)), the videos cut
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as dt_time
 import json
 import os
@@ -614,6 +617,37 @@ def forward_baseline(method: bc.BaselineMethod, model, xs: Sequence[torch.Tensor
             for x in xs]
 
 
+NUMERICS = ("comparison-method chains scored in their recorded training mode (config "
+            "'deterministic': common.deterministic; chain_numerics, PLAN.md 변경 기록 2026-10-24)")
+
+
+@contextlib.contextmanager
+def chain_numerics(cfg: Mapping):
+    """A comparison-method chain's forward path in its own training mode (PLAN.md 변경 기록
+    2026-10-24, gate (s)): a chain trained with --deterministic is scored after
+    common.deterministic(True) too, so its kept checkpoints give the stored logits bit for bit
+    (without it RTFM's Conv1d takes another cuDNN algorithm); the previous flags are restored."""
+    prev = (torch.are_deterministic_algorithms_enabled(),
+            torch.is_deterministic_algorithms_warn_only_enabled(),
+            torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark)
+    if bool(cfg.get("deterministic")):
+        bc.deterministic(True)
+    try:
+        yield
+    finally:
+        torch.use_deterministic_algorithms(prev[0], warn_only=prev[1])
+        torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark = prev[2], prev[3]
+
+
+def require_numerics_env(cuda: bool) -> None:
+    """chain_numerics on CUDA needs CUBLAS_WORKSPACE_CONFIG=:4096:8 (common.deterministic):
+    checked before any score file is moved, written or read."""
+    if cuda and os.environ.get("CUBLAS_WORKSPACE_CONFIG") != ":4096:8":
+        raise SystemExit("CUBLAS_WORKSPACE_CONFIG=:4096:8 is needed: the comparison-method "
+                         "chains are scored in their deterministic training mode "
+                         "(chain_numerics)")
+
+
 def forward_hb(model: SegmentHead, dense: DenseSet, n: int, device: torch.device
                ) -> list[np.ndarray]:
     """C.L20's offset-free snippet logits (the frozen score_dense; the E021 d16m map in
@@ -650,8 +684,9 @@ def rescore_chain(runs: Path, chain: str, arm: gt.Arm, inputs: Mapping, device: 
         path = Path(runs) / chain / arm.run / ck["file"]
         obj = torch.load(path, map_location="cpu", weights_only=True)
         model = build_model(method, obj["model_state_dict"], cfg, inputs["dim"], device)
-        z = forward_baseline(method, model, inputs["x"], unit=int(cfg["unit"]),
-                             n_chunk=int(cfg["n_chunk"]), device=device)
+        with chain_numerics(cfg):
+            z = forward_baseline(method, model, inputs["x"], unit=int(cfg["unit"]),
+                                 n_chunk=int(cfg["n_chunk"]), device=device)
         out |= {f"z_{rule}": np.concatenate(z).astype(np.float32),
                 f"point_{rule}": np.int64(ck["point"]),
                 f"sha256_recorded_{rule}": np.str_(ck["sha256"]),
@@ -707,6 +742,7 @@ def score_val(args: argparse.Namespace, resolver: Resolver = bc.get_method) -> N
     """--split val (no test data): every missing validation file (an infrastructure rerun keeps
     finished files; --rescore moves val/ aside)."""
     _outside(args.runs_root, args.out)
+    require_numerics_env(torch.cuda.is_available())
     paths = load_paths(args.paths)
     arms = family_arms(args.family, resolver)
     labels = chain_labels(arms)
@@ -714,7 +750,8 @@ def score_val(args: argparse.Namespace, resolver: Resolver = bc.get_method) -> N
     target = Path(args.out) / "val"
     meta = _json(target / "meta.json") if (target / "meta.json").is_file() else {"calls": []}
     call = {"time_utc": now_utc(), "code": code_version(), "environment": gpu_environment(),
-            "family": list(args.family), "infra_failed": excluded, "rescore": args.rescore}
+            "family": list(args.family), "infra_failed": excluded, "rescore": args.rescore,
+            "numerics": NUMERICS}
     if args.rescore:
         call["superseded"] = es.supersede(target, args.rescore)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -1462,8 +1499,9 @@ def score_job(job: Job, inputs: TestInputs, runs: Path, guard: ea.CheckpointGuar
         for rel, _, _, _ in job.files:
             obj = guard.load(Path(runs) / job.chain / rel)
             model = build_model(method, obj["model_state_dict"], cfg, dim, device)
-            z_lists.append(forward_baseline(method, model, xs, unit=int(cfg["unit"]),
-                                            n_chunk=n_chunk, device=device))
+            with chain_numerics(cfg):
+                z_lists.append(forward_baseline(method, model, xs, unit=int(cfg["unit"]),
+                                                n_chunk=n_chunk, device=device))
             del model
     arrays = manifest_arrays(m) | job_arrays(job, n_chunk, device)
     if job.rule == gt.EVAL_RULE:
@@ -1535,6 +1573,7 @@ def score_test(args: argparse.Namespace, resolver: Resolver = bc.get_method) -> 
         selection = _json(gt.FILES["selection"])
         book = _json(gt.FILES["all_ckpts"]) if args.all_ckpts_sha256 is not None else None
         bc.check_n_chunk(args.n_chunk)
+        require_numerics_env(device.type == "cuda")
         jobs, absent = jobs_of(selection, book)
         subset = parse_runs(args.runs, jobs) if args.runs else []
         if subset:
@@ -1557,7 +1596,7 @@ def score_test(args: argparse.Namespace, resolver: Resolver = bc.get_method) -> 
             "memory": memory, "rescore": args.rescore, "runs_subset": subset,
             "guard": guard_summary(guard_rec), "absent": absent, "n_chunk": int(args.n_chunk),
             "jobs": [j.label for j in todo], "access_log": os.path.realpath(args.test_log),
-            "out": str(target)}
+            "out": str(target), "numerics": NUMERICS}
     entry = line | {"time_utc": now_utc(), "event": "start", "mode": order["mode"],
                     "rescore": args.rescore, "runs": [j.label for j in todo], "absent": absent,
                     "inputs": sorted({str(f) for d in gt.DATASETS for p in gt.PAIRS

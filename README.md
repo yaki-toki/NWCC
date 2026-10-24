@@ -1315,10 +1315,12 @@ pgrep -fc "wvad[.](baselines[.])?train"                         # 0 before the n
 ```
 **Validation scoring, selection, training gates** (no test file is opened before this commit). The server re-scores every comparison-method chain's kept checkpoints on the validation videos (gate (s)) and scores C.L20's 30 stage-2 epoch checkpoints and `ckpt_last.pt` by E022 C's path; locally `select` writes `results/e023_selection.json` (W readout, sigma and logit, strict >, earliest point on ties; checkpoint sha256; per chain `collapsed`, selected sigma V-AUC < 0.60, and E022 C's chains under `collapse`: a collapsed chain leaves every rule of the analysis, PLAN.md "붕괴 제외"; the block `single_seed`: per chain its attempts and the chosen seed, the first of 42, 123, 777 that neither collapsed nor failed, C's from E022's chains, seed 42 everywhere; only the attempts are in the record) and `results/e023_all_ckpts.json` (D14: the 30 evaluation-point checkpoints of the main family), and `gates --stage train` checks (a), (b), (d), (f), (g), (p), (s), (w), (w2), (n) into `results/e023_gate.json` (only before the first test read). Single seed: while a chain's fallback seed is still to train, or an attempt started without a finished record (running, or crashed: rerun once, then `--infra_failed`), `select` writes nothing and names it (e.g. "`C.L20/ucf/xcb_xcl: seed 123 to train`"): train it (a comparison method by the confirmation command, C.L20 by the C.L20 command with the line `<ds> <pair> <seed>`), run `score --split val` again (it scores only the missing files) and `select` again. A chain dropped after an unfixable gate failure before access (A) is named with `select --gate_failed <chain>/<run>` (it gets no checkpoint and its next seed is trained like the other failures, then the gates run again) and with `--gate_failed` in the two later steps. Commit: the selection is fixed by this commit.
 ```bash
+export CUBLAS_WORKSPACE_CONFIG=:4096:8      # the chains' deterministic mode (PLAN.md 변경 기록 2026-10-24)
 setsid nohup python -m wvad.diagnostics.e023_score score --split val --runs_root $RUNS --out $S \
     --family $FAMILY > $S.val.log 2>&1 < /dev/null &
 # local
-ssh <server> 'tar -cf - --exclude="ckpt_*" -C ~/wvad_runs e023 e023_scores/val' | tar -xf - -C <local runs root>
+ssh <server> 'tar -chf - --exclude="ckpt_*" -C ~/wvad_runs e023 e023_scores/val' | tar -xf - -C <local runs root>
+ssh <server> 'cd ~/wvad_runs && tar -chf - e023/*_s*/hb_l20/ckpt_last.pt' | tar -xf - -C <local runs root>   # gate (a): C.L20's config
 python -m wvad.diagnostics.e023_score select --runs_root <local runs root>/e023 --scores <local runs root>/e023_scores \
     --family $FAMILY
 pytest tests --junitxml=$L/gates_pytest.xml
@@ -1330,6 +1332,7 @@ SEL=$(sha256sum $E/e023_selection.json | cut -d' ' -f1); ALL=$(sha256sum $E/e023
 ```
 **Access (A), once** (deploy this commit). Gate (m) first (free GPU memory >= (3j) x 1.2; a "refused" line otherwise: wait and call again), then the access device (descent from `--freeze_commit`, the frozen plan, the D1 approval, gate (t), the committed selection files and every checkpoint's sha256, the blocked-checkpoint guard at every load, the training inputs at the start and the end); every new arm's sigma-best, logit-best and last checkpoint and the D14 evaluation points are scored in one call. Then locally, before any metric, gates (v3) (structure, names and order, the chunked videos against access (0); non-finite values counted only) and (k) (no blocked checkpoint loaded), a logged part of access (A) from a clean working tree. An infrastructure failure: `--rescore '<reason>' --missing_only`; (v3) failing for a writing / indexing reason of `e023_score.py`: fix, deploy, `--rescore '<reason>' --runs <chain>/<run>`, the unit tests and (v3) again; any other cause: stop and report.
 ```bash
+export CUBLAS_WORKSPACE_CONFIG=:4096:8      # needed, else refused (chain_numerics)
 setsid nohup python -m wvad.diagnostics.e023_score score --split test --runs_root $RUNS --out $S --test_log $LOG \
     --selection_sha256 $SEL --all_ckpts_sha256 $ALL --memory_need_gb <(3j) gate_m_need_gb> --n_chunk $NC \
     --freeze_commit $FREEZE > $S.test.log 2>&1 < /dev/null &
