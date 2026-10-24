@@ -17,12 +17,14 @@
   "w": true,
   "w2": true,
   "n": true,
-  "collapse": true
+  "collapse": true,
+  "v3": true,
+  "k": true
  },
  "code": {
-  "commit": "be723dc3ba67d6b9e58a8bc2a57849282408fb96",
+  "commit": "2b9634c68ba313cbbdc79f6d6c8ad0b0ed8306cb",
   "source": "git",
-  "dirty": false
+  "dirty": true
  },
  "prefreeze": {
   "q2": {
@@ -3326,6 +3328,39 @@
    "n": true,
    "collapse": true
   },
+  "ok": true
+ },
+ "v3": {
+  "files": 107,
+  "missing": [],
+  "bad": [],
+  "unbound": [],
+  "targets": {
+   "ucf": {
+    "scoring": [
+     "Normal_Videos_924_x264",
+     "Normal_Videos_935_x264"
+    ],
+    "access0": [
+     "Normal_Videos_924_x264",
+     "Normal_Videos_935_x264"
+    ],
+    "ok": true
+   },
+   "xdv": {
+    "scoring": [],
+    "access0": [],
+    "ok": true
+   }
+  },
+  "nonfinite_files": [],
+  "ok": true,
+  "absent_rules": []
+ },
+ "k": {
+  "loaded": 600,
+  "blocked_loaded": 0,
+  "files": [],
   "ok": true
  }
 }
