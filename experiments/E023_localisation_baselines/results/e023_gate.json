@@ -5,12 +5,24 @@
   "prefreeze_q5": true,
   "prefreeze_q6": true,
   "prefreeze_q7": true,
-  "prefreeze_q1d": true
+  "prefreeze_q1d": true,
+  "a": true,
+  "a_cl20": true,
+  "b": true,
+  "d": true,
+  "f": true,
+  "g": true,
+  "p": true,
+  "s": true,
+  "w": true,
+  "w2": true,
+  "n": true,
+  "collapse": true
  },
  "code": {
-  "commit": "343bfcd143dd9afe2eef42de502f57445662cbdf",
+  "commit": "be723dc3ba67d6b9e58a8bc2a57849282408fb96",
   "source": "git",
-  "dirty": true
+  "dirty": false
  },
  "prefreeze": {
   "q2": {
@@ -227,6 +239,3092 @@
    "missing_methods": [],
    "flagged": [],
    "ok": true
+  },
+  "ok": true
+ },
+ "train": {
+  "gate_failed": [],
+  "a": {
+   "chains": {
+    "ucf_xcb_xcl_s42/mil_u32": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/mil_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/mil_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/mil_u32": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/rtfm_u32": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/rtfm_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/rtfm_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/rtfm_u32": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u200": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u200": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u200": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u200": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u256": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u256": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u256": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u256": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u256": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u32": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u32": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u32": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u32": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u32": {
+     "different": [],
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "a_cl20": {
+   "chains": {
+    "ucf_xcb_xcl_s42/hb_l20": {
+     "different": [],
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/hb_l20": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/hb_l20": {
+     "different": [],
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/hb_l20": {
+     "different": [],
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "b": {
+   "chains": {
+    "ucf_xcb_xcl_s42/mil_u32": {
+     "record_bit_equal": true,
+     "first_different_point": null,
+     "selection_equal": {
+      "sigma": true,
+      "logit": true
+     },
+     "same_command": true,
+     "deterministic": [
+      true,
+      true
+     ],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/mil_u32": {
+     "record_bit_equal": true,
+     "first_different_point": null,
+     "selection_equal": {
+      "sigma": true,
+      "logit": true
+     },
+     "same_command": true,
+     "deterministic": [
+      true,
+      true
+     ],
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/rtfm_u32": {
+     "record_bit_equal": true,
+     "first_different_point": null,
+     "selection_equal": {
+      "sigma": true,
+      "logit": true
+     },
+     "same_command": true,
+     "deterministic": [
+      true,
+      true
+     ],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/rtfm_u32": {
+     "record_bit_equal": true,
+     "first_different_point": null,
+     "selection_equal": {
+      "sigma": true,
+      "logit": true
+     },
+     "same_command": true,
+     "deterministic": [
+      true,
+      true
+     ],
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u200": {
+     "record_bit_equal": true,
+     "first_different_point": null,
+     "selection_equal": {
+      "sigma": true,
+      "logit": true
+     },
+     "same_command": true,
+     "deterministic": [
+      true,
+      true
+     ],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u200": {
+     "record_bit_equal": true,
+     "first_different_point": null,
+     "selection_equal": {
+      "sigma": true,
+      "logit": true
+     },
+     "same_command": true,
+     "deterministic": [
+      true,
+      true
+     ],
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u256": {
+     "record_bit_equal": true,
+     "first_different_point": null,
+     "selection_equal": {
+      "sigma": true,
+      "logit": true
+     },
+     "same_command": true,
+     "deterministic": [
+      true,
+      true
+     ],
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u256": {
+     "record_bit_equal": true,
+     "first_different_point": null,
+     "selection_equal": {
+      "sigma": true,
+      "logit": true
+     },
+     "same_command": true,
+     "deterministic": [
+      true,
+      true
+     ],
+     "ok": true
+    }
+   },
+   "missing": [],
+   "ok": true
+  },
+  "d": {
+   "chains": {
+    "ucf_xcb_xcl_s42/mil_u32": {
+     "n": 241,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/mil_u32": {
+     "n": 241,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/mil_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/mil_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/rtfm_u32": {
+     "n": 241,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/rtfm_u32": {
+     "n": 241,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/rtfm_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/rtfm_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u200": {
+     "n": 241,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u200": {
+     "n": 241,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u200": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u200": {
+     "n": 592,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u256": {
+     "n": 241,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u256": {
+     "n": 241,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u256": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u256": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u256": {
+     "n": 592,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u32": {
+     "n": 241,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u32": {
+     "n": 241,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u32": {
+     "n": 241,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u32": {
+     "n": 241,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u32": {
+     "n": 592,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/hb_l20": {
+     "n": 241,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/hb_l20": {
+     "n": 241,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/hb_l20": {
+     "n": 592,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/hb_l20": {
+     "n": 592,
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "f": {
+   "code": {
+    "commit": "ac5256c661cfbc9f55a9a40dca018698fa43a214",
+    "base": "efa10fdcd9511a61aafc4e7917cd1c89044a1b04",
+    "add_only": {
+     "base": "efa10fdcd9511a61aafc4e7917cd1c89044a1b04",
+     "commit": "ac5256c661cfbc9f55a9a40dca018698fa43a214",
+     "lines": [
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/__init__.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/__main__.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/check_mil.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/check_rtfm.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/check_urdmu.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/check_vadclip_v.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/common.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/mil.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/official.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/recipes.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/rtfm.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/samplers.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/train.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/urdmu.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/baselines/vadclip_v.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/diagnostics/e023.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/diagnostics/e023_access.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/diagnostics/e023_desc.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/diagnostics/e023_gates.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/diagnostics/e023_prefreeze.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/diagnostics/e023_score.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/diagnostics/e023_stats.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/eval/decompose.py"
+      },
+      {
+       "status": "A",
+       "path": "src/wvad/extract/derive_n.py"
+      }
+     ],
+     "added": [
+      "src/wvad/baselines/__init__.py",
+      "src/wvad/baselines/__main__.py",
+      "src/wvad/baselines/check_mil.py",
+      "src/wvad/baselines/check_rtfm.py",
+      "src/wvad/baselines/check_urdmu.py",
+      "src/wvad/baselines/check_vadclip_v.py",
+      "src/wvad/baselines/common.py",
+      "src/wvad/baselines/mil.py",
+      "src/wvad/baselines/official.py",
+      "src/wvad/baselines/recipes.py",
+      "src/wvad/baselines/rtfm.py",
+      "src/wvad/baselines/samplers.py",
+      "src/wvad/baselines/train.py",
+      "src/wvad/baselines/urdmu.py",
+      "src/wvad/baselines/vadclip_v.py",
+      "src/wvad/diagnostics/e023.py",
+      "src/wvad/diagnostics/e023_access.py",
+      "src/wvad/diagnostics/e023_desc.py",
+      "src/wvad/diagnostics/e023_gates.py",
+      "src/wvad/diagnostics/e023_prefreeze.py",
+      "src/wvad/diagnostics/e023_score.py",
+      "src/wvad/diagnostics/e023_stats.py",
+      "src/wvad/eval/decompose.py",
+      "src/wvad/extract/derive_n.py"
+     ],
+     "not_added": [],
+     "ok": true
+    },
+    "sets": {
+     "S_train": true,
+     "S_score": true,
+     "S_extract": true,
+     "S_analysis": true,
+     "E022_new": true
+    },
+    "ok": true
+   },
+   "inputs": {
+    "ok": true
+   },
+   "environments": {
+    "env_e023_b00": {
+     "differences": [],
+     "ok": true
+    },
+    "env_e023_bcl20": {
+     "differences": [],
+     "ok": true
+    },
+    "env_e023_bfb1": {
+     "differences": [],
+     "ok": true
+    }
+   },
+   "precision_not_fp32": [],
+   "tests": {
+    "tree_sha256": "52841ab945043380881bef22a940c88e93f99056c57e7379585a13d64ce0fb98",
+    "tree_sha256_before": "d2d1a0ad168fa3c7a727366a9d26a53985123d0a0bcbc16bf6b8d049ebba930d",
+    "same_tree": false,
+    "differences": {
+     "added": [],
+     "removed": [],
+     "changed": [
+      "tests/test_e023_analysis.py",
+      "tests/test_e023_score.py",
+      "tests/test_e023_score_helpers.py",
+      "tests/test_e023_score_test.py"
+     ]
+    },
+    "reason": "Tests changed after the pre-freeze record (PLAN.md change log 2026-10-24). tests/test_e023_analysis.py: two tests assumed the real E023 plan is not frozen (true at the pre-freeze run) and failed after the freeze commit afbfffef; they now point the seal (an.SEAL) and the plan folder (an.E023_DIR) at temporary paths, no assertion removed. tests/test_e023_score.py, tests/test_e023_score_test.py, tests/test_e023_score_helpers.py: tests of the gate (s) fix be723dc3 (chain_numerics reproduces the defect on the old code; CUBLAS_WORKSPACE_CONFIG refusals; the helper sets the variable). The run also includes tests/test_e020.py (47 tests), left out of the pre-freeze grouped run.",
+    "run": {
+     "tests": 1888,
+     "failures": 0,
+     "errors": 0,
+     "skipped": 0,
+     "passed": 1888,
+     "skipped_tests": [],
+     "timestamp": "2026-10-24T14:54:38.819543+09:00",
+     "junit_sha256": "420be43b7e9ce904293f2773942f36704f1efe18acc9fd595a5628e828b794ec"
+    },
+    "run_ok": true,
+    "ok": true
+   },
+   "tag": null,
+   "ok": true
+  },
+  "g": {
+   "chains": {
+    "ucf_xcb_xcl_s42/mil_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 21,
+       "step": 14000,
+       "v_auc": 0.9526170798898072,
+       "tied": false
+      },
+      "logit": {
+       "point": 22,
+       "step": 14667,
+       "v_auc": 0.9521349862258953,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 21,
+       "step": 14000,
+       "v_auc": 0.9526170798898072,
+       "tied": false
+      },
+      "logit": {
+       "point": 22,
+       "step": 14667,
+       "v_auc": 0.9521349862258953,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/mil_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 23,
+       "step": 15333,
+       "v_auc": 0.9777548209366391,
+       "tied": false
+      },
+      "logit": {
+       "point": 23,
+       "step": 15333,
+       "v_auc": 0.9792699724517906,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 23,
+       "step": 15333,
+       "v_auc": 0.9777548209366391,
+       "tied": false
+      },
+      "logit": {
+       "point": 23,
+       "step": 15333,
+       "v_auc": 0.9792699724517906,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/mil_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 27,
+       "step": 18000,
+       "v_auc": 0.9920852620149723,
+       "tied": false
+      },
+      "logit": {
+       "point": 28,
+       "step": 18667,
+       "v_auc": 0.9926510086290645,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 27,
+       "step": 18000,
+       "v_auc": 0.9920852620149723,
+       "tied": false
+      },
+      "logit": {
+       "point": 28,
+       "step": 18667,
+       "v_auc": 0.9926510086290645,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/mil_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 20,
+       "step": 13333,
+       "v_auc": 0.9966798102748728,
+       "tied": false
+      },
+      "logit": {
+       "point": 9,
+       "step": 6000,
+       "v_auc": 0.9973827075832905,
+       "tied": true
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 20,
+       "step": 13333,
+       "v_auc": 0.9966798102748728,
+       "tied": false
+      },
+      "logit": {
+       "point": 9,
+       "step": 6000,
+       "v_auc": 0.9973827075832905,
+       "tied": true
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/rtfm_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 29,
+       "step": 14500,
+       "v_auc": 0.9585399449035813,
+       "tied": false
+      },
+      "logit": {
+       "point": 29,
+       "step": 14500,
+       "v_auc": 0.9585399449035813,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 29,
+       "step": 14500,
+       "v_auc": 0.9585399449035813,
+       "tied": false
+      },
+      "logit": {
+       "point": 29,
+       "step": 14500,
+       "v_auc": 0.9585399449035813,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/rtfm_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 3,
+       "step": 1500,
+       "v_auc": 0.9770661157024794,
+       "tied": false
+      },
+      "logit": {
+       "point": 3,
+       "step": 1500,
+       "v_auc": 0.9770661157024794,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 3,
+       "step": 1500,
+       "v_auc": 0.9770661157024794,
+       "tied": false
+      },
+      "logit": {
+       "point": 3,
+       "step": 1500,
+       "v_auc": 0.9770661157024794,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/rtfm_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 26,
+       "step": 13000,
+       "v_auc": 0.9903194468255329,
+       "tied": false
+      },
+      "logit": {
+       "point": 15,
+       "step": 7500,
+       "v_auc": 0.9904680267443854,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 26,
+       "step": 13000,
+       "v_auc": 0.9903194468255329,
+       "tied": false
+      },
+      "logit": {
+       "point": 15,
+       "step": 7500,
+       "v_auc": 0.9904680267443854,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/rtfm_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 11,
+       "step": 5500,
+       "v_auc": 0.9968683924795703,
+       "tied": false
+      },
+      "logit": {
+       "point": 11,
+       "step": 5500,
+       "v_auc": 0.9968683924795703,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 11,
+       "step": 5500,
+       "v_auc": 0.9968683924795703,
+       "tied": false
+      },
+      "logit": {
+       "point": 11,
+       "step": 5500,
+       "v_auc": 0.9968683924795703,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u200": {
+     "recomputed": {
+      "sigma": {
+       "point": 16,
+       "step": 1600,
+       "v_auc": 0.9575413223140495,
+       "tied": false
+      },
+      "logit": {
+       "point": 2,
+       "step": 200,
+       "v_auc": 0.9573691460055096,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 16,
+       "step": 1600,
+       "v_auc": 0.9575413223140495,
+       "tied": false
+      },
+      "logit": {
+       "point": 2,
+       "step": 200,
+       "v_auc": 0.9573691460055096,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u200": {
+     "recomputed": {
+      "sigma": {
+       "point": 20,
+       "step": 2000,
+       "v_auc": 0.9751377410468319,
+       "tied": false
+      },
+      "logit": {
+       "point": 20,
+       "step": 2000,
+       "v_auc": 0.9751377410468319,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 20,
+       "step": 2000,
+       "v_auc": 0.9751377410468319,
+       "tied": false
+      },
+      "logit": {
+       "point": 20,
+       "step": 2000,
+       "v_auc": 0.9751377410468319,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u200": {
+     "recomputed": {
+      "sigma": {
+       "point": 15,
+       "step": 1500,
+       "v_auc": 0.9908166180924625,
+       "tied": false
+      },
+      "logit": {
+       "point": 5,
+       "step": 500,
+       "v_auc": 0.9907880450311446,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 15,
+       "step": 1500,
+       "v_auc": 0.9908166180924625,
+       "tied": false
+      },
+      "logit": {
+       "point": 5,
+       "step": 500,
+       "v_auc": 0.9907880450311446,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u200": {
+     "recomputed": {
+      "sigma": {
+       "point": 1,
+       "step": 100,
+       "v_auc": 0.9956797531287502,
+       "tied": false
+      },
+      "logit": {
+       "point": 25,
+       "step": 2500,
+       "v_auc": 0.9957826161494943,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 1,
+       "step": 100,
+       "v_auc": 0.9956797531287502,
+       "tied": false
+      },
+      "logit": {
+       "point": 25,
+       "step": 2500,
+       "v_auc": 0.9957826161494943,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u256": {
+     "recomputed": {
+      "sigma": {
+       "point": 23,
+       "step": 813,
+       "v_auc": 0.9452479338842975,
+       "tied": false
+      },
+      "logit": {
+       "point": 11,
+       "step": 389,
+       "v_auc": 0.9453168044077135,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 23,
+       "step": 813,
+       "v_auc": 0.9452479338842975,
+       "tied": false
+      },
+      "logit": {
+       "point": 11,
+       "step": 389,
+       "v_auc": 0.9453168044077135,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u256": {
+     "recomputed": {
+      "sigma": {
+       "point": 1,
+       "step": 35,
+       "v_auc": 0.6045454545454545,
+       "tied": false
+      },
+      "logit": {
+       "point": 1,
+       "step": 35,
+       "v_auc": 0.6045454545454545,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 1,
+       "step": 35,
+       "v_auc": 0.6045454545454545,
+       "tied": false
+      },
+      "logit": {
+       "point": 1,
+       "step": 35,
+       "v_auc": 0.6045454545454545,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u256": {
+     "recomputed": {
+      "sigma": {
+       "point": 17,
+       "step": 1983,
+       "v_auc": 0.9946854105948911,
+       "tied": false
+      },
+      "logit": {
+       "point": 17,
+       "step": 1983,
+       "v_auc": 0.9946854105948911,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 17,
+       "step": 1983,
+       "v_auc": 0.9946854105948911,
+       "tied": false
+      },
+      "logit": {
+       "point": 17,
+       "step": 1983,
+       "v_auc": 0.9946854105948911,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u256": {
+     "recomputed": {
+      "sigma": {
+       "point": 1,
+       "step": 117,
+       "v_auc": 0.5,
+       "tied": true
+      },
+      "logit": {
+       "point": 5,
+       "step": 583,
+       "v_auc": 0.640939482256129,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 1,
+       "step": 117,
+       "v_auc": 0.5,
+       "tied": true
+      },
+      "logit": {
+       "point": 5,
+       "step": 583,
+       "v_auc": 0.640939482256129,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u256": {
+     "recomputed": {
+      "sigma": {
+       "point": 9,
+       "step": 1050,
+       "v_auc": 0.997234127664438,
+       "tied": false
+      },
+      "logit": {
+       "point": 9,
+       "step": 1050,
+       "v_auc": 0.997234127664438,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 9,
+       "step": 1050,
+       "v_auc": 0.997234127664438,
+       "tied": false
+      },
+      "logit": {
+       "point": 9,
+       "step": 1050,
+       "v_auc": 0.997234127664438,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 4,
+       "step": 400,
+       "v_auc": 0.9621556473829201,
+       "tied": false
+      },
+      "logit": {
+       "point": 8,
+       "step": 800,
+       "v_auc": 0.9620523415977962,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 4,
+       "step": 400,
+       "v_auc": 0.9621556473829201,
+       "tied": false
+      },
+      "logit": {
+       "point": 8,
+       "step": 800,
+       "v_auc": 0.9620523415977962,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 6,
+       "step": 600,
+       "v_auc": 0.981404958677686,
+       "tied": false
+      },
+      "logit": {
+       "point": 6,
+       "step": 600,
+       "v_auc": 0.981404958677686,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 6,
+       "step": 600,
+       "v_auc": 0.981404958677686,
+       "tied": false
+      },
+      "logit": {
+       "point": 6,
+       "step": 600,
+       "v_auc": 0.981404958677686,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 22,
+       "step": 2200,
+       "v_auc": 0.9915538030744614,
+       "tied": false
+      },
+      "logit": {
+       "point": 22,
+       "step": 2200,
+       "v_auc": 0.9915423738499343,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 22,
+       "step": 2200,
+       "v_auc": 0.9915538030744614,
+       "tied": false
+      },
+      "logit": {
+       "point": 22,
+       "step": 2200,
+       "v_auc": 0.9915423738499343,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 28,
+       "step": 2800,
+       "v_auc": 0.9960512029258815,
+       "tied": false
+      },
+      "logit": {
+       "point": 21,
+       "step": 2100,
+       "v_auc": 0.9961026344362535,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 28,
+       "step": 2800,
+       "v_auc": 0.9960512029258815,
+       "tied": false
+      },
+      "logit": {
+       "point": 21,
+       "step": 2100,
+       "v_auc": 0.9961026344362535,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 8,
+       "step": 283,
+       "v_auc": 0.9526170798898072,
+       "tied": false
+      },
+      "logit": {
+       "point": 8,
+       "step": 283,
+       "v_auc": 0.9511707988980717,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 8,
+       "step": 283,
+       "v_auc": 0.9526170798898072,
+       "tied": false
+      },
+      "logit": {
+       "point": 8,
+       "step": 283,
+       "v_auc": 0.9511707988980717,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 3,
+       "step": 106,
+       "v_auc": 0.9772038567493113,
+       "tied": false
+      },
+      "logit": {
+       "point": 6,
+       "step": 212,
+       "v_auc": 0.9773415977961433,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 3,
+       "step": 106,
+       "v_auc": 0.9772038567493113,
+       "tied": false
+      },
+      "logit": {
+       "point": 6,
+       "step": 212,
+       "v_auc": 0.9773415977961433,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 2,
+       "step": 233,
+       "v_auc": 0.9893136750671467,
+       "tied": false
+      },
+      "logit": {
+       "point": 2,
+       "step": 233,
+       "v_auc": 0.9893136750671467,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 2,
+       "step": 233,
+       "v_auc": 0.9893136750671467,
+       "tied": false
+      },
+      "logit": {
+       "point": 2,
+       "step": 233,
+       "v_auc": 0.9893136750671467,
+       "tied": false
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 1,
+       "step": 117,
+       "v_auc": 0.5,
+       "tied": true
+      },
+      "logit": {
+       "point": 1,
+       "step": 117,
+       "v_auc": 0.8052803017315275,
+       "tied": true
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 1,
+       "step": 117,
+       "v_auc": 0.5,
+       "tied": true
+      },
+      "logit": {
+       "point": 1,
+       "step": 117,
+       "v_auc": 0.8052803017315275,
+       "tied": true
+      }
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u32": {
+     "recomputed": {
+      "sigma": {
+       "point": 1,
+       "step": 117,
+       "v_auc": 0.9958054745985485,
+       "tied": true
+      },
+      "logit": {
+       "point": 3,
+       "step": 350,
+       "v_auc": 0.995862620721184,
+       "tied": false
+      }
+     },
+     "recorded": {
+      "sigma": {
+       "point": 1,
+       "step": 117,
+       "v_auc": 0.9958054745985485,
+       "tied": true
+      },
+      "logit": {
+       "point": 3,
+       "step": 350,
+       "v_auc": 0.995862620721184,
+       "tied": false
+      }
+     },
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "p": {
+   "chains": {
+    "ucf_xcb_xcl_s42/mil_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/mil_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/mil_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/mil_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/rtfm_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/rtfm_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/rtfm_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/rtfm_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u200": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u200": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u200": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u200": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u256": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u256": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u256": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u256": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u256": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u32": {
+     "unit": true,
+     "variant": true,
+     "sampler": true,
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "s": {
+   "chains": {
+    "ucf_xcb_xcl_s42/mil_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/mil_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/mil_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/mil_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/rtfm_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/rtfm_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/rtfm_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/rtfm_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u200": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u200": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u200": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u200": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u256": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u256": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u256": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u256": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u256": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": {
+      "n": 30,
+      "different": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u32": {
+     "rules": {
+      "sigma": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "logit": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      },
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/hb_l20": {
+     "rules": {
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/hb_l20": {
+     "rules": {
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/hb_l20": {
+     "rules": {
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/hb_l20": {
+     "rules": {
+      "last": {
+       "max_rel_error": 0.0,
+       "sha256_ok": true,
+       "ok": true
+      }
+     },
+     "d14": null,
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "w": {
+   "chains": {
+    "ucf_xcb_xcl_s42/mil_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/mil_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/mil_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/mil_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/rtfm_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/rtfm_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/rtfm_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/rtfm_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u200": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u200": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u200": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u200": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u256": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u256": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u256": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u256": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u256": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/urdmu_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/urdmu_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/urdmu_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/urdmu_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u32": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_xcl_s42/hb_l20": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "ucf_xcb_siglip_s42/hb_l20": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_xcl_s42/hb_l20": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    },
+    "xdv_xcb_siglip_s42/hb_l20": {
+     "points": {
+      "sigma": true,
+      "logit": true
+     },
+     "v_auc": {
+      "sigma": true,
+      "logit": true
+     },
+     "ok": true
+    }
+   },
+   "ok": true
+  },
+  "w2": {
+   "chains": {
+    "ucf_xcb_xcl_s42/mil_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 21,
+      "point_recorded": 21,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 22,
+      "point_recorded": 22,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_siglip_s42/mil_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 23,
+      "point_recorded": 23,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 23,
+      "point_recorded": 23,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_xcl_s42/mil_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 27,
+      "point_recorded": 27,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 28,
+      "point_recorded": 28,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s42/mil_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 20,
+      "point_recorded": 20,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 9,
+      "point_recorded": 9,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_xcl_s42/rtfm_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 29,
+      "point_recorded": 29,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 29,
+      "point_recorded": 29,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_siglip_s42/rtfm_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 3,
+      "point_recorded": 3,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 3,
+      "point_recorded": 3,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_xcl_s42/rtfm_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 26,
+      "point_recorded": 26,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 15,
+      "point_recorded": 15,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s42/rtfm_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 11,
+      "point_recorded": 11,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 11,
+      "point_recorded": 11,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_xcl_s42/urdmu_u200": {
+     "ok": true,
+     "sigma": {
+      "point": 16,
+      "point_recorded": 16,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 2,
+      "point_recorded": 2,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_siglip_s42/urdmu_u200": {
+     "ok": true,
+     "sigma": {
+      "point": 20,
+      "point_recorded": 20,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 20,
+      "point_recorded": 20,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_xcl_s42/urdmu_u200": {
+     "ok": true,
+     "sigma": {
+      "point": 15,
+      "point_recorded": 15,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 5,
+      "point_recorded": 5,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s42/urdmu_u200": {
+     "ok": true,
+     "sigma": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 25,
+      "point_recorded": 25,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u256": {
+     "ok": true,
+     "sigma": {
+      "point": 23,
+      "point_recorded": 23,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 11,
+      "point_recorded": 11,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u256": {
+     "ok": true,
+     "sigma": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u256": {
+     "ok": true,
+     "sigma": {
+      "point": 17,
+      "point_recorded": 17,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 17,
+      "point_recorded": 17,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u256": {
+     "ok": true,
+     "sigma": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 5,
+      "point_recorded": 5,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u256": {
+     "ok": true,
+     "sigma": {
+      "point": 9,
+      "point_recorded": 9,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 9,
+      "point_recorded": 9,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_xcl_s42/urdmu_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 4,
+      "point_recorded": 4,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 8,
+      "point_recorded": 8,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_siglip_s42/urdmu_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 6,
+      "point_recorded": 6,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 6,
+      "point_recorded": 6,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_xcl_s42/urdmu_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 22,
+      "point_recorded": 22,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 22,
+      "point_recorded": 22,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s42/urdmu_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 28,
+      "point_recorded": 28,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 21,
+      "point_recorded": 21,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_xcl_s42/vadclip_v_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 8,
+      "point_recorded": 8,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 8,
+      "point_recorded": 8,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_siglip_s42/vadclip_v_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 3,
+      "point_recorded": 3,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 6,
+      "point_recorded": 6,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_xcl_s42/vadclip_v_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 2,
+      "point_recorded": 2,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 2,
+      "point_recorded": 2,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s42/vadclip_v_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s123/vadclip_v_u32": {
+     "ok": true,
+     "sigma": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 3,
+      "point_recorded": 3,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_xcl_s42/hb_l20": {
+     "ok": true,
+     "sigma": {
+      "point": 27,
+      "point_recorded": 27,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 27,
+      "point_recorded": 27,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "ucf_xcb_siglip_s42/hb_l20": {
+     "ok": true,
+     "sigma": {
+      "point": 18,
+      "point_recorded": 18,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 18,
+      "point_recorded": 18,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_xcl_s42/hb_l20": {
+     "ok": true,
+     "sigma": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    },
+    "xdv_xcb_siglip_s42/hb_l20": {
+     "ok": true,
+     "sigma": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     },
+     "logit": {
+      "point": 1,
+      "point_recorded": 1,
+      "max_abs_diff": 0.0,
+      "ok": true
+     }
+    }
+   },
+   "n": 30,
+   "ok": true
+  },
+  "n": {
+   "loss_nonfinite": {
+    "ucf_xcb_xcl_s42/mil_u32": 0,
+    "ucf_xcb_siglip_s42/mil_u32": 0,
+    "xdv_xcb_xcl_s42/mil_u32": 0,
+    "xdv_xcb_siglip_s42/mil_u32": 0,
+    "ucf_xcb_xcl_s42/rtfm_u32": 0,
+    "ucf_xcb_siglip_s42/rtfm_u32": 0,
+    "xdv_xcb_xcl_s42/rtfm_u32": 0,
+    "xdv_xcb_siglip_s42/rtfm_u32": 0,
+    "ucf_xcb_xcl_s42/urdmu_u200": 0,
+    "ucf_xcb_siglip_s42/urdmu_u200": 0,
+    "xdv_xcb_xcl_s42/urdmu_u200": 0,
+    "xdv_xcb_siglip_s42/urdmu_u200": 0,
+    "ucf_xcb_xcl_s42/vadclip_v_u256": 0,
+    "ucf_xcb_siglip_s42/vadclip_v_u256": 0,
+    "xdv_xcb_xcl_s42/vadclip_v_u256": 0,
+    "xdv_xcb_siglip_s42/vadclip_v_u256": 0,
+    "xdv_xcb_siglip_s123/vadclip_v_u256": 0,
+    "ucf_xcb_xcl_s42/urdmu_u32": 0,
+    "ucf_xcb_siglip_s42/urdmu_u32": 0,
+    "xdv_xcb_xcl_s42/urdmu_u32": 0,
+    "xdv_xcb_siglip_s42/urdmu_u32": 0,
+    "ucf_xcb_xcl_s42/vadclip_v_u32": 0,
+    "ucf_xcb_siglip_s42/vadclip_v_u32": 0,
+    "xdv_xcb_xcl_s42/vadclip_v_u32": 0,
+    "xdv_xcb_siglip_s42/vadclip_v_u32": 0,
+    "xdv_xcb_siglip_s123/vadclip_v_u32": 0
+   },
+   "val_nonfinite": {
+    "ucf_xcb_xcl_s42/mil_u32": 0,
+    "ucf_xcb_siglip_s42/mil_u32": 0,
+    "xdv_xcb_xcl_s42/mil_u32": 0,
+    "xdv_xcb_siglip_s42/mil_u32": 0,
+    "ucf_xcb_xcl_s42/rtfm_u32": 0,
+    "ucf_xcb_siglip_s42/rtfm_u32": 0,
+    "xdv_xcb_xcl_s42/rtfm_u32": 0,
+    "xdv_xcb_siglip_s42/rtfm_u32": 0,
+    "ucf_xcb_xcl_s42/urdmu_u200": 0,
+    "ucf_xcb_siglip_s42/urdmu_u200": 0,
+    "xdv_xcb_xcl_s42/urdmu_u200": 0,
+    "xdv_xcb_siglip_s42/urdmu_u200": 0,
+    "ucf_xcb_xcl_s42/vadclip_v_u256": 0,
+    "ucf_xcb_siglip_s42/vadclip_v_u256": 0,
+    "xdv_xcb_xcl_s42/vadclip_v_u256": 0,
+    "xdv_xcb_siglip_s42/vadclip_v_u256": 0,
+    "xdv_xcb_siglip_s123/vadclip_v_u256": 0,
+    "ucf_xcb_xcl_s42/urdmu_u32": 0,
+    "ucf_xcb_siglip_s42/urdmu_u32": 0,
+    "xdv_xcb_xcl_s42/urdmu_u32": 0,
+    "xdv_xcb_siglip_s42/urdmu_u32": 0,
+    "ucf_xcb_xcl_s42/vadclip_v_u32": 0,
+    "ucf_xcb_siglip_s42/vadclip_v_u32": 0,
+    "xdv_xcb_xcl_s42/vadclip_v_u32": 0,
+    "xdv_xcb_siglip_s42/vadclip_v_u32": 0,
+    "xdv_xcb_siglip_s123/vadclip_v_u32": 0,
+    "ucf_xcb_xcl_s42/hb_l20": 0,
+    "ucf_xcb_siglip_s42/hb_l20": 0,
+    "xdv_xcb_xcl_s42/hb_l20": 0,
+    "xdv_xcb_siglip_s42/hb_l20": 0
+   },
+   "chains_with_nonfinite": [],
+   "ok": true
+  },
+  "collapse": {
+   "block": true,
+   "c_chains_equal": true,
+   "c_chains": 40,
+   "c_problems": [],
+   "flags_mismatched": [],
+   "single_seed": {
+    "mode": "single",
+    "problems": [],
+    "ok": true
+   },
+   "ok": true
+  },
+  "status": {
+   "a": true,
+   "a_cl20": true,
+   "b": true,
+   "d": true,
+   "f": true,
+   "g": true,
+   "p": true,
+   "s": true,
+   "w": true,
+   "w2": true,
+   "n": true,
+   "collapse": true
   },
   "ok": true
  }

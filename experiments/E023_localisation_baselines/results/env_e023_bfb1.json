@@ -1,0 +1,45 @@
+{
+ "torch": "2.5.1+cu124",
+ "cuda": "12.4",
+ "gpu": "NVIDIA H100 80GB HBM3",
+ "driver": "580.126.20",
+ "commit": "ac5256c661cfbc9f55a9a40dca018698fa43a214",
+ "code": {
+  "commit": "ac5256c661cfbc9f55a9a40dca018698fa43a214",
+  "source": "deployed",
+  "dirty": null
+ },
+ "inputs_check": {
+  "record": "e023_train_inputs.json",
+  "record_sha256": "e7a72801aa40738a7d07b77fda9acb5b2ffb62ae4d89be3430d2e131aa84a726",
+  "train_inputs": {
+   "files": 42,
+   "scale_arrays": 6,
+   "changed": [],
+   "scale_changed": [],
+   "problems": [],
+   "ok": true
+  },
+  "derived": {
+   "derived_ucf": {
+    "files": 12,
+    "changed": [],
+    "ok": true
+   },
+   "derived_xdv": {
+    "files": 12,
+    "changed": [],
+    "ok": true
+   }
+  },
+  "ok": true
+ },
+ "want": {
+  "torch": "2.5.1+cu124",
+  "cuda": "12.4",
+  "gpu": "NVIDIA H100 80GB HBM3",
+  "driver": "580.126.20"
+ },
+ "env_differences": [],
+ "utc": "2026-10-24T01:52:49+00:00"
+}
