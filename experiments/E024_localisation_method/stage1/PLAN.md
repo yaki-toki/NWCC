@@ -40,12 +40,12 @@
 | K(ρ, τ) | U + 영상 안 대비 모듈 K. 설정 6개 = ρ ∈ {전역, 0.1, 0.02} × τ ∈ {1, 0.25} | 새로 학습, 4설정 × seed 0–2 | 72 |
 
 - K 명령(형태): `python -m wvad.diagnostics.e024_stage1 train --dataset <ds> --pair <pair> --seed <0|1|2> --rho <g|0.1|0.02> --tau <1|0.25> --mode k --out_dir ~/wvad_runs/e024/stage1/<ds>_<pair>_s<seed>/k_r<ρ>_t<τ>`. 학습 설정(unit 200, lr·척도 배율 1, n_chunk 4096, `--deterministic`, 평가 점 30, 선택 규칙, Adam + L2 가중 감쇠)은 0a U 명령과 같고 `train.run(cfg, method=URDMUK(kcfg))`으로 들어간다(`cfg.method = "urdmu_k"`). 정확한 명령은 README의 "Stage F E024 1단계" 블록에 적는다.
-- **폴더 이름(등록)**: ρ 토큰 `g`(전역)·`0.1`·`0.02`, τ 토큰 `1`·`0.25`. K 사슬 `k_r<ρ>_t<τ>`, 통제 `ctl_<이름>_r<ρ*>_t<τ*>`(이름 = `mlp`, `tauinf`, `mean`, `shuffle`, `trainonly`), 관문 `gate_k0`, `gate_b`. `k_config.json`은 명령줄 인자(mode, ρ, τ; 통제도 고른 (ρ*, τ*)를 그대로 받음)와 유효 KConfig(mode가 무시하는 값은 None: `tauinf`는 τ, `mean`은 ρ·τ, `mlp`는 둘 다)를 둘 다 적는다. 관문 (n)은 폴더의 ρ·τ 토큰과 mode 이름을 명령줄 인자와, 유효 KConfig를 mode 규칙과 대조해 다르면 거부한다. `shuffle`에 ρ 전역은 거부한다(C3는 ρ*가 지역일 때만).
+- **폴더 이름(등록)**: ρ 토큰 `g`(전역)·`0.1`·`0.02`, τ 토큰 `1`·`0.25`. K 사슬 `k_r<ρ>_t<τ>`, 통제 `ctl_<이름>_r<ρ*>_t<τ*>`(이름 = `mlp`, `tauinf`, `mean`, `shuffle`, `trainonly`), 관문 `gate_k0`, `gate_b`. `k_config.json`은 명령줄 인자(mode, ρ, τ; 통제도 고른 (ρ*, τ*)를 그대로 받음)와 유효 KConfig(mode가 무시하는 값은 None: `tauinf`는 τ, `mean`은 ρ·τ, `mlp`는 둘 다)를 둘 다 적는다. 관문 (n)은 폴더의 ρ·τ 토큰과 mode 이름을 명령줄 인자와, 유효 KConfig를 mode 규칙과 대조해 다르면 거부한다. `shuffle`에 ρ 전역은 거부한다(C3는 ρ*가 지역일 때만). `off`의 유효 KConfig는 (None, None)이다. 관문 폴더도 등록한다: `gate_k0` = mode `off`, 명령줄 ρ `g`·τ `1`, 유효 (None, None); `gate_b` = mode `k`, ρ `g`, τ `1`.
 
 ### K의 정의 (고정)
 URDMU 순전파에서 `x = self.selfatt(x)` 뒤의 스니펫 임베딩 x_t ∈ R^512(배치 B, 길이 T; 기억 증강과 이어 붙이기 전의 512차원)와 분류 헤드의 로짓 z_t(`cls_head.logits`, 시그모이드 앞)를 쓴다. 한 시퀀스(학습: 영상의 `d16m200` 창 행 200개; 채점: 조각 하나, 아래 "맥락 범위") 안에서
 
-- z̃_j = (z_j − mean_j z) / (std_j z + 10⁻⁶), std는 모집단 표준편차(ddof 0), 기울기 차단
+- z̃_j = (z_j − mean_j z) / (std_j z + 10⁻⁶), std는 모집단 표준편차(ddof 0; `torch.std(correction=0)`), 기울기 차단
 - **복제 행 마스크**: 입력 행(임베딩 전, 처리된 특징) t가 행 t−1과 어느 원소라도 다르면 런 번호 r_t가 1 늘어난다. r_j = r_t인 모든 j는 t의 맥락에서 뺀다(w_tt = 0의 일반화). 조밀 채점에서는 바이트 단위로 같은 연속 스니펫(정지·검은 구간; 드물다)만 마스크되고 나머지는 w_tt = 0으로 줄어든다. 입력 기록에 데이터셋별로 앞 스니펫과 바이트 단위로 같은 검증 스니펫의 비율을 적고, `rescore`는 그 사슬에서 실제로 마스크된 비율을 적는다. 시퀀스가 한 런이면(T = 1 포함) k_t = 0이다. 핵의 거리는 행 단위다.
 - **가중은 로그 공간에서** 한 번에 계산한다: ℓ_tj = −z̃_j / τ − |t − j| / (ρ·T) (ρ = 전역이면 거리 항 0), 마스크된 j(t 자신과 같은 런)는 ℓ_tj = −∞, w_t· = softmax_j(ℓ_t·). 이것은 "정상 가중 a_j = softmax(−z̃/τ) × 위치 핵 exp(−|t−j|/(ρT))를 정규화한 것"과 수학적으로 같고, float32 언더플로(0/0)를 피한다. 가중은 기울기 차단.
 - 맥락 c_t = Σ_j w_tj x_j (가중은 차단, x_j에는 기울기가 흐른다)
@@ -69,7 +69,7 @@ URDMU 순전파에서 `x = self.selfatt(x)` 뒤의 스니펫 임베딩 x_t ∈ R
 | C2 tauinf | K(ρ*, τ = ∞): ℓ_tj = −|t−j|/(ρ*T)만(z 항 없음, 균등 정상 가중), 마스크 같음 | 정상 가중(τ)이 필요한가(ρ*는 유지) | 항상 |
 | C2b mean | 자기 영상 평균: K(전역, τ = ∞), 마스크 같음(균등 가중, 위치 핵 없음) | 위치 핵과 정상 가중을 모두 뺀 영상 평균이면 충분한가 | ρ*가 지역일 때만(ρ* 전역이면 C2와 같음) |
 | C3 shuffle | 위치 핵을 순열 위치에 적용: π_T = `np.random.default_rng([seed, 1, T]).permutation(T)`, ℓ_tj의 거리 항을 |π_T(t) − π_T(j)|로. 특징은 모으지 않고 거리만 바꾼다. 전역 난수 상태는 건드리지 않는다 | 시간 근접성이 필요한가 | ρ*가 지역일 때만(ρ* 전역이면 C3 ≡ K(ρ*, τ*)) |
-| C6 trainonly | **학습 전용 K**(DSANet식 대안): 같은 g·같은 (ρ*, τ*). 총 손실 = 공식 `AD_Loss` 손실 − ½·영상 BCE 항(σ(z)) + ½·영상 BCE 항(σ(z + k)); 영상 BCE 항은 `AD_Loss`의 것과 같은 형태(영상마다 상위 T//16+1 평균에 BCE). k ≡ 0이면 U의 손실과 정확히 같으므로 첫 단계의 trunk 갱신이 U와 비트 일치한다(시험). 채점은 σ(z)만(k를 쓰지 않음) | 영상 안 대비가 추론 때 점수에 있어야 하는가, 학습 정규화로 충분한가 | 항상 |
+| C6 trainonly | **학습 전용 K**(DSANet식 대안): 같은 g·같은 (ρ*, τ*). 총 손실 = 공식 `AD_Loss` 손실 − ½·영상 BCE 항(σ(z)) + ½·영상 BCE 항(σ(z + k)); 영상 BCE 항은 `AD_Loss`의 것과 같은 형태(영상마다 상위 T//16+1 평균에 BCE). k ≡ 0이면 손실 값은 U와 같고(float32 반올림 안에서 allclose; ±½ 배는 정확하지만 더하기 순서로 마지막 비트가 다를 수 있음), 첫 단계의 trunk 갱신은 U와 비트 일치한다(시험). 채점은 σ(z)만(k를 쓰지 않음) | 영상 안 대비가 추론 때 점수에 있어야 하는가, 학습 정규화로 충분한가 | 항상 |
 | I1 smooth | U 선택 점의 `z`에 5스니펫 중심 이동평균. 영상 전체에(조각 무시), 가장자리는 있는 이웃만 평균, 길이 < 5면 있는 만큼. 학습 없음 | K가 고정 평활보다 나은가 | 항상 |
 
 - 뺀 통제와 이유: **C4(다른 영상 맥락)**는 채점 경로(`score_video`가 영상 하나의 조각만 넘김)에서 레이블과 무관한 짝 영상을 줄 방법이 없고, "분할 순서의 앞 영상"은 UCF 검증 순서가 레이블·범주로 정렬돼 있어 추론에 레이블 정보가 새어 든다. "맥락이 필요한가"는 C1(맥락 없음)로 가른다. "다른 영상의 맥락으로도 되는가"는 이 단계에서 시험하지 않으며 논문에 한계로 적는다. **C5(데이터셋 평균 EMA 맥락)**는 스니펫과 무관한 c가 g 첫 층의 편향으로 흡수되어(W₁(x_t − c) + b₁ = W₁x_t + (b₁ − W₁c)) C1과 같은 함수족이고, 데이터셋 수준 정상 기준은 URDMU의 Nmemory가 이미 제공한다.
@@ -92,7 +92,7 @@ URDMU 순전파에서 `x = self.selfatt(x)` 뒤의 스니펫 임베딩 x_t ∈ R
 - **seed 짝짓기**: 모든 대비(K − U, K − 통제, 조건 3의 V-AUC)는 (데이터셋, 쌍)마다 **두 팔 모두 살아남은 seed의 교집합**에서 계산한다(같은 초기화의 짝을 지킨다). 교집합이 2개 미만이면 그 (데이터셋, 쌍)은 "판정 없음"이고, 그 데이터셋의 대비도 "판정 없음"이다.
 - 팔마다 (데이터셋, 쌍)에서 교집합 seed의 값을 평균하고, 두 쌍을 평균한다.
 - **주 부트스트랩(판정용, 0a와 같음)**: 영상만 재표본한다(이상·정상 검증 영상을 따로 복원 추출). R = 2,000, 추출은 `glance.bootstrap_draws(n_이상, n_정상, 1, 2000, 20261024)`의 영상 블록이다. 모든 팔·설정·쌍에 같은 추출을 쓴다(짝지음). 재표본 0은 원래 표본이다.
-- **민감도 부트스트랩(기술, 판정에 쓰지 않음)**: 영상 × seed. `glance.bootstrap_draws(n_이상, n_정상, n_seed, 2000, 20261024)`의 seed 블록을 두 팔에 같이(같은 seed 번호, 교집합 순서로) 적용해 seed 짝을 지킨다. n_seed는 그 (데이터셋, 쌍)의 교집합 seed 수(2 또는 3)다. 블록은 이상 → 정상 → seed 순서로 뽑히므로 영상 블록은 n_seed와 무관하게 주 부트스트랩과 같다(시험). 모든 대비에 대해 구간과 그 q_d를 적고, 데이터셋별 K − U의 seed SD를 적는다.
+- **민감도 부트스트랩(기술, 판정에 쓰지 않음)**: 영상 × seed. `glance.bootstrap_draws(n_이상, n_정상, n_seed, 2000, 20261024)`의 seed 블록을 두 팔에 같이(같은 seed 번호, 교집합 순서로) 적용해 seed 짝을 지킨다. n_seed는 그 (데이터셋, 쌍)의 교집합 seed 수(2 또는 3)다. 블록은 이상 → 정상 → seed 순서로 뽑히므로 영상 블록은 n_seed와 무관하게 주 부트스트랩과 같다(시험). 교집합 크기가 다른 설정·쌍은 seed 흐름이 달라 결합 방식이 섞이므로 민감도 q_d는 참고값이다. 모든 대비에 대해 구간과 그 q_d를 적고, 데이터셋별 K − U의 seed SD를 적는다.
 
 ### A단계 — 설정 선택 (K 72사슬)
 - 데이터셋 d, 설정 k의 대비 D_{d,k} = K(k) − U(GP). 재표본 r의 값 D^r_{d,k}(r = 1..R), 부트스트랩 SD sd_{d,k}(r = 1..R, ddof = 1).
@@ -112,7 +112,7 @@ URDMU 순전파에서 `x = self.selfatt(x)` 뒤의 스니펫 임베딩 x_t ∈ R
 ### 결과 → 다음 (위에서부터 먼저 맞는 행)
 | 결과 | 다음 |
 |---|---|
-| 관문 실패, 또는 멈추는 판정 없음 = (가) 어느 데이터셋에서든 K(ρ*, τ*) − U가 판정 없음, (나) 어느 데이터셋에 판정 있는 설정이 하나도 없음, (다) 조건 2의 집합에 남은 통제가 없음 | 멈추고 보고. 사용자 결정. (판정 없는 설정·통제를 가족에서 빼고 계속하는 것은 위 규칙대로이며 여기 해당하지 않는다) |
+| 관문 실패, 또는 멈추는 판정 없음 = (가) 어느 데이터셋에 판정 있는 설정이 하나도 없음, (나) 조건 2의 집합에 남은 통제가 없음 (후보는 두 데이터셋 모두 판정이 있으므로 K(ρ*, τ*) − U 자체가 판정 없음일 수는 없다) | 멈추고 보고. 사용자 결정. (판정 없는 설정·통제를 가족에서 빼고 계속하는 것은 위 규칙대로이며 여기 해당하지 않는다) |
 | A단계 후보 없음 | 1단계 미채택. 통제는 돌리지 않는다. 사용자 결정: 다른 후보 등록(새 1단계 계획), 감사·평가 논문, 중단 |
 | 후보 있음, 조건 2 실패 | 미채택. 어떤 통제가 K를 설명하는지 적는다(예: C2면 "정상 가중 없이도 같음", C6이면 "학습 정규화로 충분, 추론 때 쓸 이유 없음"). 사용자 결정 |
 | 후보 있음, 조건 2 통과, 조건 3 실패 | 미채택. 위치 찾기 이득이 영상 수준 검출을 깎는다고 적는다. 사용자 결정 |
@@ -133,14 +133,14 @@ URDMU 순전파에서 `x = self.selfatt(x)` 뒤의 스니펫 임베딩 x_t ∈ R
 - (b) 결정 모드 반복: K(전역, 1) UCF XCB+XCL seed 0을 한 번 더 돌려 `z`와 선택이 비트 단위로 같은지 본다. 1사슬(`gate_b`).
 - (e) 매개변수 수: `selection.json`의 매개변수 수 − 같은 (데이터셋, 쌍) 0a U의 매개변수 수 = 65,793(mode k와 C1·C2·C2b·C3·C6), 0(mode off). `k_config.json`에 적힌 **학습되는** g 매개변수 수(mode off는 0)와도 같아야 한다.
 - (s) 재채점 일치: `rescore`가 다시 채점한 로짓 가운데 그 사슬이 실제로 채점에 쓴 것(`trainonly`는 z₀, 나머지 모드는 s)이 저장된 `z[point−1]`과 결정 모드에서 비트 단위로 같아야 한다. 어느 사슬(고르지 않은 설정 포함)에서든 다르면 결정 모드 재채점의 결함이므로 멈추고 보고한다.
-- (v) 환경 대조: 분석이 모든 K·통제 사슬의 기록 환경(torch, cuda, gpu, TF32 플래그)을 0a U 사슬과 대조하고, 다르면 멈추고 보고한다. `rescore`도 자기 실행 환경(같은 항목 + `CUBLAS_WORKSPACE_CONFIG`·결정 플래그)을 곁 JSON에 적고 `deterministic(True)`로 돌며, 값을 비교하기 전에 그 사슬의 `selection.json` 환경과 대조한다. 다르면 관문 (s)는 "값이 다름"이 아니라 "환경이 다름"으로 보고한다.
+- (v) 환경 대조: 분석이 모든 K·통제 사슬의 기록 환경(torch, cuda, gpu, TF32 플래그)을 0a U 사슬과 대조하고, 다르면 멈추고 보고한다. `rescore`도 자기 실행 환경(같은 항목 + `CUBLAS_WORKSPACE_CONFIG`·결정 플래그)을 곁 JSON에 적고 `deterministic(True)`로 돌며, 값을 비교하기 전에 그 사슬의 `selection.json` 환경과 대조한다. 다르면 관문 (s)는 "값이 다름"이 아니라 "환경이 다름"으로 보고하고, 맞는 환경에서 `rescore`를 한 번 다시 돌린다(`.pt` 삭제 전). 그래도 다르면 멈추고 보고한다.
 - (n) 이름 대조: 폴더 이름과 `k_config.json`의 KConfig·mode가 맞지 않는 사슬은 분석이 거부한다.
-- (t) 새 코드의 단위 시험과 전체 단위 시험 통과(묶음 실행). 시험에 넣을 것: CPU 작은 모델의 (k0) 동치(mode off = URDMU 비트 일치), build 뒤 CPU·CUDA 난수 상태 불변, 옵티마이저 trunk 그룹 순서 = `model.parameters()`, 로그 공간 가중(단일 이상치 T ∈ {200, 4096}·τ 0.25·ρ 0.02, 상수 z: 모두 유한, 행 합 1, 마스크 위치 0), 복제 행 마스크(런, 한 런 → k = 0), C3 순열이 전역 난수 상태를 건드리지 않음, C2·C2b·C6 모양과 손실(C6: k ≡ 0에서 손실이 U와 같고 첫 단계 trunk 갱신이 URDMU와 비트 일치; mode off에서 K의 비용이 U와 같음), 민감도 추출의 영상 블록이 n_seed와 무관함, max-T 구간(합성 자료), seed 교집합 짝짓기, `k_config.json` 대조 거부, 재채점 관문, 시험 경로 거부, 합성 자료 분석.
+- (t) 새 코드의 단위 시험과 전체 단위 시험 통과(묶음 실행). 시험에 넣을 것: CPU 작은 모델의 (k0) 동치(mode off = URDMU 비트 일치), build 뒤 CPU·CUDA 난수 상태 불변, 옵티마이저 trunk 그룹 순서 = `model.parameters()`, 로그 공간 가중(단일 이상치 T ∈ {200, 4096}·τ 0.25·ρ 0.02, 상수 z: 모두 유한, 행 합 1, 마스크 위치 0), 복제 행 마스크(런, 한 런 → k = 0), C3 순열이 전역 난수 상태를 건드리지 않음, C2·C2b·C6 모양과 손실(C6: k ≡ 0에서 손실 값 allclose, 첫 단계 trunk 갱신은 URDMU와 비트 일치; mode off에서 K의 비용이 U와 같음), 민감도 추출의 영상 블록이 n_seed와 무관함, max-T 구간(합성 자료), seed 교집합 짝짓기, `k_config.json` 대조 거부, 재채점 관문, 시험 경로 거부, 합성 자료 분석.
 - (c) 코드 독립 검토(Jev 경로).
 - 고정 뒤 수치 코드 수정은 E023 코드 규칙 1과 같다. 결함을 발견하면 멈추고 보고한다.
 
 ## 코드 (새 파일만; 기존 src 파일 무변경)
-- `src/wvad/baselines/urdmu_k.py`: `RECIPE = urdmu.RECIPE`(같은 옵티마이저·lr·sampler), `KConfig(rho, tau, mode)`(`mode` ∈ {k, off, mlp, tauinf, mean, shuffle, trainonly}; ρ 전역은 `None`), `WSAD_K(urdmu.WSAD)`(순전파 전체를 다시 쓰되 `urdmu.py:377-455`와 같은 순서; 512차원 x를 이어 붙이기 전에 보관; z = `cls_head.logits`, s = z + k; `trainonly`는 frame = σ(z)와 보조용 σ(z + k)를 함께 반환), `URDMUK(urdmu.URDMU)`(`name = "urdmu_k"`, `build` → WSAD_K(g는 전용 생성기), `loss` → `trainonly`면 보조 항 추가, `sequence_logits` → s(`trainonly`는 z), `make_optimizer` → g 별도 그룹). `KNOWN_METHODS`는 바꾸지 않고 `train.run(cfg, method=URDMUK(...))`으로 넣는다(`cfg.method = "urdmu_k"`; `Chain`은 `base.name == cfg.method`만 검사한다).
+- `src/wvad/baselines/urdmu_k.py`: `RECIPE = urdmu.RECIPE`(같은 옵티마이저·lr·sampler), `KConfig(rho, tau, mode)`(`mode` ∈ {k, off, mlp, tauinf, mean, shuffle, trainonly}; ρ 전역은 `None`), `WSAD_K(urdmu.WSAD)`(순전파 전체를 다시 쓰되 `urdmu.py:377-455`와 같은 순서; 512차원 x를 이어 붙이기 전에 보관; z = `cls_head.logits`, s = z + k; `trainonly`는 frame = σ(z)와 보조용 σ(z + k)를 함께 반환), `URDMUK(urdmu.URDMU)`(`name = "urdmu_k"`, `build` → WSAD_K(g는 전용 생성기), `loss` → `trainonly`면 −½·영상 BCE(σ(z)) + ½·영상 BCE(σ(z + k))를 더함, `sequence_logits` → s(`trainonly`는 z), `make_optimizer` → g 별도 그룹). `KNOWN_METHODS`는 바꾸지 않고 `train.run(cfg, method=URDMUK(...))`으로 넣는다(`cfg.method = "urdmu_k"`; `Chain`은 `base.name == cfg.method`만 검사한다).
 - `src/wvad/diagnostics/e024_stage1.py`: `train`(TrainConfig 구성, **`train.run` 전에 out_dir에 `k_config.json`(KConfig, 학습되는 g 매개변수 수(mode off는 0), 코드 판)을 씀**), `pins`, `freeze`, `gate-k0`, `gate-b`, `gate-h`, `gate-e`, `rescore`(서버; 관문 (s) 포함), `smooth`(I1: 0a `val_scores.npz`에서 계산), `analyze`(A단계·B단계; 관문 (p)(n)(v) 포함; 0a의 `frames_of`·`run_values`·`uca_values`·`pooled`·`contrast`·`refuse_test_paths`·`require_frozen` 방식 재사용; B단계 분석은 A단계 결과 파일을 입력으로 받고, 통제 사슬이 없으면 A단계만 쓴다).
 - `tests/test_e024_stage1.py`
 - README: "Stage F E024 1단계" 블록(서버 학습·관문·`rescore`·로컬 분석 명령). 실행 스크립트는 만들지 않는다.
@@ -174,5 +174,6 @@ URDMU 순전파에서 `x = self.selfatt(x)` 뒤의 스니펫 임베딩 x_t ∈ R
 - 초안 2 재확인(2026-10-25, 같은 검토자): 22건 모두 해소. 새 지적 13건, 판정 "고친 뒤 고정"(재설계 없음). Jev(`jev_e024_s1_recheck_accept.json`)가 전부 수용(0.79–0.92); 수정 뒤 추가 검토 없이 봉인 가능 0.54 → 초안 3을 한 번 더 확인받는다.
   - N1(M) C6 손실이 영상 BCE를 두 배로 넣어 U에서 출발하지 않음 → "−½ + ½" 형태(k ≡ 0에서 U와 동일). N2(M) 관문 (s)가 C6에서 늘 실패 → 사슬이 실제 채점에 쓴 로짓과 대조. N3(M)·N7 조건 2 집합 명시, sd 정의, q_d 재사용은 "근사적 보수화". N4 k_config는 학습되는 g 수(off = 0). N5(M) 결과표 첫 행의 "판정 없음"을 세 경우로 한정. N6(M) `nn.Linear` 생성이 전역 CPU 난수를 소비 → `skip_init` + 전용 생성기 초기화. N8 교집합 2-seed의 민감도 추출. N9 통제의 KConfig 기록 규칙. N10 C4 폐기 이유 과장 수정. N11 BN-WVAD 대응 수정. N12 조밀 채점에서도 바이트 동일 스니펫은 마스크됨. N13 `rescore` 환경 기록·대조.
   - 구현자 질문 5건(계획 공백): z̃의 std는 ddof 0; 2-seed 교집합은 N8 방식; ‖x_t − c_t‖는 손실 부분 `xc_norm`으로 기록; B단계 sd = 0도 멈춤; k_config는 명령줄 인자 + 유효 KConfig 둘 다. `--allow_code_change`는 0a와 같이 없음.
+- 초안 3 최종 확인(2026-10-25, 같은 검토자): N1–N13 모두 해소, 판정 **"freeze"**. LOW 문구 6건을 추가 검토 없이 반영: C6 손실 값은 allclose(갱신은 비트 일치), 결과표 첫 행의 불가능한 경우 삭제, 관문 폴더의 k_config 등록, `rescore` 환경 불일치는 맞는 환경에서 한 번 재실행, `torch.std(correction=0)`, 민감도 q_d는 참고값. 이 6건은 문구라 Jev를 따로 부르지 않았고 코드 검토 수용 판정에 기록용으로 함께 올린다.
 
 ## 변경 기록
