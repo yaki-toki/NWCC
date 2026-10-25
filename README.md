@@ -1395,6 +1395,89 @@ git add $E/e024_stage0a.json $E/e024_stage0a_runs.csv && git commit
 ```
 Stage 0b (the diagnostic arms) runs only on a dataset where Δ_gap32 is positive, under its own frozen plan.
 
+### Stage F E024 1단계 — the within-video contrast module K ([stage 1](experiments/E024_localisation_method/stage1/PLAN.md))
+Validation only; no test file is read (`wvad.diagnostics.e024_stage1` refuses test paths). P = URDMU + K (`wvad.baselines.urdmu_k`): K adds k_t = g(x_t − c_t) to UR-DMU's snippet logit, c_t a normality- and distance-weighted context of the other snippets of the same sequence (duplicate d16m200 rows masked), g a 65,793-parameter MLP drawn from its own generator, so the trunk, the batch order and the dropout draws are U's. The 12 stage-0a U chains are the reference arm (not retrained). Stage A trains six K configurations (ρ ∈ {g(lobal), 0.1, 0.02} × τ ∈ {1, 0.25}) on 4 settings × seeds 0-2 (72 chains, folders `k_r<ρ>_t<τ>`) and selects a development candidate on validation data, not a demonstration of improvement: the configuration with a verdict on both datasets whose mean of the two datasets' K − U glance-GP point estimates is largest and positive (registration order on ties); every configuration's max-T simultaneous interval and class are reported, not required. Without a positive-mean configuration the search ends. Stage B runs only for a candidate: the required controls C1 `mlp` and C6 `trainonly` (24 chains, folders `ctl_<name>_r<ρ*>_t<τ*>`) and I1 (`smooth`, no training), analysed with the committed stage-A result as input; it reports K − C classes ("K 우위", "통제 우위", "차이 불확정") and `final_control`, the confirmation's comparator, and never an adoption verdict. `train` writes `k_config.json` into the chain folder first. `rescore` re-scores a chain's sigma checkpoint in deterministic mode with k (s = z + k, C6 included) and with k = 0 (z0, I2). It first checks its environment against the chain's `selection.json`: on a mismatch it records "environment differs" and stops, and is rerun once in the chain's environment. Otherwise it stops unless the logits the chain scored with (z0 for C6, s otherwise) equal the stored ones bit for bit (gate (s)). It also records the validation snippets equal byte for byte to the previous one and the share K actually masks (descriptive; the dense stores are on the server only). Run it on every K and control chain before any checkpoint is deleted. Before the freeze, `pins` records the U chains' files, parameter counts and environments, the splits, the glance and UCA counts and the long videos (once); `freeze` writes `stage1/PLAN.sha256`, committed alone. `analyze` writes nothing and stops unless the tree is clean at the freeze commit with the pins as committed before it, the server's gate files (`gate_k0`, `gate_b`, `gate_h`, `gate_e`; stage B also `gate_h_b`, `gate_e_b`) are all ok and list every chain as passed, and every K and control chain has the registered configuration, the freeze commit's code, its recorded `val_scores.npz`, a passed `rescore.json`, a folder name matching `k_config.json` (gate (n)) and the U chains' environment (gate (v)); a numerically failed chain stops it too.
+```bash
+E=experiments/E024_localisation_method/results      # both machines
+export RUNS1=~/wvad_runs/e024/stage1                 # server; xargs children read it
+export U0=~/wvad_runs/e024/stage0                    # server: the 0a U chains
+export CUBLAS_WORKSPACE_CONFIG=:4096:8               # deterministic mode
+# local, before the freeze
+pytest tests --junitxml=<local runs root>/e024_local/e024s1_pytest.xml          # gate (t)
+python -m wvad.diagnostics.e024_stage1 pins --u_runs <local runs root>/e024/stage0      # once
+git add $E/e024_stage1_inputs.json experiments/E024_localisation_method/stage1/PLAN.md \
+    src/wvad/baselines/urdmu_k.py src/wvad/diagnostics/e024_stage1.py README.md && git commit
+python -m wvad.diagnostics.e024_stage1 freeze
+git add experiments/E024_localisation_method/stage1/PLAN.sha256 && git commit       # the freeze commit
+# server (deploy the freeze commit first): gate (k0) alone, before any K chain
+mkdir -p $RUNS1/ucf_xcb_xcl_s0
+d=$RUNS1/ucf_xcb_xcl_s0/gate_k0
+python -m wvad.diagnostics.e024_stage1 train --dataset ucf --pair xcb_xcl --seed 0 --rho g --tau 1 --mode off \
+    --out_dir $d > $d.log 2>&1
+python -m wvad.diagnostics.e024_stage1 gate-k0 --runs $RUNS1 --u_runs $U0 --out $RUNS1/gate_k0.json
+```
+If `gate-k0` prints FAILED (exit 1): stop and report; do not launch the K chains. Only after it passed:
+```bash
+# server: the 72 K chains
+for ds in ucf xdv; do for pair in xcb_xcl xcb_siglip; do for seed in 0 1 2; do for rho in g 0.1 0.02; do
+  for tau in 1 0.25; do echo $ds $pair $seed $rho $tau; done; done; done; done; done > $RUNS1/jobs_k.txt
+setsid nohup xargs -P 4 -L 1 bash -c 'd=$RUNS1/${0}_${1}_s${2}/k_r${3}_t${4}; mkdir -p $(dirname $d)
+  python -m wvad.diagnostics.e024_stage1 train --dataset $0 --pair $1 --seed $2 --rho $3 --tau $4 --mode k \
+      --out_dir $d > $d.log 2>&1
+' < $RUNS1/jobs_k.txt > $RUNS1/queue_k.log 2>&1 &
+```
+```bash
+# server, when the queue is done: gate (b), gates (h) (e), gate (s) on every K chain
+pgrep -fc "wvad[.]diagnostics[.]e024_stage1 train"  # 0 before the gates
+ls $RUNS1/*/k_r*/selection.json | wc -l              # 72
+d=$RUNS1/ucf_xcb_xcl_s0/gate_b
+python -m wvad.diagnostics.e024_stage1 train --dataset ucf --pair xcb_xcl --seed 0 --rho g --tau 1 --mode k \
+    --out_dir $d > $d.log 2>&1
+python -m wvad.diagnostics.e024_stage1 gate-b --runs $RUNS1 --out $RUNS1/gate_b.json
+python -m wvad.diagnostics.e024_stage1 gate-h --runs $RUNS1 --u_runs $U0 --out $RUNS1/gate_h.json
+python -m wvad.diagnostics.e024_stage1 gate-e --runs $RUNS1 --u_runs $U0 --out $RUNS1/gate_e.json
+for d in $RUNS1/*/k_r*/; do d=${d%/}                 # chain folders only (not the .log files); minutes each
+  python -m wvad.diagnostics.e024_stage1 rescore --chain $d >> $RUNS1/rescore.log 2>&1 || { echo "FAILED $d"; break; }; done
+# a FAILED chain's rescore.json says why: "environment differs" -> rerun it once where it matches; else stop and report
+# local: the runs without checkpoints (tar -h: e024 is a link), stage A
+ssh <server> 'tar -chf - --exclude="*.pt" -C ~/wvad_runs e024/stage1' | tar -xf - -C <local runs root>
+export PYTHONUTF8=1      # Windows: the freeze check reads the Korean seal line through `git show`
+python -m wvad.diagnostics.e024_stage1 analyze --u_runs <local runs root>/e024/stage0 \
+    --runs <local runs root>/e024/stage1      # + --infra_failed <ds>_<pair>_s<seed>/<folder> for a chain missing after its rerun
+git add $E/e024_stage1.json $E/e024_stage1_runs.csv && git commit                   # the stage-A result
+# server, after the stage-A commit: keep the checkpoints of the candidate and of the gate chains only
+K=<candidate folder, e.g. k_r0.1_t0.25>
+find $RUNS1 -name "*.pt" -not -path "*/$K/*" -not -path "*/gate_*/*" -delete
+```
+Stage B, only when stage A has a candidate K = `k_r<R>_t<T>`: the required controls C1 and C6 (24 chains) and I1.
+```bash
+# server: the required controls. The server stays on the freeze commit: no redeploy between stage A and
+# stage B (DEPLOYED_COMMIT must still be the freeze commit, else the analysis refuses the control chains)
+R=<rho* token> T=<tau* token>
+CTL="mlp trainonly"                                  # C1, C6
+for ds in ucf xdv; do for pair in xcb_xcl xcb_siglip; do for seed in 0 1 2; do for c in $CTL; do
+  echo $ds $pair $seed $c $R $T; done; done; done; done > $RUNS1/jobs_ctl.txt
+setsid nohup xargs -P 4 -L 1 bash -c 'd=$RUNS1/${0}_${1}_s${2}/ctl_${3}_r${4}_t${5}; mkdir -p $(dirname $d)
+  python -m wvad.diagnostics.e024_stage1 train --dataset $0 --pair $1 --seed $2 --rho $4 --tau $5 --mode $3 \
+      --out_dir $d > $d.log 2>&1
+' < $RUNS1/jobs_ctl.txt > $RUNS1/queue_ctl.log 2>&1 &
+```
+```bash
+# server, when the queue is done: gates (h) (e) on every chain, gate (s) on every control chain
+pgrep -fc "wvad[.]diagnostics[.]e024_stage1 train"  # 0 before the gates
+python -m wvad.diagnostics.e024_stage1 gate-h --runs $RUNS1 --u_runs $U0 --out $RUNS1/gate_h_b.json
+python -m wvad.diagnostics.e024_stage1 gate-e --runs $RUNS1 --u_runs $U0 --out $RUNS1/gate_e_b.json
+for d in $RUNS1/*/ctl_*/; do d=${d%/}                # chain folders only (not the .log files)
+  python -m wvad.diagnostics.e024_stage1 rescore --chain $d >> $RUNS1/rescore.log 2>&1 || { echo "FAILED $d"; break; }; done
+# local: I1, stage B (the committed stage-A result is the input; the output replaces it)
+ssh <server> 'tar -chf - --exclude="*.pt" -C ~/wvad_runs e024/stage1' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e024_stage1 smooth --u_runs <local runs root>/e024/stage0 --runs <local runs root>/e024/stage1
+python -m wvad.diagnostics.e024_stage1 analyze --u_runs <local runs root>/e024/stage0 \
+    --runs <local runs root>/e024/stage1 --stage_a $E/e024_stage1.json
+git add $E/e024_stage1.json $E/e024_stage1_runs.csv && git commit                   # the stage-B result
+```
+Optional, never required: C2 `tauinf` (and C2b `mean`, C3 `shuffle` when R is local) run with the same launch (add them to `CTL`) before the stage-B gates; the analysis reports such a control only when its folder exists in all 12 cells and passes the gates (one in fewer cells is ignored and listed as `optional_controls_ignored` with the cells present), and never needs it. The outcome row (`outcome.row`: no_verdict, no_candidate, stage_a_only, stage_b_done) follows PLAN.md "결과 → 다음"; whatever it is, it goes into the result file and the parent plan's change log.
+
 ## Paper
 The manuscript, its figure and number generators and their commands are kept local until submission ([`paper/README.md`](paper/README.md)).
 
