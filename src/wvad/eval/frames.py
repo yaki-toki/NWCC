@@ -47,9 +47,9 @@ from wvad.extract import grid
 Expand = Callable[[np.ndarray, int], np.ndarray]       # (unit values, T) -> (T,) frame values
 UNITS = ("segment", "window", "snippet")
 METRICS = {"auc": roc_auc_score, "ap": average_precision_score}
-PRIMARY = {"ucf": "frame_auc", "xdv": "frame_ap"}       # the main metric of each dataset
-L_METRIC = {"ucf": "auc", "xdv": "ap"}                  # L uses the main metric's kind
-OPPOSITE = {"ucf": "ap", "xdv": "auc"}                  # the descriptive other kind
+PRIMARY = {"ucf": "frame_auc", "xdv": "frame_ap", "ubn": "frame_auc"}   # main metric per dataset
+L_METRIC = {"ucf": "auc", "xdv": "ap", "ubn": "auc"}    # L uses the main metric's kind
+OPPOSITE = {"ucf": "ap", "xdv": "auc", "ubn": "ap"}     # the descriptive other kind
 
 
 def snippet_frames(values: Sequence[float] | np.ndarray, total_frames: int) -> np.ndarray:

@@ -67,7 +67,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from wvad.data.catalog import DATASETS, ENCODER_PAIRS, ENCODERS, dense_dir, dense_name
+from wvad.data.catalog import ALL_DATASETS, ENCODER_PAIRS, ENCODERS, dense_dir, dense_name
 from wvad.data.dense import (
     FEATURES_FILE,
     INDEX_FILE,
@@ -490,7 +490,7 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     p = argparse.ArgumentParser(prog="python -m wvad.extract.derive_n",
                                 description="E023 derived training inputs (training split only)")
-    p.add_argument("--dataset", required=True, choices=DATASETS)
+    p.add_argument("--dataset", required=True, choices=ALL_DATASETS)
     p.add_argument("--variants", nargs="+", required=True)
     p.add_argument("--encoders", nargs="+", default=list(ENCODERS), choices=ENCODERS)
     p.add_argument("--record", type=Path, help="results/e023_train_inputs.json (merged)")

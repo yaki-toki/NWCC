@@ -116,7 +116,7 @@ from torch import nn
 
 from wvad.baselines import samplers
 from wvad.baselines.recipes import LICENCES_FILE, Recipe, check_recipe, lr_at, require_recipe
-from wvad.data.catalog import ENCODER_PAIRS
+from wvad.data.catalog import ALL_DATASETS, ENCODER_PAIRS
 from wvad.data.dense import ScaleMap
 from wvad.eval.crossfit import rank_auc
 from wvad.eval.dense_readout import readout, sigmoid32
@@ -343,7 +343,7 @@ def main_family() -> dict[str, BaselineMethod]:
     return {n: get_method(n) for n in available_methods(False)}
 
 
-DATASETS = ("ucf", "xdv")
+DATASETS = ALL_DATASETS              # E024 stage 2: UBnormal registered beside UCF and XD
 
 
 def dataset_method(method: BaselineMethod, dataset: str) -> BaselineMethod:

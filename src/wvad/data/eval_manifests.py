@@ -27,8 +27,13 @@ from wvad.eval.metrics import frame_labels
 from wvad.paths import REPO_ROOT
 
 EVAL_MANIFEST_FILES = {"ucf": "data/manifests/ucf_test.json",
-                       "xdv": "data/manifests/xdv_test.json"}
+                       "xdv": "data/manifests/xdv_test.json",
+                       "ubn": "data/manifests/ubn_test.json"}      # E024 stage 2 (UBnormal)
 COLUMNS = ("names", "categories", "labels", "intervals", "total_frames", "fps")
+# meta key of a manifest whose intervals are not stored in the file (UBnormal, CC BY-NC-ND: the
+# tracks files are read by the dataset's own reader at the sealed scoring); every row's
+# intervals column is then empty and ``frame_gts`` refuses.
+EXTERNAL_INTERVALS = "intervals_external"
 
 
 class EvalManifestError(ValueError):
@@ -48,8 +53,15 @@ class EvalManifest:
     def __len__(self) -> int:
         return len(self.names)
 
+    @property
+    def intervals_external(self) -> bool:
+        return bool(self.meta.get(EXTERNAL_INTERVALS))
+
     def frame_gts(self) -> list[np.ndarray]:
         """0/1 frame labels per video (``wvad.eval.metrics.frame_labels``)."""
+        if self.intervals_external:
+            raise EvalManifestError(f"intervals are external ({EXTERNAL_INTERVALS}): use the "
+                                    "dataset's own label reader")
         return [frame_labels(t, iv) for t, iv in zip(self.total_frames, self.intervals,
                                                      strict=True)]
 
@@ -82,7 +94,13 @@ def parse_eval_manifest(raw: Mapping[str, object], source: str = "<manifest>") -
         raise EvalManifestError(f"{source}: labels must be 0 or 1")
     if any(t < 1 for t in total):
         raise EvalManifestError(f"{source}: total_frames must be positive")
+    external = bool(meta.get(EXTERNAL_INTERVALS))
     for i, (y, iv) in enumerate(zip(labels, intervals, strict=True)):
+        if external:
+            if iv:
+                raise EvalManifestError(f"{source}: row {i} stores intervals although the "
+                                        f"manifest marks them {EXTERNAL_INTERVALS}")
+            continue
         if bool(iv) != bool(y):
             raise EvalManifestError(f"{source}: row {i} label {y} with {len(iv)} intervals")
         if any(s < 0 or e < s for s, e in iv):

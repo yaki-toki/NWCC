@@ -349,12 +349,14 @@ def cmd_check(args) -> None:
 # --- parser ---------------------------------------------------------------------------------
 
 def parse(argv=None) -> argparse.Namespace:
+    from wvad.data.catalog import ALL_DATASETS  # E024 stage 2: header/dense also take ubn
+
     ap = argparse.ArgumentParser(prog="python -m wvad.extract")
     sub = ap.add_subparsers(dest="command", required=True)
 
-    def common(p, dataset=True):
+    def common(p, dataset=True, choices=("ucf", "xdv")):
         if dataset:
-            p.add_argument("--dataset", required=True, choices=("ucf", "xdv"))
+            p.add_argument("--dataset", required=True, choices=choices)
         p.add_argument("--encoders", nargs="+", choices=ENCODERS, default=list(ENCODERS))
 
     g = sub.add_parser("gate", help="(x0) unit-test and normalisation records, (x1), (x2), "
@@ -381,13 +383,13 @@ def parse(argv=None) -> argparse.Namespace:
     b.add_argument("--batch", type=_batch, default=_batch(PRODUCTION_BATCH))
     b.add_argument("--normalize", choices=NORMALIZE, default="lut")
     h = sub.add_parser("header", help="(x3a) header frame counts and (x6) sha256")
-    h.add_argument("--dataset", required=True, choices=("ucf", "xdv"))
+    h.add_argument("--dataset", required=True, choices=ALL_DATASETS)
     h.add_argument("--subset", choices=("all", "trainpart"), default="all")
     h.add_argument("--sha_only", action="store_true")
     h.add_argument("--access_log", required=True)
     h.add_argument("--out", required=True)
     d = sub.add_parser("dense", help="production extraction of a phase")
-    common(d)
+    common(d, choices=ALL_DATASETS)
     d.add_argument("--phase", required=True, choices=("val", "trainpart"))
     d.add_argument("--access_log", required=True)
     d.add_argument("--workers", type=int, default=32)

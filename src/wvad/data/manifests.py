@@ -27,7 +27,10 @@ from types import MappingProxyType
 from wvad.paths import REPO_ROOT
 
 MANIFEST_FILES = {"ucf": "data/manifests/ucf_train.json",
-                  "xdv": "data/manifests/xdv_train.json"}
+                  "xdv": "data/manifests/xdv_train.json",
+                  # E024 stage 2: the official UBnormal training and validation videos (332),
+                  # categories "normal" / "abnormal", rel_paths UBnormal/Scene<s>/<name>.mp4
+                  "ubn": "data/manifests/ubn_train.json"}
 COLUMNS = ("names", "categories", "labels", "total_frames", "fps", "rel_paths")
 
 

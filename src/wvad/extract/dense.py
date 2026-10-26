@@ -43,7 +43,7 @@ from pathlib import Path, PurePosixPath
 import numpy as np
 import torch
 
-from wvad.data.catalog import dense_dir
+from wvad.data.catalog import NEW_DATASETS, dense_dir
 from wvad.data.dense import (
     FEATURES_FILE,
     META_FILE,
@@ -86,6 +86,11 @@ def rel_video_path(dataset: str, manifest: TrainManifest, index: int) -> str:
         return str(PurePosixPath(UCF_FOLDER) / rel)
     if dataset == "xdv":
         return str(XD_FOLDER / f"{manifest.names[index]}.mp4")
+    if dataset in NEW_DATASETS:            # E024 stage 2 (UBnormal): the manifest's rel_paths
+        rel = manifest.rel_paths[index]
+        if rel is None:
+            raise ValueError(f"{dataset} manifest row {index} has no rel_path")
+        return str(PurePosixPath(rel))
     raise KeyError(f"unknown dataset '{dataset}'")
 
 

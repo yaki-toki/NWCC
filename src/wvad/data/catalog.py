@@ -19,13 +19,16 @@ from pathlib import Path
 
 from wvad.paths import REPO_ROOT, Paths
 
-DATASETS = ("ucf", "xdv")
+DATASETS = ("ucf", "xdv")            # the E020-E023 benchmarks (their gates loop over this pair)
+NEW_DATASETS = ("ubn",)              # E024 stage 2: UBnormal (dense caches only, no legacy cache)
+ALL_DATASETS = (*DATASETS, *NEW_DATASETS)
 ENCODERS = ("xcb", "xcl", "siglip")
 ENCODER_PAIRS = {"xcb_xcl": ("xcb", "xcl"), "xcb_siglip": ("xcb", "siglip"),
                  # single encoders (E019 pre-check), used through the same "pair" argument
                  "xcb": ("xcb",), "xcl": ("xcl",), "siglip": ("siglip",)}
 SPLIT_FILES = {"ucf": "data/splits/ucf_val_split_15.json",
-               "xdv": "data/splits/xdv_val_split_15.json"}
+               "xdv": "data/splits/xdv_val_split_15.json",
+               "ubn": "data/splits/ubn_val_official.json"}
 SEGMENTS_PER_VIDEO = 32
 LEGACY = "legacy"
 FEATURE_VARIANTS = (LEGACY, "d16c", "d16r", "d16m", "d16m2")    # what training --features takes
@@ -34,8 +37,8 @@ DENSE_SUFFIX = "d16"
 
 
 def _check(dataset: str, pair: str | None = None) -> None:
-    if dataset not in DATASETS:
-        raise KeyError(f"unknown dataset '{dataset}' (known: {', '.join(DATASETS)})")
+    if dataset not in ALL_DATASETS:
+        raise KeyError(f"unknown dataset '{dataset}' (known: {', '.join(ALL_DATASETS)})")
     if pair is not None and pair not in ENCODER_PAIRS:
         raise KeyError(f"unknown encoder pair '{pair}' (known: {', '.join(ENCODER_PAIRS)})")
 
@@ -59,6 +62,8 @@ def feature_names(dataset: str, pair: str, variant: str = LEGACY) -> tuple[str, 
     ``paths.yaml``), unchanged; a dense variant: ``<dataset>_<encoder>_<variant>``."""
     _check(dataset, pair)
     check_variant(dataset, variant)
+    if variant == LEGACY and dataset in NEW_DATASETS:
+        raise KeyError(f"'{dataset}' has no legacy 32-clip cache (dense variants only)")
     suffix = "" if variant == LEGACY else f"_{variant}"
     return tuple(f"{dataset}_{enc}{suffix}" for enc in ENCODER_PAIRS[pair])
 

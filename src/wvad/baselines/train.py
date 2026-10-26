@@ -88,12 +88,12 @@ from wvad.baselines.common import (
 )
 from wvad.baselines.recipes import UNITS, UnitInput, parse_mult, require_recipe, total_steps
 from wvad.data import check_labels, load_feature_set, load_split, split_file
-from wvad.data.catalog import ENCODER_PAIRS, FEATURE_VARIANTS, dense_dir
+from wvad.data.catalog import ALL_DATASETS, ENCODER_PAIRS, FEATURE_VARIANTS, dense_dir
 from wvad.data.dense import META_FILE, DenseSet, read_json
 from wvad.data.features import FeatureSet
 
 PAIRS = ("xcb_xcl", "xcb_siglip")
-DATASETS = ("ucf", "xdv")
+DATASETS = ALL_DATASETS              # E024 stage 2: UBnormal registered beside UCF and XD
 FILES = {"config": "config.json", "val": "val_scores.npz", "history": "history.json",
          "record": "selection.json", "sigma": "ckpt_sigma_best.pt",
          "logit": "ckpt_logit_best.pt", "last": "ckpt_last.pt"}
