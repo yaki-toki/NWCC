@@ -23,7 +23,6 @@ from types import MappingProxyType
 
 import numpy as np
 
-from wvad.eval.metrics import frame_labels
 from wvad.paths import REPO_ROOT
 
 EVAL_MANIFEST_FILES = {"ucf": "data/manifests/ucf_test.json",
@@ -62,6 +61,8 @@ class EvalManifest:
         if self.intervals_external:
             raise EvalManifestError(f"intervals are external ({EXTERNAL_INTERVALS}): use the "
                                     "dataset's own label reader")
+        from wvad.eval.metrics import frame_labels  # sklearn: not needed to read a manifest
+
         return [frame_labels(t, iv) for t, iv in zip(self.total_frames, self.intervals,
                                                      strict=True)]
 
