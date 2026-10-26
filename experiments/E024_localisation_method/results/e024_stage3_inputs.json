@@ -1,0 +1,1081 @@
+{
+ "stage": "E024 stage 3 inputs (stage3/PLAN.md \uad00\ubb38 (p))",
+ "files": {
+  "data/manifests/ubn_train.json": {
+   "sha256": "596d70cc5cf61a2087c3ff506b4c3aa134887627cffd2e05065f424451dd3746",
+   "meta": {
+    "dataset": "ubn",
+    "split": "train+val",
+    "n": 332,
+    "n_train": 268,
+    "n_val": 64,
+    "source": {
+     "repository": "https://github.com/lilygeorgescu/UBnormal",
+     "commit": "8c77642bb72615988ace0451b94ec42f8953a525",
+     "checked": "2026-10-26",
+     "paper": "Acsintoae et al., CVPR 2022, arXiv:2111.08644",
+     "lists": {
+      "normal_training_video_names.txt": "329813830c3fe5765ac35bb31a691b7ec69eb9c963174d14e643898aed59dd1e",
+      "abnormal_training_video_names.txt": "79bd655775a6a5c24dfa04220f969ebc11790dc293bdea441bbc74f5dd55f145",
+      "normal_validation_video_names.txt": "3112a825a325c900f5616c43837c7178bc087290eee35b9d544c61a332c85324",
+      "abnormal_validation_video_names.txt": "9de909b5aa35b99f372829efb57326586b99367752c3c150946ed587bc27d580",
+      "normal_test_video_names.txt": "c5adc274b9551773d9c6ebf61e92b56749e69b3a5e6e02de3149303bf44291f8",
+      "abnormal_test_video_names.txt": "da4f0655ebfbcbb3123e320d20a97ffbeb81288fcc0a3c784bb9036133877035"
+     },
+     "licence": "CC BY-NC-ND 4.0",
+     "licence_sha256": {
+      "repository license.txt": "727f1dcf53278cdad47f7a92ed47c3f9197e10e45f2c70acd21e787df07c3d2d",
+      "archive license.txt": "4c397c016fde73e4d9bb523a0f820bc00cd7e4914832514b6f9aa616308b3a28"
+     }
+    },
+    "headers": "cv2 4.13.0 CAP_PROP_FRAME_COUNT, CAP_PROP_FPS",
+    "order": "official lists: normal_training_video_names.txt, abnormal_training_video_names.txt, normal_validation_video_names.txt, abnormal_validation_video_names.txt",
+    "created": "2026-10-26T00:13:35+00:00"
+   }
+  },
+  "data/manifests/ubn_test.json": {
+   "sha256": "7949866c42c3a3cd6443ee28c3156755920335c22ac13b589070d57e5e97a53e",
+   "meta": {
+    "dataset": "ubn",
+    "split": "test",
+    "n": 211,
+    "source": {
+     "repository": "https://github.com/lilygeorgescu/UBnormal",
+     "commit": "8c77642bb72615988ace0451b94ec42f8953a525",
+     "checked": "2026-10-26",
+     "paper": "Acsintoae et al., CVPR 2022, arXiv:2111.08644",
+     "lists": {
+      "normal_training_video_names.txt": "329813830c3fe5765ac35bb31a691b7ec69eb9c963174d14e643898aed59dd1e",
+      "abnormal_training_video_names.txt": "79bd655775a6a5c24dfa04220f969ebc11790dc293bdea441bbc74f5dd55f145",
+      "normal_validation_video_names.txt": "3112a825a325c900f5616c43837c7178bc087290eee35b9d544c61a332c85324",
+      "abnormal_validation_video_names.txt": "9de909b5aa35b99f372829efb57326586b99367752c3c150946ed587bc27d580",
+      "normal_test_video_names.txt": "c5adc274b9551773d9c6ebf61e92b56749e69b3a5e6e02de3149303bf44291f8",
+      "abnormal_test_video_names.txt": "da4f0655ebfbcbb3123e320d20a97ffbeb81288fcc0a3c784bb9036133877035"
+     },
+     "licence": "CC BY-NC-ND 4.0",
+     "licence_sha256": {
+      "repository license.txt": "727f1dcf53278cdad47f7a92ed47c3f9197e10e45f2c70acd21e787df07c3d2d",
+      "archive license.txt": "4c397c016fde73e4d9bb523a0f820bc00cd7e4914832514b6f9aa616308b3a28"
+     }
+    },
+    "headers": "cv2 4.13.0 CAP_PROP_FRAME_COUNT, CAP_PROP_FPS",
+    "order": "official lists: normal_test_video_names.txt, abnormal_test_video_names.txt",
+    "intervals_external": {
+     "file": "UBnormal/Scene<s>/<name>_annotations/<name>_tracks.txt",
+     "read": "at the sealed scoring of E024 stage 3 only (wvad.data.ubnormal.test_frame_gts, access logged)",
+     "reason": "CC BY-NC-ND 4.0: the intervals are not redistributed"
+    },
+    "created": "2026-10-26T00:13:35+00:00"
+   }
+  },
+  "data/splits/ubn_val_official.json": {
+   "sha256": "fd4ba83ea9199cf74462114ff6155c1ba7ccebecc7eb05a57e9d5d632df5f946",
+   "meta": {
+    "source": "official validation lists (UBnormal scripts)",
+    "n_total": 332,
+    "n_val": 64,
+    "n_val_anom": 38,
+    "n_val_norm": 26,
+    "split_sha256": "9fd339973c281f4954888c8db60745a996b968130dc1bcc4ab0abae034081b93",
+    "labels_source": "ubn_train.json labels",
+    "created": "2026-10-26T00:13:35+00:00"
+   }
+  },
+  "data/manifests/ucf_test.json": {
+   "sha256": "1f200e224e2d60251a3ec6f70c6f7996e6f88e384cee16c7a836725fde6decef"
+  },
+  "data/manifests/xdv_test.json": {
+   "sha256": "b32483ba01df8b858114a47ff5f53524ba22af2f484c546c7847eb90fd7590cf"
+  }
+ },
+ "lists": {
+  "normal_training_video_names.txt": "329813830c3fe5765ac35bb31a691b7ec69eb9c963174d14e643898aed59dd1e",
+  "abnormal_training_video_names.txt": "79bd655775a6a5c24dfa04220f969ebc11790dc293bdea441bbc74f5dd55f145",
+  "normal_validation_video_names.txt": "3112a825a325c900f5616c43837c7178bc087290eee35b9d544c61a332c85324",
+  "abnormal_validation_video_names.txt": "9de909b5aa35b99f372829efb57326586b99367752c3c150946ed587bc27d580",
+  "normal_test_video_names.txt": "c5adc274b9551773d9c6ebf61e92b56749e69b3a5e6e02de3149303bf44291f8",
+  "abnormal_test_video_names.txt": "da4f0655ebfbcbb3123e320d20a97ffbeb81288fcc0a3c784bb9036133877035"
+ },
+ "tracks": {
+  "file": "tracks_check.json",
+  "sha256": "b246e7a898e33c247cc8ffb59fbcf88b16f8ec0be195916cf5bc931384259d03",
+  "check": "E024 stage 2 (0g-ubn) tracks check",
+  "utc": "2026-10-26T00:14:31+00:00",
+  "summary": {
+   "validation_videos": 38,
+   "validation_ok": 38,
+   "validation_problems": [],
+   "test_videos": 158,
+   "test_missing": [],
+   "test_manifest_n": 211,
+   "ok": true
+  },
+  "test": {
+   "abnormal_scene_10_scenario_1": "6b8a7ae0d1cdd204c8dd8e619bef86e19f9d0a6eebf530000f490c38b1f47bff",
+   "abnormal_scene_10_scenario_3": "85d38d8f0b2bfb0506801356178a75d715c398cd4085ad01ed17d78ab51556c2",
+   "abnormal_scene_10_scenario_4": "229cd85f5671559b950c96fdc9c7fde5c2a3ba0135f4159c4e7637b053c79ecc",
+   "abnormal_scene_10_scenario_5": "443eacf0877413174b2765d643d93a0e5e0acfbd4b5b219208b6074a9ab51eb5",
+   "abnormal_scene_10_scenario_6": "5aea7aa580f140aa908cb9eb3b451559f2725eed9f3eac9b1b80f74a6ff79490",
+   "abnormal_scene_10_scenario_7": "24ff6c94a0d3664912c115ed1fcf9b77c18e61738be10e8c44536779eeb66059",
+   "abnormal_scene_10_scenario_8": "88043a841e9d405fa00e165bb7add2886be5c8d40dea1d9559bbbb22079d4f2d",
+   "abnormal_scene_11_scenario_1": "d9cfdc854134a450f828dc467154d1969b739d711bef31537eab7702b4281b3c",
+   "abnormal_scene_11_scenario_1_fog": "c0d7fb7a74475b3ded45f4907e7c91ba91567fe979695989fe2cb5bbe31fe10d",
+   "abnormal_scene_11_scenario_2": "a5d50cfbd28210bfbd34c95784da59b82708a8ce8e5f8086b7ca26d344247822",
+   "abnormal_scene_11_scenario_2_fog": "671c96af050a73e65d29e949c8b437fe53bd01bb8cd4b191e7bceb4ea52c43e9",
+   "abnormal_scene_11_scenario_8": "a8f829bb09a6e1c687e1584f486d06f4e27e887d834faa170742aabe2980ab1c",
+   "abnormal_scene_11_scenario_9": "2e657f2b2ca758714e9141d69b35f132daa38c3930f822ba4166298057f1e7a2",
+   "abnormal_scene_12_scenario_1": "23b4c799831d251b165c20d65376be1a5dd4cf7a2fe1e481481d56e4034b29a4",
+   "abnormal_scene_12_scenario_1_smoke": "5366994c504a3e6dc59b3e1b6195eeaed7bed951fc812eced94c035386ead7d6",
+   "abnormal_scene_12_scenario_2": "f0f61838f01f4fd664f7ebc246a30d8b5ce5ff7cd771813f88930d286886eaee",
+   "abnormal_scene_12_scenario_3": "665afcdb6a2bee53f92c30c30103d554305b2ccbe8a9ce7c1f0204c862797571",
+   "abnormal_scene_12_scenario_4": "4438b79bf8740dbc7112002371c0589e41f249c64f51b7ba7183b44421621de3",
+   "abnormal_scene_12_scenario_8": "4939b3d0fc23f085ae25f00f4ce2a5d4c29c950fd7a7b1b684ac53e0eb8883be",
+   "abnormal_scene_12_scenario_9": "112c1e3d8caac2a3fcf015a30c44e8998e3d4518d68e825c3eca26868d4d9345",
+   "abnormal_scene_13_scenario_1": "5ef8819f54e12b94400f68dbe59227c8e3c31af974494b4249b2f494e54af431",
+   "abnormal_scene_13_scenario_1_fog": "54394bc843607f7f0642adb555006479e25ada47638755ecf2b10540163c2967",
+   "abnormal_scene_13_scenario_2_fog": "ae5c5f5e1a3a1fc7a33ba1a296e511101080961d2ca55f669b3573a4d347b4e9",
+   "abnormal_scene_13_scenario_3": "7558cc91606567129dfc1a9d4a3b31e6de9be93a156ffd4741366e2860603553",
+   "abnormal_scene_13_scenario_3_fog": "fd4753aed81548850498595867fe9573050597307a200dfe3dd38100b17fb7c6",
+   "abnormal_scene_13_scenario_4": "e8b02093b21c658558995c6efb7b32b5be8051981e2a6b9a44073ce524223921",
+   "abnormal_scene_13_scenario_4_fog": "9761f947daa8f5ea1d6be0dab4faa55bb1480b01d5797bb3b8888e7ea991c228",
+   "abnormal_scene_13_scenario_5": "d835f67abad08e8ad156fbe064eb3d2f147a5004c032058c497374f21af1329d",
+   "abnormal_scene_13_scenario_8": "7bc07cf09e4ed698ed35a1a3bac1f3061dd65d2860a12472449edcad2c7e0e47",
+   "abnormal_scene_13_scenario_9": "10ac8c3c3e53f5671facea291fda0e871c8ed9ff09724adb7fe335d77d6c6625",
+   "abnormal_scene_14_scenario_5": "8e5b341ed7bc8f44928bb694f979cbede9849f6353fceaf5bfbfe56ed00d34b1",
+   "abnormal_scene_14_scenario_6": "9b77cfea08bf2d61389a4cf22939956839a0f9fa147415b63a6cf268171c2e58",
+   "abnormal_scene_14_scenario_7": "17e934c72642d73b682a203588a6aad62108e5ac0698cf6b45a4a9267051bd99",
+   "abnormal_scene_14_scenario_8": "fa39a9a428eb17a5c66f265e26a75dcf6a64e789a3ca252c4100691af7525972",
+   "abnormal_scene_15_scenario_1": "4789e879e208760c1b12f3e949eae6fe866308834ef95c15d4447d4bcf6437f5",
+   "abnormal_scene_15_scenario_2": "e33585a444f9ec83245df574575e2a9f60dae3eb7e66a0ca933d17ec59e09ffa",
+   "abnormal_scene_15_scenario_3": "59b011f76ebc9fb29daeaaf593a68e58845e79beccb555df0aece3675c52a29b",
+   "abnormal_scene_15_scenario_4": "b759d5d905d112d17dd0d4188542de3d47074b70c46b99d9bc42e5cc4ef4c0b5",
+   "abnormal_scene_15_scenario_5": "f5494254a0ae2dab6ac9d855b024a07261da1582b18a52716b3ed63814b26ff0",
+   "abnormal_scene_15_scenario_6": "27f3d05e873109cf0c7f7d6553fe56f319ef4e98225922fac94790ec01828049",
+   "abnormal_scene_15_scenario_8": "8da7ac623b539396305ffa54a23cd89be1b2009771c8fa3b9b2acba2c6bbcd48",
+   "abnormal_scene_15_scenario_9": "2825bb666b135d222eaedbcdb4801582c9ae55f49e7a15ea99264fedca0ad3cd",
+   "abnormal_scene_16_scenario_2": "3d82d14aca41d26a688ac5ac8d5d2ce225913aec01ce19bcf9f09988acc2e9f7",
+   "abnormal_scene_16_scenario_3": "7751317c0d024038b75cc18d3f4633f402a88563b4d77a00510039221d2db44f",
+   "abnormal_scene_16_scenario_4": "bc3138f7f8e3208f84ba87d421a31a03e85d528701436a67dd484b3fb1e67ace",
+   "abnormal_scene_17_scenario_1_smoke": "ffb1c2a48179c65ad5d964516d43a7d6d411b74c5fdb352ea1bbd5a16d33da57",
+   "abnormal_scene_17_scenario_2": "9a642eadda0c6be1d26b3e7c9ced6c1728a86062eb6784ccc3d17e3e8e4cbd1d",
+   "abnormal_scene_17_scenario_2_fire": "6219b57dabb2e1ab78fc2a693b088b414d748190fdf9803c53aaed4080f433a3",
+   "abnormal_scene_17_scenario_4": "934f355fe2e2c11710bc63bb62e0bf5853d7af1e0ad4597ba803397bb39fd5cb",
+   "abnormal_scene_17_scenario_5": "a3f5a9a19dd6caa32e0e4f7c55e036a03b550fc077092ceed13fdfaf00882933",
+   "abnormal_scene_17_scenario_6": "6e7b59f67c207a40790198dc44eb39041fb2151aa1f9ad314ada81ef3b9d6ac6",
+   "abnormal_scene_17_scenario_7": "d3b8faab4a68f29d6a36dfa1e2387f41dbc61072d1afde996c6ccc1e20f3391a",
+   "abnormal_scene_17_scenario_9": "a065df564a70d1a58624064ca521ce1daa52b62291f22ff4a49c4e2a595bafb6",
+   "abnormal_scene_18_scenario_5": "7943892c5e8aa03271244825308e97adbc84fc0501ee541437084dd272fb6d00",
+   "abnormal_scene_18_scenario_6": "db8a89271d715107a5b7868531afe18b116596ee1833166268e800040f07af98",
+   "abnormal_scene_18_scenario_7": "b8c5b44b57e80b9df549c8afd243de5b279ff77ae8ebf8432e835f017fa6d2e6",
+   "abnormal_scene_19_scenario_5": "e3e6cd15bf6c0f47ef92034b13d61627b59a8555a86dd1fcd22689d71207174a",
+   "abnormal_scene_19_scenario_6": "9a7b4d2637970fba2d404c1f0b8374f5d05ae12ec80286313cd2593a4cad02fa",
+   "abnormal_scene_19_scenario_7": "ece050e62488eb346d0f864433beb3fad71cf6b10154c51dab42db722370acf4",
+   "abnormal_scene_19_scenario_8": "8e558e72f9cdc96034c376a76bf5eae5c19288c13cb4daf4f9c66834cfc3910b",
+   "abnormal_scene_1_scenario_1": "8ec14de3054da26744c61cd7622906dd04bbabc179e0f4bd6bedabae14f466ed",
+   "abnormal_scene_1_scenario_2": "ecbe5615aa60ab63e994065e084b3d1c483f204b7c9f6e5f663b7fab552bd82f",
+   "abnormal_scene_1_scenario_4": "1c7a3d5307055716705a9a29e8e426baa800ae3db5095d21caab7c72ea707db2",
+   "abnormal_scene_1_scenario_5": "3a99cb6caded5f65dd786a01014f3227470f1e8d452ad10a0b7645f9e27f17c0",
+   "abnormal_scene_1_scenario_6": "c6a01f9d265da171c7204730a658006c2d384bb79f7fadb917f170981257376d",
+   "abnormal_scene_1_scenario_7": "88989bc046abdbee0869acf5c1fb0aa6e8510932a77b62812eaba3a0f8c2a86c",
+   "abnormal_scene_1_scenario_8": "71ae4d2270ec0cdfe3fe5005daa65f5e26b55fcb741858abffab88e2611288b2",
+   "abnormal_scene_1_scenario_9": "c6be77e25a9818732b750d76c04967b2c0b60f26773423ac353daccca2f6d0d4",
+   "abnormal_scene_20_scenario_1": "2f9469596f0fd81aba2cc23c4712834cd56b5d1194aa25d1384df09d0e533f6d",
+   "abnormal_scene_20_scenario_2": "40093de711c6f7da92d75f679931bded34a439231d82469992b7ba775bc6b7d5",
+   "abnormal_scene_20_scenario_3": "d5464eb387e422425220bdb67d606b746c57969b9a955d33f41f7c73513b3bf9",
+   "abnormal_scene_20_scenario_4": "c26f1f6ded9582f46250c2f93871617105fa1574973a9452dd24d0468129df85",
+   "abnormal_scene_21_scenario_1": "f3fba9b1b51b361e52837976cc696a02bec1440d383c76d35f7c6099b4fcc8d8",
+   "abnormal_scene_21_scenario_2": "e758e95a7906d38c9ecd4cef509e192c2ad71a7c0be437889c78ef37a55869c5",
+   "abnormal_scene_21_scenario_3": "be7c0e191da0ddf3e092490afada2e4d74635f9cf879b927bca56243402897d3",
+   "abnormal_scene_22_scenario_1": "a27b2a23473d5822aebef71fc6ee2b76f6da4e67964deccf68016b82c4f6357c",
+   "abnormal_scene_22_scenario_2": "abbb14738f5a674c319c8ca9c2f701b9163d84352d1ac0ae63aeee4908bbe2bd",
+   "abnormal_scene_22_scenario_3": "9d6d97e731c495c2a762d45aa5639be819cdceb6f30d145e1d6a34f358b7b1ad",
+   "abnormal_scene_22_scenario_4": "35fc010462a77877c42bdda7769c780eebbf85de9014a2614da5df4a2bc89286",
+   "abnormal_scene_23_scenario_1": "03fc951c619455c0c168a6b620b622afbac9ca15cdf16456458bbc3c34a18b4e",
+   "abnormal_scene_23_scenario_2": "bcc6ae9715bb9490b07d6cab92e22e93587ba9c655e4cd9c6d0368e943fa2709",
+   "abnormal_scene_23_scenario_3": "f41e78e9d14b3cb8d86b012978b9b947eb05dd1b77928f548da3112cccad1c85",
+   "abnormal_scene_23_scenario_4": "4a65811e434c13dd3d744e1c8324810966dd09e93aff1daab0a0690a7354d6c9",
+   "abnormal_scene_24_scenario_1": "69dea169cc3ae33e457f23b259c857f6a261d625802fd1513f4a75c22323365e",
+   "abnormal_scene_24_scenario_2": "949846db1cb304dafa4e7185f74c51cd8dce977ac536fbda9b8280e1eeb85415",
+   "abnormal_scene_24_scenario_3": "50782adea46796e28e2ee855953203cff3f6a8ecf31a18c8b83ee0d65ad78ef4",
+   "abnormal_scene_24_scenario_4": "4e0d8dabed020cd334afa057a0c308f26c5d31bdce85dae9ec2c133782298922",
+   "abnormal_scene_25_scenario_1": "97f0b09dab2e00817b495fced0af4512510f8fb3a9cf48570160abb084c5eaf6",
+   "abnormal_scene_25_scenario_3": "e9fbf5d33ff2f6c7422800b6b3ed43f03b7e5ec4cd3c823bff34a837469c583f",
+   "abnormal_scene_25_scenario_4": "0967a124d46e1e5dd5cc152fba8c78ab4f0d5306138238f1fff8758ea1162228",
+   "abnormal_scene_26_scenario_1": "aa0315e78cdf2cb1ffdc243f378646d4426dd71ad87701d455ccb2c9e6db8899",
+   "abnormal_scene_26_scenario_2": "4273b0c59d0dd5b619a51acd6633b057189a5146cd517b8c095bf195ad434ecd",
+   "abnormal_scene_26_scenario_3": "6e6120db31735cf86ccc727b5e30726c0d3a18ed6835ac45046d2b567badcba7",
+   "abnormal_scene_26_scenario_4": "860d653396cbaf9ee6efd7bb5fd125fc18dd9e1c266fde04e9d54260f49a789e",
+   "abnormal_scene_27_scenario_1_smoke": "09e5f206d9ca63db2b2b624ced7d5146f9c354ba1ec684f57535d1a1701290d7",
+   "abnormal_scene_27_scenario_2": "aedeb8cd6350aa9fc971e0c55dd2aec77409a65268537c71fb50e54a20870e0b",
+   "abnormal_scene_27_scenario_2_fire": "64d4e65bf44c7acc575e90c1d53e994db8e6ba4499fe64a85cd52373f4dc8ade",
+   "abnormal_scene_27_scenario_3": "2416abeec6a897fc99929cde5f615328402ea949a48a0cbdfac00419a167e47f",
+   "abnormal_scene_27_scenario_4": "bc84cbfafec000b0e4f96433f67460446b24c7400194286344750d3f898d7992",
+   "abnormal_scene_28_scenario_1": "a5208e6d7e0ee770861d682f0f11c2436f54b7def368837dd5b02f2da207737b",
+   "abnormal_scene_28_scenario_2": "a770ac874f392c0711c5a921fa31e333fb16d3a61c3935e670dc5214d63c07d7",
+   "abnormal_scene_28_scenario_3": "6fa8283a263411030831eb21bf56a2a75e6f960b7ffff5fbf3b18e448bc42d1d",
+   "abnormal_scene_28_scenario_4": "023a9e6b463e97052d20c7565c89e7d712fefcb3d4ba90e233141cccea69aa52",
+   "abnormal_scene_29_scenario_1": "7234de393d1e3261b1505caac6b6ac8867ffec2f267385321ea5e920a8d7d6a6",
+   "abnormal_scene_29_scenario_1_smoke": "c9b56c7a8c147de0164c48b8c81844fb76ed9d95d7573dfe8d74a4cc97e1870c",
+   "abnormal_scene_29_scenario_2": "576a06a89e90b73a92e0f83acf4379f4fe6c7fe424447db03717a80ef12ecb76",
+   "abnormal_scene_29_scenario_2_smoke": "c6222aa259e2b95733176e85c66ba0a3c170d5d2a3e4645a0f9629b887df644f",
+   "abnormal_scene_29_scenario_3": "5edcdb3b23a214e93c23499cf26db1c05ccdc934c7981b5cf642e3a4c1ad1800",
+   "abnormal_scene_29_scenario_4": "e97cfb3444c40f35ec3e61994aaa9ab4f325b4d1b80d8cf1a96cc3678df46ff1",
+   "abnormal_scene_2_scenario_1": "887b2fbc732424c43cd3181e0615bdde07e766e00a0c01f9dc9dfa4f276a1777",
+   "abnormal_scene_2_scenario_4": "46acd23aedd83e2ca35be3545a0f65ee21edc144dee48431613e8c3e25c47dcc",
+   "abnormal_scene_2_scenario_5": "353efcbfd5732b5c7c482d05540b8af5f70db904764dfa1405f2a6294faeb659",
+   "abnormal_scene_2_scenario_6": "9329f9eda1f640faf54ea3d284956b980da80049cbfce99bf2199b26dc76f293",
+   "abnormal_scene_3_scenario_1": "e99666eb726e99991aa666460d3526b5d94f09e749ec9c36fafb3714a3218d9e",
+   "abnormal_scene_3_scenario_2": "ca114a03bb16ae9800fba0f5aa50a3f508dda2f85308cac2414bc3e534fc3bb9",
+   "abnormal_scene_3_scenario_6": "9a159af7fda718399251aa94f3ba66305138751498164acb9ab26c1c65a13a5d",
+   "abnormal_scene_4_scenario_1": "fa740984c97b8d713d6739f0ac58acf9a1b51015bbb3fb97b80f3bc281310862",
+   "abnormal_scene_4_scenario_1_fire": "e28dc263c668c025205218f40dabd577f94f1239e9365395214bdaa832ecd58c",
+   "abnormal_scene_4_scenario_2_fire": "a15a85fd632d21d25bae79012c39bc570bffb40f8efe5155bb9cd702de46dbe6",
+   "abnormal_scene_4_scenario_4": "cf5c473e35e2ae7ea5665bccbe107e0efa9f10e0abb49b787c55cc173f02de53",
+   "abnormal_scene_4_scenario_6": "0d65ac2c18d6f5fcce0eaf57901a93953dd897ba92663c3eede048491534d148",
+   "abnormal_scene_5_scenario_1_smoke": "dae73f355d77930143d196d2e08181b47992928649c843d2d05e0088aba78b4e",
+   "abnormal_scene_5_scenario_2_smoke": "0ae6542cc6590f64b83cac9eef4545e30d959922e6a1314e329fecaf8f78dcbe",
+   "abnormal_scene_5_scenario_4": "98551fa0179beda1bbb06e66aad75d1f70ff1881b15087df6ac790dd10b924d6",
+   "abnormal_scene_5_scenario_5": "01cff72aad5dcef50282fcfad6473216376e56b8b34b623e3d36ccd91e133498",
+   "abnormal_scene_5_scenario_7": "84d28fe88ea030d725fda4fafc27f962d894b96f936e73f0d23553af35b91e28",
+   "abnormal_scene_5_scenario_8": "7b1cd3b8e67442347bfbbd02ec586b83f8e3c4d49a27b6c95b44dfdd889d4912",
+   "abnormal_scene_6_scenario_2": "05bb609a90114e28d934b3163a0e9075cf5f8f16e02c005483c16ccf286f8fa3",
+   "abnormal_scene_6_scenario_3": "b4bc5aee2ed3d2fd58ef49f5696fec34a62ca0dd1c18b48f2f46cd08a06e6481",
+   "abnormal_scene_6_scenario_8": "091c70acf9b2867daa77c46fd4b10f0acd18c0d0e953ae1a51c5a70d9a9118c8",
+   "abnormal_scene_7_scenario_1": "b2692e8bdd7bedd365ed139009e63dcb952dc50bb4aeb1fe3d8b321d6d3d2e91",
+   "abnormal_scene_7_scenario_10": "eb0cc1a98f8517fe27ed6e9079c5c43033197cd40be95ec4315c335d3acadd1f",
+   "abnormal_scene_7_scenario_1_fire": "11438b70db280f3397b289ba7ee87072184f6f5b918b2be0343a7a806b8517fc",
+   "abnormal_scene_7_scenario_1_fog": "3933dc56467588e05efbfd2594c530b77d2d843e16bbf6d5c8c3f5d0f3610ad5",
+   "abnormal_scene_7_scenario_2": "ebe799d0edca7c14d4e0748b42b8596f54caa390ccde14e5ced3fb9dcc241e6c",
+   "abnormal_scene_7_scenario_2_fog": "063527e730cc166ce5ee28d43bf2afb050b41d003a1bdf1aa891637336cdf12f",
+   "abnormal_scene_7_scenario_2_smoke": "841476b1d84ccb950007fe2d099413162eb88dddb9e9e6780d6db80b4fadf20b",
+   "abnormal_scene_7_scenario_3": "af9590d830b8b2abdce22d5f0de843d178131b227e95c0d41cdd318d85666b12",
+   "abnormal_scene_7_scenario_3_fog": "c9b56c7a8c147de0164c48b8c81844fb76ed9d95d7573dfe8d74a4cc97e1870c",
+   "abnormal_scene_7_scenario_4": "c6d5b2ce90c7dd212d95f1f8a41ae9daaff60f246d28a5a3bb14f878f31f4be6",
+   "abnormal_scene_7_scenario_4_fog": "ea736d46f10f9a49150e0b74cab9427107693cd120cb5670178437bbd6f7ac9e",
+   "abnormal_scene_7_scenario_5": "2825bb666b135d222eaedbcdb4801582c9ae55f49e7a15ea99264fedca0ad3cd",
+   "abnormal_scene_7_scenario_6": "0957990afeafc518487ce046bffb51d9927723d683e97f5f88e2956394a88894",
+   "abnormal_scene_7_scenario_7": "2469925b6fe0a0b86ec4bde822d7ecfa81db3febbd52f0901659426dcda044e2",
+   "abnormal_scene_7_scenario_8": "5414da6d5b4b1b318691548ed932153347c9af4db3cf6cd50187a787675f98c5",
+   "abnormal_scene_7_scenario_9": "5696a4de3bb5c9442823134e9fb2a00bae7c2dee9b3abdb536b5ad96374f72bf",
+   "abnormal_scene_8_scenario_1": "be4536569e1879144f18d4af694f56309899fdc3de8b7d8a7eb7fb8019c657af",
+   "abnormal_scene_8_scenario_1_fog": "4a8f03b033468a2f56e79a2ffe50378ebb64468892b9013cfe7f975f721a4511",
+   "abnormal_scene_8_scenario_2": "545aa97dc13b31953f7e21c445896ffb913fef7cacc5039c657ddbebc79d96ba",
+   "abnormal_scene_8_scenario_2_fog": "8a82c8a0b6529b81ea1ff25f3601d10738aef0a9d42cc683adda99c0d2c78476",
+   "abnormal_scene_8_scenario_3": "6b97ae55f8a4947b7f5a0c38ff03736ee8f2607c764381bffc67c10862345134",
+   "abnormal_scene_8_scenario_4": "014f0965712e0372bde8da0214ebc01dbb796c584e6bfb0e04ef01029c9cd6c0",
+   "abnormal_scene_8_scenario_5": "4f20e0441df81b98fc73bf0226aed62d51025aa1f4578dc48bf8393ec145cda4",
+   "abnormal_scene_9_scenario_2_fog": "89612ba3472f1ba47cc455c8443c4c7678db492d955d3eba9262a881d944158e",
+   "abnormal_scene_9_scenario_3": "d0aa200b7b2c457d0caf326b9bbb16df5dfe13742c2183d6167b27ddf94801ec",
+   "abnormal_scene_9_scenario_4_fog": "d78bdd4a9b9a9630d8c02e148842b7b77629a5eaf08dcbec796148d0c9d14cf9",
+   "abnormal_scene_9_scenario_7": "b5f58e3c07a447fafaf0940aa253b17e5772eb6dc61c0290a0fd3dc5ed2f8095",
+   "abnormal_scene_9_scenario_8": "205c18c02d32a3e27244e870ad607b7ce5036bb3d283976b9a09665790996fd6"
+  },
+  "validation": {
+   "abnormal_scene_10_scenario_2": {
+    "n_tracks": 1,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_10_scenario_9": {
+    "n_tracks": 1,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_11_scenario_4": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_13_scenario_5_fog": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_13_scenario_7": {
+    "n_tracks": 3,
+    "max_end": 445,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_14_scenario_1": {
+    "n_tracks": 3,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_15_scenario_7": {
+    "n_tracks": 1,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_16_scenario_1": {
+    "n_tracks": 1,
+    "max_end": 390,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_17_scenario_1": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_17_scenario_10": {
+    "n_tracks": 1,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_18_scenario_8": {
+    "n_tracks": 3,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_21_scenario_4": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_21_scenario_8": {
+    "n_tracks": 2,
+    "max_end": 200,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_22_scenario_5": {
+    "n_tracks": 1,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_23_scenario_8": {
+    "n_tracks": 2,
+    "max_end": 378,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_24_scenario_6": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_24_scenario_8": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_25_scenario_2": {
+    "n_tracks": 3,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_25_scenario_6": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_26_scenario_5": {
+    "n_tracks": 4,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_27_scenario_1": {
+    "n_tracks": 3,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_28_scenario_5": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_28_scenario_6": {
+    "n_tracks": 4,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_28_scenario_7": {
+    "n_tracks": 1,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_2_scenario_2": {
+    "n_tracks": 2,
+    "max_end": 456,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_3_scenario_3": {
+    "n_tracks": 1,
+    "max_end": 275,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_3_scenario_8": {
+    "n_tracks": 1,
+    "max_end": 416,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_4_scenario_3": {
+    "n_tracks": 2,
+    "max_end": 460,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_4_scenario_7": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_5_scenario_1": {
+    "n_tracks": 1,
+    "max_end": 400,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_5_scenario_2": {
+    "n_tracks": 2,
+    "max_end": 460,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_5_scenario_6": {
+    "n_tracks": 1,
+    "max_end": 460,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_6_scenario_1": {
+    "n_tracks": 2,
+    "max_end": 280,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_6_scenario_6": {
+    "n_tracks": 1,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_8_scenario_8": {
+    "n_tracks": 3,
+    "max_end": 445,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_8_scenario_9": {
+    "n_tracks": 2,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_9_scenario_5": {
+    "n_tracks": 3,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   },
+   "abnormal_scene_9_scenario_6": {
+    "n_tracks": 3,
+    "max_end": 450,
+    "ends_beyond_video": 0,
+    "ok": true
+   }
+  }
+ },
+ "licence": {
+  "licence": "CC BY-NC-ND 4.0",
+  "sha256": {
+   "repository license.txt": "727f1dcf53278cdad47f7a92ed47c3f9197e10e45f2c70acd21e787df07c3d2d",
+   "archive license.txt": "4c397c016fde73e4d9bb523a0f820bc00cd7e4914832514b6f9aa616308b3a28"
+  },
+  "upstream": {
+   "repository": "https://github.com/lilygeorgescu/UBnormal",
+   "commit": "8c77642bb72615988ace0451b94ec42f8953a525",
+   "checked": "2026-10-26",
+   "paper": "Acsintoae et al., CVPR 2022, arXiv:2111.08644"
+  }
+ },
+ "archive": {
+  "file": "UBnormal.zip",
+  "sha256": "5bbfa6c9f65563b4793e1157e1207b10856e3b31c36b7a732823008344a8de5c"
+ },
+ "stage1": {
+  "file": "experiments/E024_localisation_method/results/e024_stage1.json",
+  "sha256": "56da3343d198e7d0750dc41e3ae9bb2ba4fa6399db109fce92bb643ad8b0ed2d",
+  "candidate": "k_rg_t0.25",
+  "final_control": "trainonly"
+ },
+ "u_dev": {
+  "xcb_xcl_s0/urdmu_u200_lr0.5": {
+   "lr_mult": "0.5",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 0,
+   "v_auc": 0.7580971659919028,
+   "point": 20,
+   "parameters": 7672577,
+   "selection_sha256": "df6a4705f53551c2f244552298e74918e9a5222c148cde7574e2e78b0a70810b",
+   "val_scores_sha256": "a37cdd1f5a22a3e416d4fda5cec45587e06c370c3d46eac37557c24ab3a446a5",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_xcl_s1/urdmu_u200_lr0.5": {
+   "lr_mult": "0.5",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 1,
+   "v_auc": 0.7449392712550608,
+   "point": 15,
+   "parameters": 7672577,
+   "selection_sha256": "a296c4dbf4717fe73f5958075cdaa5660eab02f01b74b71d9d06beeb87fa4f7b",
+   "val_scores_sha256": "796c6b0a82c195c674dc9ec6b7fbc0f4a16d5a73ae11a0b2fabee6a61e3816f7",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_xcl_s2/urdmu_u200_lr0.5": {
+   "lr_mult": "0.5",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 2,
+   "v_auc": 0.7186234817813765,
+   "point": 6,
+   "parameters": 7672577,
+   "selection_sha256": "7a338c08d877e35ddced90bab3374ad469b2054ab2084c1d184e075bfa4a18bb",
+   "val_scores_sha256": "5b883bd8aa71c2609d55634edc6c06f55bbfc0ce2f4732e02230ace18e4af188",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s0/urdmu_u200_lr0.5": {
+   "lr_mult": "0.5",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 0,
+   "v_auc": 0.8410931174089069,
+   "point": 2,
+   "parameters": 7873025,
+   "selection_sha256": "df67f9f223676b684bf0b8268e57f6e96bc159316be8c1a39f2e4dd9fa7c644f",
+   "val_scores_sha256": "5c4be12098091185a4b42a23939d9dea16478ac14d14a59408eb96c149f6d233",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s1/urdmu_u200_lr0.5": {
+   "lr_mult": "0.5",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 1,
+   "v_auc": 0.8603238866396761,
+   "point": 28,
+   "parameters": 7873025,
+   "selection_sha256": "079bd31b07121d357200e262f1d0c10599ecaac329e29098f8b119abeb102e1e",
+   "val_scores_sha256": "661868c437a9f452de0aa92316a7e60f7f00cbb2256cce225b11664e0917d2c3",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s2/urdmu_u200_lr0.5": {
+   "lr_mult": "0.5",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 2,
+   "v_auc": 0.8441295546558705,
+   "point": 30,
+   "parameters": 7873025,
+   "selection_sha256": "8f1cb11f8a6f3413f26bd0889198e751190f031e5a2662a96301fe12fd47aefd",
+   "val_scores_sha256": "ef2fdc28e73204781d995702b58e442fa7453860131fd68ba63ebed5414c74cc",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_xcl_s0/urdmu_u200_lr1": {
+   "lr_mult": "1",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 0,
+   "v_auc": 0.7540485829959515,
+   "point": 2,
+   "parameters": 7672577,
+   "selection_sha256": "b4e6bcefce683f5ca55f6eff4f960345edacd91b3fa4816a1d772a941497bf61",
+   "val_scores_sha256": "20c949b33bb6423f50a6da4221c7b29734c3f610e75f22aa54f1721eb365cc36",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_xcl_s1/urdmu_u200_lr1": {
+   "lr_mult": "1",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 1,
+   "v_auc": 0.7560728744939271,
+   "point": 2,
+   "parameters": 7672577,
+   "selection_sha256": "c517214a1a077a73e685875554a97591b963e25bb8afb2a88f5f0f78d4eb4753",
+   "val_scores_sha256": "9b6e6d18527d0505f62003ad6beb3fec5ddb98068c50987b685cc183c6d958ef",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_xcl_s2/urdmu_u200_lr1": {
+   "lr_mult": "1",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 2,
+   "v_auc": 0.7368421052631579,
+   "point": 2,
+   "parameters": 7672577,
+   "selection_sha256": "b92c7b61da18e61442c31aba89613274982e2911e8305f7b9ed7ee709ba40716",
+   "val_scores_sha256": "7c84e63dec41d8237a7b2d6098bc808916de4bb653396ec1579dda5dcaca522f",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s0/urdmu_u200_lr1": {
+   "lr_mult": "1",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 0,
+   "v_auc": 0.8431174089068826,
+   "point": 3,
+   "parameters": 7873025,
+   "selection_sha256": "8e0fc4bb9adf431ee8322709d1e72c6f307503ede6a04a4fc3d7842220f6220b",
+   "val_scores_sha256": "9dd0b8fad6c8508acd68586e2b26ec8caba30d81a1a299396e08178f3d47a52e",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s1/urdmu_u200_lr1": {
+   "lr_mult": "1",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 1,
+   "v_auc": 0.8385627530364372,
+   "point": 20,
+   "parameters": 7873025,
+   "selection_sha256": "641b09a3b46f5d9deee2760d92a78e81534e8b61eff63484d67575c01707afe6",
+   "val_scores_sha256": "83518d4d3d47ea246005df2c8db750c1447a06f612b7d9e002907ccfde6bf51c",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s2/urdmu_u200_lr1": {
+   "lr_mult": "1",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 2,
+   "v_auc": 0.8441295546558705,
+   "point": 5,
+   "parameters": 7873025,
+   "selection_sha256": "ff2be4857778336d85119a45a8c1c21fa1141105f495bb1f4e0862ac39270337",
+   "val_scores_sha256": "c225ceb23a3169cbcca5b81c5cd4fb107fc80a3ea0f25e47d625e560c8c20d90",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_xcl_s0/urdmu_u200_lr2": {
+   "lr_mult": "2",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 0,
+   "v_auc": 0.7682186234817814,
+   "point": 6,
+   "parameters": 7672577,
+   "selection_sha256": "6157783b6642ee7d682db5022005fa6fd3ca23843b3abee029eb65940c2ea1b5",
+   "val_scores_sha256": "ce61927102e4caff8c95617d43d43a53afb6cfbf3cac7eb938eda1fdd00e896e",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_xcl_s1/urdmu_u200_lr2": {
+   "lr_mult": "2",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 1,
+   "v_auc": 0.7580971659919028,
+   "point": 8,
+   "parameters": 7672577,
+   "selection_sha256": "9cb8de5c4d27295618e28d2447b07391b3f08cbdcb710a983b9fb518f13d225d",
+   "val_scores_sha256": "e9001fe3dbf5c35893118ac4e565a7f916a723f623b5c19d7569c4c49b7e4511",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_xcl_s2/urdmu_u200_lr2": {
+   "lr_mult": "2",
+   "scale_mult": "1",
+   "pair": "xcb_xcl",
+   "seed": 2,
+   "v_auc": 0.7530364372469636,
+   "point": 2,
+   "parameters": 7672577,
+   "selection_sha256": "b2f3266e61dd529a918e08f1c6ee30ac444e1db332a4831ac21a98871112ddd6",
+   "val_scores_sha256": "7f5299f00baf1a38dce867b88b07825172465ac68c9bb5bff20e1d34d2e28868",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s0/urdmu_u200_lr2": {
+   "lr_mult": "2",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 0,
+   "v_auc": 0.8694331983805668,
+   "point": 14,
+   "parameters": 7873025,
+   "selection_sha256": "35e3cf16e498476fab9da7b60f3d0bde965b2d0d84f2b84bbb8666987af2cba7",
+   "val_scores_sha256": "15aae0e2164551028dc2d2edec3ae999fe11a9fe8fb09a53ed80e542f35c9a98",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s1/urdmu_u200_lr2": {
+   "lr_mult": "2",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 1,
+   "v_auc": 0.8582995951417004,
+   "point": 25,
+   "parameters": 7873025,
+   "selection_sha256": "cadd589cc8d752143c1259d491232da5f7ef44232649177a3fcde8e94d49ec59",
+   "val_scores_sha256": "d95628057a2a644cd93ab0c47ddf4f70d27eaaf75d5b42ffdde9d895ecfb7f9f",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  },
+  "xcb_siglip_s2/urdmu_u200_lr2": {
+   "lr_mult": "2",
+   "scale_mult": "1",
+   "pair": "xcb_siglip",
+   "seed": 2,
+   "v_auc": 0.8451417004048583,
+   "point": 28,
+   "parameters": 7873025,
+   "selection_sha256": "894e3f13e66f34dc9a87f38a927fef9ac5cb48ee6787ead7791a580789d54bb2",
+   "val_scores_sha256": "2ac47f3de08651ba843a87749a34cbc260c7eb8159970392353caa0cfada3fcc",
+   "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "1.26.4",
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   },
+   "code": {
+    "commit": "150ab20523aa9ef8ed9f73b0ec69da6b42f59b91",
+    "source": "deployed",
+    "dirty": null
+   }
+  }
+ },
+ "collapse": {
+  "rule": "0.5 + 0.5 (m_U - 0.5); m_U = median selected sigma V-AUC of the lr x 1 development U chains; a chain below it is flagged collapsed (reported; the main analysis keeps it)",
+  "chains": 6,
+  "m_u": 0.7973178137651822,
+  "threshold": 0.6486589068825911,
+  "by_dataset": {
+   "ubn": 0.6486589068825911,
+   "ucf": 0.6,
+   "xdv": 0.6
+  },
+  "aux_rule": "ucf and xdv: stage 1's 0.6"
+ },
+ "multiplier": {
+  "grid_lr_mult": [
+   "0.5",
+   "1",
+   "2"
+  ],
+  "scale_mult": "1",
+  "chosen_lr_mult": "2",
+  "mean_sigma_vauc": {
+   "0.5": 0.7945344129554656,
+   "1": 0.7954622132253711,
+   "2": 0.8087044534412956
+  },
+  "by_dataset": {
+   "ubn": {
+    "lr_mult": "2",
+    "scale_mult": "1"
+   },
+   "ucf": {
+    "lr_mult": "1",
+    "scale_mult": "1"
+   },
+   "xdv": {
+    "lr_mult": "1",
+    "scale_mult": "1"
+   }
+  }
+ },
+ "environment": {
+  "keys": [
+   "torch",
+   "cuda",
+   "gpu",
+   "cuda_matmul_allow_tf32",
+   "cudnn_allow_tf32",
+   "float32_matmul_precision"
+  ],
+  "distinct": [
+   {
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest"
+   }
+  ],
+  "shared": true
+ },
+ "code": {
+  "commit": "baff3fcf4142eab5b212a157ecbc86dea995d8a0",
+  "source": "git",
+  "dirty": false
+ }
+}
