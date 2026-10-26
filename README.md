@@ -1520,11 +1520,15 @@ export S3=~/wvad_runs/e024/stage3                    # server: the stage-3 chain
 export SC=~/wvad_runs/e024/stage3_scores             # server: the sealed test scores (outside the repository)
 # local, before the freeze: the inputs record, then the plan, record, code and README committed, then the seal alone
 ssh <server> 'tar -chf - --exclude="*.pt" -C ~/wvad_runs e024/stage2' | tar -xf - -C <local runs root>
-python -m wvad.diagnostics.e024_stage3 pins --u_dev <local runs root>/e024/stage2 --lists <local copy of the six list files> \
+python -m wvad.diagnostics.e024_stage3 pins --u_dev <local runs root>/e024/stage2 --lists <local runs root>/e024/stage2/ubnormal_meta \
+    --tracks_check <local runs root>/e024/stage2/tracks_check.json \
     --zip_sha256 5bbfa6c9f65563b4793e1157e1207b10856e3b31c36b7a732823008344a8de5c
 git add $E/e024_stage3_inputs.json experiments/E024_localisation_method/stage3/PLAN.md src/wvad/diagnostics/e024_stage3.py README.md && git commit
 python -m wvad.diagnostics.e024_stage3 freeze
-git add experiments/E024_localisation_method/stage3/PLAN.sha256 && git commit       # the freeze commit; deploy it (server conventions)
+git add experiments/E024_localisation_method/stage3/PLAN.sha256 && git commit       # the freeze commit; deploy exactly it
+FREEZE=$(git rev-parse HEAD)                                                        # deploy (server conventions), then the lineage beside DEPLOYED_COMMIT
+python -c "import json; from wvad.data.dense_test import write_lineage; print(json.dumps(write_lineage('$FREEZE')))" \
+    | ssh <server> 'cat > ~/frozen-vlm-wvad/DEPLOYED_LINEAGE.json'
 # server (conda sear): the 54 chains, U first in every cell, then P and C6; the (k0) chain; the gates
 export M=$(python -c "import json; print(json.load(open('$E/e024_stage3_inputs.json'))['multiplier']['chosen_lr_mult'])")
 for ds in ubn ucf xdv; do for pair in xcb_xcl xcb_siglip; do for seed in 3 4 5; do echo $ds $pair $seed; done; done; done > $S3/jobs.txt
@@ -1541,8 +1545,9 @@ python -m wvad.diagnostics.e024_stage3 train --dataset ubn --pair xcb_xcl --seed
 pgrep -fc "wvad[.](baselines[.]train|diagnostics[.]e024_stage3 train)"                   # 0 before the gates
 python -m wvad.diagnostics.e024_stage3 gate-k0 --runs $S3
 python -m wvad.diagnostics.e024_stage3 gates --runs $S3
-# server: the sealed test read, once (gate (s) on every chain, then ubn, ucf, xdv)
-python -m wvad.diagnostics.e024_stage3 score-test --runs $S3 --out $SC --access_log $S3/test_access.csv
+# server: the sealed test read, once (the freeze-commit check against DEPLOYED_COMMIT and the lineage first, then
+# the gate records recomputed, gate (s) on every chain, then ubn, ucf, xdv)
+python -m wvad.diagnostics.e024_stage3 score-test --runs $S3 --out $SC --access_log $S3/test_access.csv --freeze_commit $FREEZE
 # local: copy (no checkpoints), analyse, commit
 ssh <server> 'tar -chf - --exclude="*.pt" -C ~/wvad_runs e024/stage3 e024/stage3_scores' | tar -xf - -C <local runs root>
 python -m wvad.diagnostics.e024_stage3 analyze --runs <local runs root>/e024/stage3 --scores <local runs root>/e024/stage3_scores \
