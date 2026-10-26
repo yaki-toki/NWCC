@@ -5,8 +5,9 @@ Layout under ``raw_video_root``: ``UBnormal/Scene<s>/<name>.mp4`` and, for an ab
 ``object_id,start_frame,end_frame`` (end frame included; the official
 ``scripts/write_frame_level_ground_truth.py``). Frame labels are zeros of length T with ones on
 every [start, end], clipped to [0, T) (``wvad.eval.metrics.frame_labels``, the rule of the
-UCF-Crime and XD-Violence test manifests). Names are
-``{normal|abnormal}_scene_<s>_scenario_<k>[_<j>]``; the label is the prefix.
+UCF-Crime and XD-Violence test manifests). Names are ``{normal|abnormal}_scene_<s>_<tag>`` (tags
+such as ``scenario_1``, ``scenario_6_1``, ``scenario1_9``, ``scenario_3_fog``); the label is the
+prefix and the scene number gives the folder.
 
 The six official split lists (``scripts/*_video_names.txt`` of the upstream repository) are
 pinned by sha256 and size: training 186 normal + 82 abnormal, validation 26 + 38, test 53 + 158.
@@ -59,8 +60,9 @@ LIST_SHA256 = {"normal_training_video_names.txt":
 LIST_COUNTS = {("train", 0): 186, ("train", 1): 82, ("val", 0): 26, ("val", 1): 38,
                ("test", 0): 53, ("test", 1): 158}
 CATEGORY = {0: "normal", 1: "abnormal"}
-NAME_RE = re.compile(r"^(normal|abnormal)_scene_([1-9][0-9]*)_scenario_([1-9][0-9]*)"
-                     r"(?:_([0-9]+))?$")
+# {normal|abnormal}_scene_<s>_<scenario tag>; tags seen in the official lists: scenario_1,
+# scenario_6_1, scenario1_9 (no underscore), scenario_3_fog / _smoke / _fire
+NAME_RE = re.compile(r"^(normal|abnormal)_scene_([1-9][0-9]*)_([A-Za-z0-9_]+)$")
 TRACKS_SUFFIX = "_tracks.txt"
 ANNOTATIONS_SUFFIX = "_annotations"
 
