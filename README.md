@@ -1514,7 +1514,7 @@ xargs -P 4 -L 1 bash -c 'd=$S2/${0}_s${1}/urdmu_u200_lr${2}; mkdir -p $(dirname 
 ```
 Regression gate (r) after the registration commit, before the stage-3 freeze: `pytest tests` passes (the add-only tests allow exactly the registration files, `tests/e024_registration.py`); on the server `python -m wvad.diagnostics.e024_stage1 rescore --chain <copy of $RUNS1/ucf_xcb_xcl_s0/k_rg_t0.25>` and the same for `xdv_xcb_xcl_s0` pass gate (s) under the new deploy (run on copies under `$S2/regress`, the stage-1 records untouched); locally `python -m wvad.diagnostics.e024_stage1 analyze --u_runs <local runs root>/e024/stage0 --runs <local runs root>/e024/stage1 --stage_a <the committed stage-A result>` reproduces the committed stage-1 result (identical apart from `code.commit`; run in a throwaway clone whose HEAD holds the stage-A result).
 
-Stage 3 (`wvad.diagnostics.e024_stage3`; the plan's "팔", "통계와 판정", "관문", "시험 접근" and "구현 결정"): arms P (`k_rg_t0.25`), U (`urdmu_u200`) and C6 (`ctl_trainonly_rg_t0.25`) on ubn, ucf and xdv, two encoder pairs, the new seeds 3-5 (54 chains) plus the (k0) chain; the multiplier `m` of the inputs record applies to the ubn chains only (ucf, xdv: 1, as in stage 1). `pins` writes the inputs record (collapse threshold and multiplier from the stage-2 U development chains, the ubn files' sha256, the lists, the licence, the archive sha256, the stage-1 choice); `freeze` seals the plan; `score-test` is the one sealed test read: gate (s) on every chain first (validation re-scored bit for bit, `gate_s.json`), then ubn, ucf, xdv, every test-side read logged, scores outside the repository; it refuses a second run without `--infra_rerun <reason>`. `analyze` requires the frozen state, the gate files and `done.json`, and writes the result JSON and CSV (outcome row `met`, `partial_u`, `partial_c6`, `not_met`, `no_verdict`; ucf/xdv under `auxiliary`, non-independent).
+Stage 3 (`wvad.diagnostics.e024_stage3`; the plan's "팔", "통계와 판정", "붕괴와 실패", "관문", "시험 접근" and "구현 결정"): arms P (`k_rg_t0.25`), U (`urdmu_u200`) and C6 (`ctl_trainonly_rg_t0.25`) on ubn, ucf and xdv, two encoder pairs, the new seeds 3-5 (54 chains) plus the (k0) chain. The learning-rate multiplier `m` chosen from the stage-2 U development chains (which ran with `--lr_mult {0.5,1,2} --scale_mult 1`) applies to the ubn chains only, with the scale multiplier 1; ucf and xdv chains use 1 and 1, as in stage 1 (`pins`, `train`, `gates` and `analyze` check both fields against the record's `multiplier.by_dataset`). `pins` writes the inputs record (collapse threshold and multiplier from the development chains, the ubn files' sha256, the lists, the licence, the archive sha256, the stage-1 choice); `freeze` seals the plan. `score-test` is the one sealed test read: it first checks the seal and the deployment (the deployed `stage3/PLAN.sha256` equals the plan's sealed hash, `code_version()`'s commit equals every chain's recorded commit, no uncommitted change where git is available, the inputs record present), then gate (s) on every chain (validation re-scored bit for bit, `gate_s.json`), then ubn, ucf, xdv, every test-side read logged, scores outside the repository; it refuses a second run without `--infra_rerun <reason>`. The collapse threshold only flags chains: every numerically complete seed enters the main analysis, and the contrasts without flagged chains are a reference block only. `analyze` requires the frozen state (the recorded commit is the freeze commit or a descendant that changed none of the code files, the plan, the seal or the inputs record), the gate files and `done.json`, and writes the result JSON and CSV (outcome row `met`, `partial_u`, `partial_c6`, `not_met`, `no_verdict`, with the wording composed from the two contrasts' classes 양 / 열세 / 차이 불확정; ucf/xdv under `auxiliary`, non-independent).
 ```bash
 export S3=~/wvad_runs/e024/stage3                    # server: the stage-3 chains and gate records
 export SC=~/wvad_runs/e024/stage3_scores             # server: the sealed test scores (outside the repository)
@@ -1526,17 +1526,17 @@ git add $E/e024_stage3_inputs.json experiments/E024_localisation_method/stage3/P
 python -m wvad.diagnostics.e024_stage3 freeze
 git add experiments/E024_localisation_method/stage3/PLAN.sha256 && git commit       # the freeze commit; deploy it (server conventions)
 # server (conda sear): the 54 chains, U first in every cell, then P and C6; the (k0) chain; the gates
-export M=$(python -c "import json; print(json.load(open('$E/e024_stage3_inputs.json'))['multiplier']['chosen'])")
+export M=$(python -c "import json; print(json.load(open('$E/e024_stage3_inputs.json'))['multiplier']['chosen_lr_mult'])")
 for ds in ubn ucf xdv; do for pair in xcb_xcl xcb_siglip; do for seed in 3 4 5; do echo $ds $pair $seed; done; done; done > $S3/jobs.txt
-setsid nohup xargs -P 4 -L 1 bash -c 'c=$S3/${0}_${1}_s${2}; mkdir -p $c; m=1; [ $0 = ubn ] && m=$M
+setsid nohup xargs -P 4 -L 1 bash -c 'c=$S3/${0}_${1}_s${2}; mkdir -p $c; m=1; [ $0 = ubn ] && m=$M     # lr multiplier: ubn only; scale 1 everywhere
   python -m wvad.baselines.train --method urdmu --unit 200 --dataset $0 --pair $1 --seed $2 --out_dir $c/urdmu_u200 \
-      --lr_mult $m --scale_mult $m --n_chunk 4096 --deterministic > $c/urdmu_u200.log 2>&1
-  python -m wvad.diagnostics.e024_stage3 train --dataset $0 --pair $1 --seed $2 --arm p --lr_mult $m --scale_mult $m \
+      --lr_mult $m --scale_mult 1 --n_chunk 4096 --deterministic > $c/urdmu_u200.log 2>&1
+  python -m wvad.diagnostics.e024_stage3 train --dataset $0 --pair $1 --seed $2 --arm p --lr_mult $m --scale_mult 1 \
       --out_dir $c/k_rg_t0.25 > $c/k_rg_t0.25.log 2>&1
-  python -m wvad.diagnostics.e024_stage3 train --dataset $0 --pair $1 --seed $2 --arm c6 --lr_mult $m --scale_mult $m \
+  python -m wvad.diagnostics.e024_stage3 train --dataset $0 --pair $1 --seed $2 --arm c6 --lr_mult $m --scale_mult 1 \
       --out_dir $c/ctl_trainonly_rg_t0.25 > $c/ctl_trainonly_rg_t0.25.log 2>&1
 ' < $S3/jobs.txt > $S3/queue.log 2>&1 &
-python -m wvad.diagnostics.e024_stage3 train --dataset ubn --pair xcb_xcl --seed 3 --arm k0 --lr_mult $M --scale_mult $M \
+python -m wvad.diagnostics.e024_stage3 train --dataset ubn --pair xcb_xcl --seed 3 --arm k0 --lr_mult $M --scale_mult 1 \
     --out_dir $S3/ubn_xcb_xcl_s3/gate_k0 > $S3/ubn_xcb_xcl_s3/gate_k0.log 2>&1       # after that cell's U chain
 pgrep -fc "wvad[.](baselines[.]train|diagnostics[.]e024_stage3 train)"                   # 0 before the gates
 python -m wvad.diagnostics.e024_stage3 gate-k0 --runs $S3
