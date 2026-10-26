@@ -1,0 +1,64 @@
+{
+ "derived_ubn": {
+  "dataset": "ubn",
+  "split_sha256": "9fd339973c281f4954888c8db60745a996b968130dc1bcc4ab0abae034081b93",
+  "variants": {
+   "ubn_xcb_d16_e023/d16m200": {
+    "data_sha256": "2fe9f3b66ab5475c62b8822ad04e38da29eb4d59dac147e593a9006869b8f1d0",
+    "meta_sha256": "23f4e24c9ae2db1698985400f48e85ea12601a55b2776018ad0639017cfb29ee",
+    "scale_array_sha256": "7dcbf4b674714686cb0cdbbe3715630dd2289807bccbf29c6fac1777b8424838",
+    "videos": 332,
+    "rows": 66400
+   },
+   "ubn_xcl_d16_e023/d16m200": {
+    "data_sha256": "22f1257964ab6712ce6080c069a0d826ca6a0f25af96337ff72afc1bb47c25f3",
+    "meta_sha256": "2fdb7167ef31382b518a66cef6d298cdb8faf626b0e3b8174ed22d31d0e8d6ea",
+    "scale_array_sha256": "6a9c7e65b388a365d1c420de6ff4e7e54f691d74716906cce1fcfdfd055ec500",
+    "videos": 332,
+    "rows": 66400
+   },
+   "ubn_siglip_d16_e023/d16m200": {
+    "data_sha256": "defd1637700da7118f303a2830d523ae00a95da8765f3161d33ef12b3608a1f9",
+    "meta_sha256": "a44ba91ef7f3202209687a2da85717e4e4f81463b43c96d8ac2a35df81f07479",
+    "scale_array_sha256": "d5a44e6a4e25aca318d55ff9b6e6ad3c2ed32486e2ab3de8cae325a1cc688464",
+    "videos": 332,
+    "rows": 66400
+   }
+  },
+  "sources": {
+   "ubn_xcb_d16": {
+    "dense16/train/features.npy": "f2f6ddac7a02a43c7b9b495d953614001567a9632ce7df6b890fac381da912bd",
+    "dense16/train/index.npz": "c7c4d9126c14e07b485121ae05fad6384af43f3a93330bf59f8d5e22c1af244e"
+   },
+   "ubn_xcl_d16": {
+    "dense16/train/features.npy": "d7729c67b713e8084803bf8ea87de2232364150bc6f19448fca4d8fed31cbe0f",
+    "dense16/train/index.npz": "c7c4d9126c14e07b485121ae05fad6384af43f3a93330bf59f8d5e22c1af244e"
+   },
+   "ubn_siglip_d16": {
+    "dense16/train/features.npy": "9e21f80012aed26d131370016e7b74c5c5874ec69529e5b0fca9e956910a3a20",
+    "dense16/train/index.npz": "c7c4d9126c14e07b485121ae05fad6384af43f3a93330bf59f8d5e22c1af244e"
+   }
+  },
+  "utc": "2026-10-26T00:56:56+00:00",
+  "code": {
+   "commit": "63b176e0bdfd4b7c71c851c712781413a4bc8b4e",
+   "source": "deployed",
+   "dirty": null
+  },
+  "calls": [
+   {
+    "utc": "2026-10-26T00:56:56+00:00",
+    "code": {
+     "commit": "63b176e0bdfd4b7c71c851c712781413a4bc8b4e",
+     "source": "deployed",
+     "dirty": null
+    },
+    "variants": [
+     "ubn_siglip_d16_e023/d16m200",
+     "ubn_xcb_d16_e023/d16m200",
+     "ubn_xcl_d16_e023/d16m200"
+    ]
+   }
+  ]
+ }
+}
