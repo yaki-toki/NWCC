@@ -10,7 +10,13 @@ Rules for the local manuscript:
 
 Commands (local):
 ```bash
-python -m wvad.paper.figures                 # paper/figs/*.pdf (+ .png previews)
+python -m wvad.paper.figures                 # paper/figs/*.pdf (+ .png previews): diagrams
+python -m wvad.paper.evidence                # experiments/E024_localisation_method/figures_20261027/
+                                             #   (record.json, per_video.csv, case_*.csv); decoded frames
+                                             #   under F:/Vision/wvad_runs/e024_figures; needs UBnormal.zip,
+                                             #   the stage-3 score files and the original UCF/XD videos
+python -m wvad.paper.evidence_figs           # paper/figs/fig_{input,yield,cases,review,supp_cases}.pdf
 python -m wvad.paper.numbers                 # paper/generated/numbers.tex
 cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main
+cd paper && pdflatex supp && bibtex supp && pdflatex supp && pdflatex supp   # supplementary material
 ```
