@@ -1512,7 +1512,44 @@ xargs -P 4 -L 1 bash -c 'd=$S2/${0}_s${1}/urdmu_u200_lr${2}; mkdir -p $(dirname 
       --lr_mult $2 --scale_mult 1 --n_chunk 4096 --deterministic > $d.log 2>&1
 ' < $S2/jobs_udev.txt
 ```
-Regression gate (r) after the registration commit, before the stage-3 freeze: `pytest tests` passes (the add-only tests allow exactly the registration files, `tests/e024_registration.py`); on the server `python -m wvad.diagnostics.e024_stage1 rescore --chain $RUNS1/ucf_xcb_xcl_s0/k_rg_t0.25` and the same for `xdv_xcb_xcl_s0` pass gate (s) under the new deploy; locally `python -m wvad.diagnostics.e024_stage1 analyze --u_runs <local runs root>/e024/stage0 --runs <local runs root>/e024/stage1 --stage_a $E/e024_stage1.json` reproduces the committed stage-1 result (identical apart from `code.commit`). The stage-3 commands (`wvad.diagnostics.e024_stage3`: pins, freeze, train, gate-k0, gates, score-test, analyze) are added here when the module is committed.
+Regression gate (r) after the registration commit, before the stage-3 freeze: `pytest tests` passes (the add-only tests allow exactly the registration files, `tests/e024_registration.py`); on the server `python -m wvad.diagnostics.e024_stage1 rescore --chain <copy of $RUNS1/ucf_xcb_xcl_s0/k_rg_t0.25>` and the same for `xdv_xcb_xcl_s0` pass gate (s) under the new deploy (run on copies under `$S2/regress`, the stage-1 records untouched); locally `python -m wvad.diagnostics.e024_stage1 analyze --u_runs <local runs root>/e024/stage0 --runs <local runs root>/e024/stage1 --stage_a <the committed stage-A result>` reproduces the committed stage-1 result (identical apart from `code.commit`; run in a throwaway clone whose HEAD holds the stage-A result).
+
+Stage 3 (`wvad.diagnostics.e024_stage3`; the plan's "팔", "통계와 판정", "관문", "시험 접근" and "구현 결정"): arms P (`k_rg_t0.25`), U (`urdmu_u200`) and C6 (`ctl_trainonly_rg_t0.25`) on ubn, ucf and xdv, two encoder pairs, the new seeds 3-5 (54 chains) plus the (k0) chain; the multiplier `m` of the inputs record applies to the ubn chains only (ucf, xdv: 1, as in stage 1). `pins` writes the inputs record (collapse threshold and multiplier from the stage-2 U development chains, the ubn files' sha256, the lists, the licence, the archive sha256, the stage-1 choice); `freeze` seals the plan; `score-test` is the one sealed test read: gate (s) on every chain first (validation re-scored bit for bit, `gate_s.json`), then ubn, ucf, xdv, every test-side read logged, scores outside the repository; it refuses a second run without `--infra_rerun <reason>`. `analyze` requires the frozen state, the gate files and `done.json`, and writes the result JSON and CSV (outcome row `met`, `partial_u`, `partial_c6`, `not_met`, `no_verdict`; ucf/xdv under `auxiliary`, non-independent).
+```bash
+export S3=~/wvad_runs/e024/stage3                    # server: the stage-3 chains and gate records
+export SC=~/wvad_runs/e024/stage3_scores             # server: the sealed test scores (outside the repository)
+# local, before the freeze: the inputs record, then the plan, record, code and README committed, then the seal alone
+ssh <server> 'tar -chf - --exclude="*.pt" -C ~/wvad_runs e024/stage2' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e024_stage3 pins --u_dev <local runs root>/e024/stage2 --lists <local copy of the six list files> \
+    --zip_sha256 5bbfa6c9f65563b4793e1157e1207b10856e3b31c36b7a732823008344a8de5c
+git add $E/e024_stage3_inputs.json experiments/E024_localisation_method/stage3/PLAN.md src/wvad/diagnostics/e024_stage3.py README.md && git commit
+python -m wvad.diagnostics.e024_stage3 freeze
+git add experiments/E024_localisation_method/stage3/PLAN.sha256 && git commit       # the freeze commit; deploy it (server conventions)
+# server (conda sear): the 54 chains, U first in every cell, then P and C6; the (k0) chain; the gates
+export M=$(python -c "import json; print(json.load(open('$E/e024_stage3_inputs.json'))['multiplier']['chosen'])")
+for ds in ubn ucf xdv; do for pair in xcb_xcl xcb_siglip; do for seed in 3 4 5; do echo $ds $pair $seed; done; done; done > $S3/jobs.txt
+setsid nohup xargs -P 4 -L 1 bash -c 'c=$S3/${0}_${1}_s${2}; mkdir -p $c; m=1; [ $0 = ubn ] && m=$M
+  python -m wvad.baselines.train --method urdmu --unit 200 --dataset $0 --pair $1 --seed $2 --out_dir $c/urdmu_u200 \
+      --lr_mult $m --scale_mult $m --n_chunk 4096 --deterministic > $c/urdmu_u200.log 2>&1
+  python -m wvad.diagnostics.e024_stage3 train --dataset $0 --pair $1 --seed $2 --arm p --lr_mult $m --scale_mult $m \
+      --out_dir $c/k_rg_t0.25 > $c/k_rg_t0.25.log 2>&1
+  python -m wvad.diagnostics.e024_stage3 train --dataset $0 --pair $1 --seed $2 --arm c6 --lr_mult $m --scale_mult $m \
+      --out_dir $c/ctl_trainonly_rg_t0.25 > $c/ctl_trainonly_rg_t0.25.log 2>&1
+' < $S3/jobs.txt > $S3/queue.log 2>&1 &
+python -m wvad.diagnostics.e024_stage3 train --dataset ubn --pair xcb_xcl --seed 3 --arm k0 --lr_mult $M --scale_mult $M \
+    --out_dir $S3/ubn_xcb_xcl_s3/gate_k0 > $S3/ubn_xcb_xcl_s3/gate_k0.log 2>&1       # after that cell's U chain
+pgrep -fc "wvad[.](baselines[.]train|diagnostics[.]e024_stage3 train)"                   # 0 before the gates
+python -m wvad.diagnostics.e024_stage3 gate-k0 --runs $S3
+python -m wvad.diagnostics.e024_stage3 gates --runs $S3
+# server: the sealed test read, once (gate (s) on every chain, then ubn, ucf, xdv)
+python -m wvad.diagnostics.e024_stage3 score-test --runs $S3 --out $SC --access_log $S3/test_access.csv
+# local: copy (no checkpoints), analyse, commit
+ssh <server> 'tar -chf - --exclude="*.pt" -C ~/wvad_runs e024/stage3 e024/stage3_scores' | tar -xf - -C <local runs root>
+python -m wvad.diagnostics.e024_stage3 analyze --runs <local runs root>/e024/stage3 --scores <local runs root>/e024/stage3_scores \
+    --access_log <local runs root>/e024/stage3/test_access.csv
+git add $E/e024_stage3.json $E/e024_stage3_runs.csv && git commit
+```
+Whatever the outcome row is, it goes into the result file, the manuscript and the plan's change log; no arm, seed, statistic, criterion, control or wording rule changes after the test is read.
 
 ## Paper
 The manuscript, its figure and number generators and their commands are kept local until submission ([`paper/README.md`](paper/README.md)).
