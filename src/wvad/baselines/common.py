@@ -343,16 +343,18 @@ def main_family() -> dict[str, BaselineMethod]:
     return {n: get_method(n) for n in available_methods(False)}
 
 
-DATASETS = ALL_DATASETS              # E024 stage 2: UBnormal registered beside UCF and XD
+DATASETS = ("ucf", "xdv")            # the E023 benchmarks (E023 records loop over this pair)
 
 
 def dataset_method(method: BaselineMethod, dataset: str) -> BaselineMethod:
     """``method.for_dataset(dataset)``, checked: a BaselineMethod of the same name and official
     unit whose recipe is well-formed (else recipes.RecipeError) and whose sampler is registered
     (the one place where a method meets a dataset: training chain, D4, validation / test
-    scoring, records, gates)."""
-    if dataset not in DATASETS:
-        raise MethodError(f"unknown dataset {dataset!r} (known: {DATASETS})")
+    scoring, records, gates). E024 stage 2: a registered new dataset (``catalog.ALL_DATASETS``)
+    is accepted; a method without an official configuration for it refuses in
+    ``for_dataset``."""
+    if dataset not in ALL_DATASETS:
+        raise MethodError(f"unknown dataset {dataset!r} (known: {ALL_DATASETS})")
     m = method.for_dataset(dataset)
     if not isinstance(m, BaselineMethod):
         raise MethodError(f"{method.name}.for_dataset({dataset!r}) is no BaselineMethod")
