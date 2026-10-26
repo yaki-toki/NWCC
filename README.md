@@ -1478,6 +1478,42 @@ git add $E/e024_stage1.json $E/e024_stage1_runs.csv && git commit               
 ```
 Optional, never required: C2 `tauinf` (and C2b `mean`, C3 `shuffle` when R is local) run with the same launch (add them to `CTL`) before the stage-B gates; the analysis reports such a control only when its folder exists in all 12 cells and passes the gates (one in fewer cells is ignored and listed as `optional_controls_ignored` with the cells present), and never needs it. The outcome row (`outcome.row`: no_verdict, no_candidate, stage_a_only, stage_b_done) follows PLAN.md "결과 → 다음"; whatever it is, it goes into the result file and the parent plan's change log.
 
+### Stage F E024 2·3단계 — UBnormal preparation and confirmation ([stage 3](experiments/E024_localisation_method/stage3/PLAN.md))
+Stage 2 registers UBnormal as the dataset `ubn` (the only edits to existing `src` files since E022, listed in the plan's "코드" section and guarded by the regression gate (r)) and prepares it without reading a test value: the archive is checked by sha256 and unpacked under `raw_video_root/UBnormal/Scene<s>/`, the six official split lists (sha256 pinned in `wvad.data.ubnormal`) and the video headers give `data/manifests/ubn_train.json` (official training then validation videos, 332), `data/splits/ubn_val_official.json` (the 64 official validation videos) and `data/manifests/ubn_test.json` (211 videos, **no intervals**: the tracks files are read once, at the sealed scoring, `meta.intervals_external`; CC BY-NC-ND 4.0, so metrics only are published and no feature, score or interval is redistributed). `tracks-check` parses the validation tracks and records existence, sha256 and line count of the test tracks only. The dense 16-frame stores (`ubn_<encoder>_d16`, phases val and trainpart; `ubn_<encoder>_d16_test` for the test videos, pixels only) and the `d16m200` windows are extracted as for UCF/XD. The U development chains (seeds 0-2, learning-rate multiplier m in {0.5, 1, 2}, scale multiplier 1) fix the collapse threshold and the multiplier of stage 3 before the freeze (plan "붕괴와 실패"). Every test-side read (listing, headers, extraction, tracks) is appended to the access log before it happens.
+```bash
+E=experiments/E024_localisation_method/results      # both machines
+export S2=~/wvad_runs/e024/stage2                    # server: stage-2 logs, records and the U development chains
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
+# server: the archive (copied with its local sha256 file) and the official lists
+mkdir -p /data2/jhkim/raw/ubnormal /data2/jhkim/raw/ubnormal_meta $S2
+sha256sum -c /data2/jhkim/raw/ubnormal/UBnormal.zip.sha256 && unzip -q /data2/jhkim/raw/ubnormal/UBnormal.zip -d /data2/jhkim/raw/UBnormal
+for f in normal_training abnormal_training normal_validation abnormal_validation normal_test abnormal_test; do
+  curl -sS -o /data2/jhkim/raw/ubnormal_meta/${f}_video_names.txt https://raw.githubusercontent.com/lilygeorgescu/UBnormal/main/scripts/${f}_video_names.txt; done
+# server, extraction environment (conda wvad-extract): manifests, split, tracks check (access type (0) / (0g-ubn))
+python -m wvad.prep.ubnormal manifests --lists /data2/jhkim/raw/ubnormal_meta --access_log $S2/access_server.csv
+python -m wvad.prep.ubnormal tracks-check --lists /data2/jhkim/raw/ubnormal_meta --access_log $S2/access_server.csv --out $S2/tracks_check.json
+# local: the three data files are copied back, hashed and committed
+scp <server>:~/frozen-vlm-wvad/data/manifests/ubn_train.json <server>:~/frozen-vlm-wvad/data/manifests/ubn_test.json data/manifests/
+scp <server>:~/frozen-vlm-wvad/data/splits/ubn_val_official.json data/splits/
+(cd data && sha256sum manifests/ubn_train.json manifests/ubn_test.json splits/ubn_val_official.json >> SHA256SUMS && sha256sum -c SHA256SUMS)
+git add data/manifests/ubn_train.json data/manifests/ubn_test.json data/splits/ubn_val_official.json data/SHA256SUMS data/README.md && git commit
+# server (deployed commit): headers, dense stores (val, trainpart), the test store, d16m200, then the U development chains
+# (run in this order; $S2/stage2.sh on the server holds exactly these lines and is launched detached)
+conda activate wvad-extract && export PYTHONPATH=src HF_HUB_OFFLINE=1 KMP_DUPLICATE_LIB_OK=TRUE
+python -m wvad.extract header --dataset ubn --access_log $S2/access_server.csv --out $S2/header_ubn.csv
+python -m wvad.extract dense --dataset ubn --phase val --access_log $S2/access_server.csv
+python -m wvad.extract dense --dataset ubn --phase trainpart --access_log $S2/access_server.csv
+python -m wvad.prep.ubnormal extract-test --access_log $S2/access_server.csv          # ubn_<encoder>_d16_test
+conda activate sear && export PYTHONPATH=src OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 KMP_DUPLICATE_LIB_OK=TRUE
+python -m wvad.extract.derive_n --dataset ubn --variants d16m200 --record $E/e024_stage3_train_inputs.json
+for m in 0.5 1 2; do for pair in xcb_xcl xcb_siglip; do for seed in 0 1 2; do echo $pair $seed $m; done; done; done > $S2/jobs_udev.txt
+xargs -P 4 -L 1 bash -c 'd=$S2/${0}_s${1}/urdmu_u200_lr${2}; mkdir -p $(dirname $d)
+  python -m wvad.baselines.train --method urdmu --unit 200 --dataset ubn --pair $0 --seed $1 --out_dir $d \
+      --lr_mult $2 --scale_mult 1 --n_chunk 4096 --deterministic > $d.log 2>&1
+' < $S2/jobs_udev.txt
+```
+Regression gate (r) after the registration commit, before the stage-3 freeze: `pytest tests` passes (the add-only tests allow exactly the registration files, `tests/e024_registration.py`); on the server `python -m wvad.diagnostics.e024_stage1 rescore --chain $RUNS1/ucf_xcb_xcl_s0/k_rg_t0.25` and the same for `xdv_xcb_xcl_s0` pass gate (s) under the new deploy; locally `python -m wvad.diagnostics.e024_stage1 analyze --u_runs <local runs root>/e024/stage0 --runs <local runs root>/e024/stage1 --stage_a $E/e024_stage1.json` reproduces the committed stage-1 result (identical apart from `code.commit`). The stage-3 commands (`wvad.diagnostics.e024_stage3`: pins, freeze, train, gate-k0, gates, score-test, analyze) are added here when the module is committed.
+
 ## Paper
 The manuscript, its figure and number generators and their commands are kept local until submission ([`paper/README.md`](paper/README.md)).
 
