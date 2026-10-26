@@ -1,0 +1,52 @@
+E024 post-hoc capability analysis, requested by user on 2026-10-26.
+This is exploratory analysis AFTER the sealed stage-3 results were inspected.
+The original not_met verdict is retained. No retraining, change to within-run
+checkpoint selection, test re-scoring, frozen-code edits, or original-result
+edits. A separate second-round seed-choice policy is documented below.
+
+Inputs: existing stage3_scores logits (P, U, C6 and same-checkpoint I2), all
+two encoder pairs and seeds 3,4,5. Reuse original annotations, verified against
+the sealed per-snippet positive-frame counts. Exact temporal labels are needed
+for windows/events; do not reconstruct event boundaries from positive counts.
+
+Before computing new metric values, bound the metric family to:
+1. Within-video AUC and AP (reference, reproduce original L).
+2. Mean TPR over FPR [0,.05] and [0,.10]; TPR at FPR .05 and .10.
+3. Anomaly-frame recall at ranked review budgets 5%,10%,20%; precision at 10%.
+4. Fraction of video reviewed to recover 80% of anomalous frames (lower better).
+5. Probability that a uniformly selected maximum-score frame is anomalous.
+6. Anomaly-frame recall in ONE highest-mean-score contiguous review window of
+   10% or 20% of video duration; also its ratio to the best possible same-size
+   ground-truth window (descriptive oracle normalization, not test tuning).
+7. Mean per-event fractional coverage at ranked review budgets 10%,20% (each
+   connected positive interval equally weighted; NO point adjustment).
+
+Use the same mixed-label anomalous-video population as the sealed L analysis.
+Report all 18 metrics, not just favorable ones. Overall plus fixed annotation-
+based prevalence strata (0,.25], (.25,.50], (.50,1), motivated by availability
+of normal context. Subgroups are exploratory, never deployment selectors.
+Central operational budget is 10%; 5% and 20% are sensitivity values, not
+optimized. Tie handling: fractional, uniform within equal-score groups.
+
+Pair P-U, P-C6, P-I2 by video/encoder/seed. Average encoder pairs, then compute
+crossed video x seed bootstrap intervals and video-only intervals conditional
+on these six already-trained models. Report per-seed and per-pair effects.
+Approximate bootstrap max-standardized-deviation intervals cover all 18 x 3
+contrasts jointly within each dataset/population. Use Bonferroni across
+populations and datasets to avoid assumptions about overlapping strata.
+These do not make a post-hoc search
+an independent confirmation; with only three seeds, generalization remains
+weakly identified. Archive complete outputs and code.
+
+Follow-up analysis, explicitly AFTER seeing the above 18-metric results:
+- Test simple untrained temporal-prior baselines (constant, rising, falling,
+  center-peaked scores) to identify metrics driven by annotation positions.
+- Compute a UBnormal scene-cluster bootstrap as dependence sensitivity; do
+  not present the original video bootstrap as protection from scene effects.
+- Evaluate one standard deployment policy: for each dataset, feature pair,
+  and arm separately, choose the seed with maximum already-recorded VALIDATION
+  sigma V-AUC among 3,4,5 (ties: smaller seed). I2 uses P's selected seed.
+  This policy was proposed post hoc and is NOT the original confirmation.
+  Report every dataset under the same rule, not just a favorable subset.
+- Inspect test video-level discrimination rather than infer non-degradation
+  from validation AUC or the absence of numerical collapse.
