@@ -27,8 +27,6 @@ from pathlib import Path, PurePosixPath
 
 import numpy as np
 
-from wvad.eval.metrics import frame_labels as _frame_labels
-
 DATASET = "ubn"
 FOLDER = "UBnormal"
 UPSTREAM = {"repository": "https://github.com/lilygeorgescu/UBnormal",
@@ -195,6 +193,8 @@ def intervals_of(tracks: Sequence[Sequence[int]]) -> tuple[tuple[int, int], ...]
 def frame_labels(total_frames: int, tracks: Sequence[Sequence[int]]) -> np.ndarray:
     """0/1 frame labels (float32, as ``metrics.frame_labels``) of an abnormal video: ones on
     every track's [start, end], clipped to [0, T) as the official script does."""
+    from wvad.eval.metrics import frame_labels as _frame_labels  # sklearn: scoring hosts only
+
     return _frame_labels(int(total_frames), intervals_of(tracks))
 
 
