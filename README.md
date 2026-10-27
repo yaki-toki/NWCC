@@ -1556,6 +1556,15 @@ git add $E/e024_stage3.json $E/e024_stage3_runs.csv && git commit
 ```
 Whatever the outcome row is, it goes into the result file, the manuscript and the plan's change log; no arm, seed, statistic, criterion, control or wording rule changes after the test is read.
 
+**Post hoc, second round (2026-10-27; exploratory, after the verdict; `wvad.diagnostics.e024_posthoc`, record `experiments/E024_localisation_method/posthoc_20261027/`).** The completed P checkpoints are re-scored with uniform context weights (the normality term removed; same exclusion rule, g, pieces, readout) in a deployed copy beside the sealed one, after reproducing the sealed logits bit for bit; locally, every arm is compared with four untrained temporal rules and with the uniform-context scores on Precision@10% and Recall@5/10/20% (Bonferroni over the 20 new contrasts per dataset). The sealed scores, the sealed access log and the verdict are not touched.
+```bash
+# server (conda sear), a separate deployed copy: git archive HEAD | ssh <server> 'mkdir -p ~/frozen-vlm-wvad_posthoc && tar -x -C ~/frozen-vlm-wvad_posthoc'
+python -m wvad.diagnostics.e024_posthoc score-uniform --runs ~/wvad_runs/e024/stage3 --scores ~/wvad_runs/e024/stage3_scores \
+    --out ~/wvad_runs/e024/posthoc_uniform --access_log ~/wvad_runs/e024/posthoc_access.csv
+# local: copy ~/wvad_runs/e024/posthoc_uniform (and the access log) under <local runs root>/e024/, then
+python -m wvad.diagnostics.e024_posthoc analyze       # -> posthoc_20261027/results.json, per_video.csv
+```
+
 ## Paper
 The manuscript, its figure and number generators and their commands are kept local until submission ([`paper/README.md`](paper/README.md)).
 

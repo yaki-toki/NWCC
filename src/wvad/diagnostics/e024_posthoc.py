@@ -502,6 +502,14 @@ def analyze_dataset(ds: str, followup: Mapping) -> tuple[dict, list[dict]]:
                                     "by_seed": {str(s): float(du[:, si].mean() * 100)
                                                 for si, s in enumerate(SEEDS)},
                                     "counts_mean6": _counts(du.mean(axis=0).mean(axis=0))}
+        # the archived contrasts: estimate and per-video counts only (their intervals stay in
+        # the archived analysis and are not recomputed here)
+        for other, tag in (("u", "U"), ("i2", "I2"), ("c6", "C6")):
+            da = vals[ip, :, :, :, ki] - vals[ARMS.index(other), :, :, :, ki]
+            contrasts[f"P-{tag}/{k}"] = {"archived": True, "estimate": float(da.mean() * 100),
+                                         "by_seed": {str(s): float(da[:, si].mean() * 100)
+                                                     for si, s in enumerate(SEEDS)},
+                                         "counts_mean6": _counts(da.mean(axis=0).mean(axis=0))}
     rows = []
     kp = METRIC_KEYS.index("precision10")
     for vi, i in enumerate(lv):
