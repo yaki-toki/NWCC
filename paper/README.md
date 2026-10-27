@@ -17,7 +17,9 @@ python -m wvad.paper.evidence                # experiments/E024_localisation_met
                                              #   the stage-3 score files and the original UCF/XD videos
 python -m wvad.paper.evidence_figs           # paper/figs/fig_{input,yield,cases,review,supp_cases}.pdf
 python -m wvad.paper.result_figs             # paper/figs/fig_{contrasts,dev,base}.pdf from the committed result
-                                             #   files (e024_stage3.json, e024_stage1.json, e023_summary.json)
+                                             #   files (e024_stage3.json, e024_stage1.json, e023_summary.json);
+                                             #   --only budget: fig_budget.pdf, a candidate (recall against the
+                                             #   review budget from the stored UBnormal scores), not in the manuscript
 python -m wvad.paper.numbers                 # paper/generated/numbers.tex
 cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main
 cd paper && pdflatex supp && bibtex supp && pdflatex supp && pdflatex supp   # supplementary material
