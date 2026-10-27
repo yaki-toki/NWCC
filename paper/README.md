@@ -11,6 +11,7 @@ Rules for the local manuscript:
 Commands (local):
 ```bash
 python -m wvad.paper.figures                 # paper/figs/*.pdf (+ .png previews): diagrams
+(cd paper/figs && pdflatex -interaction=nonstopmode fig_module_tikz.tex)   # Fig. 2 (TikZ, standalone) -> fig_module_tikz.pdf
 python -m wvad.paper.evidence                # experiments/E024_localisation_method/figures_20261027/
                                              #   (record.json, per_video.csv, case_*.csv); decoded frames
                                              #   under F:/Vision/wvad_runs/e024_figures; needs UBnormal.zip,
