@@ -22,11 +22,9 @@ python -m wvad.paper.result_figs             # paper/figs/fig_{contrasts,dev,bas
                                              #   --only budget: fig_budget.pdf, a candidate (recall against the
                                              #   review budget from the stored UBnormal scores), not in the manuscript
 python -m wvad.paper.numbers                 # paper/generated/numbers.tex
-cd paper && pdflatex main && pdflatex supp                                 # first pass: each document writes the .aux the other reads (xr-hyper)
-cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main
-cd paper && pdflatex supp && bibtex supp && pdflatex supp && pdflatex supp   # supplementary material
-cd paper && pdflatex main                                                   # picks up any renumbered supplementary label
+cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main   # the submission: main.tex only
 ```
-Main text and supplement cite each other through `xr-hyper`: `\ref{S:<label>}` in `main.tex` resolves a supplementary label
-(for example `Table~\ref{S:tab:policy}` prints "Table S3") and `\ref{M:<label>}` in `supp.tex` resolves a main-text label; no
-cross-document number is typed by hand.
+No supplementary material can be submitted (user decision 2026-10-28), so `main.tex` stands alone and refers to no
+supplement. `supp.tex` is kept as an internal record only (the tables moved out of the main text, the data-figure cases,
+the development head); it is not part of the submission. If it is needed, build it after `main` with
+`cd paper && pdflatex supp && bibtex supp && pdflatex supp && pdflatex supp` (it reads `main.aux` through `xr-hyper`).
