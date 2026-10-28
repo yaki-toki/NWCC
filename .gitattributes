@@ -5,5 +5,3 @@
 *.pdf binary
 *.png binary
 
-# Prior-evidence folders are preserved byte for byte (no line-ending normalization)
-experiments/P*/** -text

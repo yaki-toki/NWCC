@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "frozen-vlm-wvad"
 dynamic = ["version"]
-description = "Weakly supervised video anomaly detection on frozen vision-language encoders (redesign in progress)"
+description = "NWCC, a normality-weighted context contrast for weakly supervised video anomaly localisation on frozen vision-language features"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
