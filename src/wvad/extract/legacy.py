@@ -1,6 +1,6 @@
 """Clip positions and decode rules of the earlier 32-clip caches (E021 gates (x0)-(x2) only).
 
-Ported from the previous project (the previous project's ``extract/reader.py`` ``read_video_segments_fast`` for
+Ported from the previous project (its ``extract/reader.py`` ``read_video_segments_fast`` for
 UCF-Crime, ``extract_features_xdviolence.py`` ``read_segments_from_video`` for XD-Violence).
 Both use 32 segments of L = max(1, T // 32) frames and 8-frame clips with step 2 (frames
 min(s + 2 i, T - 1)); T is the header frame count in the earlier code and is passed explicitly
