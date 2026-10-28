@@ -18,7 +18,7 @@ The manuscript and its figure and number generators are kept out of the reposito
 | `configs/` | `paths.example.yaml` (copy to `paths.yaml`, git-ignored) |
 | `docs/`, `tests/` | local only, git-ignored: planning notes, unit tests, equivalence checks |
 
-Each experiment folder holds its plan (`PLAN.md`, sealed by the commit that adds `PLAN.sha256` alone), its small result files and its report ([`experiments/README.md`](experiments/README.md)). The development history that preceded these four experiments (E001–E020 and the prior ablation P000) was removed from the tree on 2026-10-28 and remains in the commit history; the manuscript claims nothing from it.
+Each experiment folder holds its plan (`PLAN.md`, sealed by the commit that adds `PLAN.sha256` alone), its small result files and its report ([`experiments/README.md`](experiments/README.md)). The development history that preceded these four experiments (E001–E020 and the prior ablation P000) was removed from the tree on 2026-10-28 and remains in the commit history; the manuscript claims nothing from it. Two consequences for this tree: the analysis commands of E021 and E022 read lineage records of those earlier experiments, and every analysis command checks that `src/` holds no file deleted or modified since its freeze commit, so re-running an analysis (never needed for the committed results) is done on a checkout at or before commit `84c04fb`.
 
 ## Principles
 - **Sealed test sets.** Model, checkpoint, threshold and hyperparameter choices use only held-out training videos (validation split). UBnormal was read once, in the sealed stage-3 scoring. The UCF-Crime and XD-Violence test splits were read three times across E022, E023 and the E024 auxiliary reading (non-independent; recorded in the plans).
