@@ -9,7 +9,7 @@
     - 이 계획은 그 선택지와 세 가지가 다르다. 셋 모두 아래 사용자 결정(2026-10-07)으로 정했다: (a) 격자(1초 → 연속 16프레임, 결정 1), (b) 범위(검증 전용 → 단계적, 결정 2; 비용 차이는 "추출 범위·비용·순서"), (c) 질문(같은 특징 비교 기법 대비 XD 격차는 이 실험에서 답하지 않는다. 같은 특징 비교 기법(UR-DMU·RTFM) 재실행 비교는 **로드맵 F2로 명시적으로 미룬다**; 좁혀진 질문은 결정 4).
   - 동기(조사 기록, 위 JSON): 우리 표준 수치가 보고된 최고 수준에 못 미친다(E020 시험 UCF 프레임 AUC 84.84–87.25 대 CLIP 특징 방법 약 88–90, XD 프레임 AP 72–74 대 약 84–88). 가설: 거친 표현(영상당 32구간 × 구간당 8프레임 클립 하나)이 원인 가운데 하나이고, 특히 XD에서 그렇다. 이 가설은 검증되지 않았다.
     - 이 가설과 "특히 XD"는 시험셋 수치(E020, 이전 프로젝트)를 본 뒤에 나왔다. 그래서 뒤의 시험셋 확인은 이 방향 선택과 독립이 아니다("한계", "결과의 쓰임").
-    - 같은 32구간 특징으로 다시 돌린 UR-DMU는 XD에서 이전 SEAR 헤드보다 높았다(78.6 대 75.8 AP; 이전 프로젝트, 시험 선택 시절 수치). 특징이 같으므로 이 차이는 표현이 아니라 헤드·시간 모델링(단계 E1) 쪽을 가리킨다. 표현 가설의 근거로 쓰지 않는다.
+    - 같은 32구간 특징으로 다시 돌린 UR-DMU는 XD에서 이전 프로젝트 헤드보다 높았다(78.6 대 75.8 AP; 이전 프로젝트, 시험 선택 시절 수치). 특징이 같으므로 이 차이는 표현이 아니라 헤드·시간 모델링(단계 E1) 쪽을 가리킨다. 표현 가설의 근거로 쓰지 않는다.
   - 진단 이력: E002·E003에서 P9 해상도는 "기각(근사 기준)", 관측 범위는 "보류"였다. UCF 검증의 UCA 근사 구간으로 32구간 신탁 AP가 약 99이고 128구간과 1포인트 안이었다(`experiments/E002_diagnostics/REPORT.md` C1, `experiments/E003_training_diagnostics/REPORT.md` C1 마무리). 근사 구간이 문장 단위라 영향을 작게 보이게 하는 쪽으로 치우쳤을 수 있다. 구간 길이 절반보다 짧은 근사 사건은 약 3분의 2를 놓쳤다(E002 C2). XD는 학습·검증 영상에 구간 레이블이 없어 확인한 적이 없다.
 - 기준 파이프라인: **L20(E013)과 M10(E017)을 같은 자격으로 돌린다.** 주·부 구별은 없다. 판정은 두 파이프라인 모두에서의 무해성을 요구하고, 어느 한쪽의 해로움이 NO-GO를 낸다("기준 파이프라인" 절).
 - 문턱: L20 계보는 E010의 δ_d(UCF 0.1091, XD 0.0488포인트; `experiments/E010_dev_metric_calibration/results/e010_summary.json`), M10 계보는 E018의 δ_d(UCF 0.1774, XD 0.0287포인트; `experiments/E018_delta_recalibration/results/e018_summary.json`). 비열등 여유와 길이 층화 지표의 문턱은 "문턱" 절.
@@ -87,11 +87,11 @@
 | 저장 dtype | XCB·XCL float32, SigLIP **float16** | 세 인코더 모두 float32 |
 
 - 출처
-  - UCF 해독·위치·전처리: `F:/Vision/RiskDetection/sear/extract/reader.py`(`read_video_segments_fast`). 처음의 `cap.set(POS_FRAMES, 0)`은 로컬 영상 20개에서 결과를 바꾸지 않았다(검토 탐침).
-  - 학습 분할의 무작위 위치(`is_train`): 실제로 돈 것은 `train_ucf_mil.UCFCrimeMILDataset`이다. `F:/Vision/RiskDetection/train_ucf_mil.py`는 지금 2026-04-22의 연결 파일이고, 04-14 바이트코드(`__pycache__/train_ucf_mil.cpython-311.pyc`)도 `train = split == 'train'`이다. (`sear/dataset/ucf_crime.py` 82행도 같은 규칙.)
-  - autocast: `sear/extract/extractor.py`(`use_amp = device.type == "cuda"`).
-  - X-CLIP 풀링: `F:/Vision/RiskDetection/sear/extract/backbone.py`(`XCLIPBackbone.extract`, `hidden.mean(dim=[1, 2])`). 이 파일은 04-22에 DINOv2를 더한 것만 바뀌었다.
-  - UCF X-CLIP 캐시(2026-03-18)는 `sear/extract`(2026-03-20)보다 먼저 만들어졌다. 실제로 쓴 `extract_features_v3.py`는 원본이 없고 `F:/Vision/RiskDetection/__pycache__/extract_features_v3.cpython-310.pyc`(2026-04-06)만 남았다. 역어셈블 결과: 같은 위치·해독 규칙, `use_amp = device.type == 'cuda'`, `np.random.seed` 없음, `SigLIPBackbone`(위 표), `--dataset xdviolence`이면 `extract_features_xdviolence.extract_split_v3` 호출. **다만 그 바이트코드의 원본 날짜는 2026-04-05 00:53로 두 UCF 캐시(03-18, 04-03)보다 늦다.** 캐시를 만든 판보다 나중 판을 기술한다. UCF X-CLIP 캐시가 행동으로 재현되는 것은 탐침으로 확인했다(아래).
+  - UCF 해독·위치·전처리: `<이전 프로젝트>/extract/reader.py`(`read_video_segments_fast`). 처음의 `cap.set(POS_FRAMES, 0)`은 로컬 영상 20개에서 결과를 바꾸지 않았다(검토 탐침).
+  - 학습 분할의 무작위 위치(`is_train`): 실제로 돈 것은 `train_ucf_mil.UCFCrimeMILDataset`이다. `F:/Vision/RiskDetection/train_ucf_mil.py`는 지금 2026-04-22의 연결 파일이고, 04-14 바이트코드(`__pycache__/train_ucf_mil.cpython-311.pyc`)도 `train = split == 'train'`이다. (`<이전 프로젝트>/dataset/ucf_crime.py` 82행도 같은 규칙.)
+  - autocast: `<이전 프로젝트>/extract/extractor.py`(`use_amp = device.type == "cuda"`).
+  - X-CLIP 풀링: `<이전 프로젝트>/extract/backbone.py`(`XCLIPBackbone.extract`, `hidden.mean(dim=[1, 2])`). 이 파일은 04-22에 DINOv2를 더한 것만 바뀌었다.
+  - UCF X-CLIP 캐시(2026-03-18)는 `<이전 프로젝트>/extract`(2026-03-20)보다 먼저 만들어졌다. 실제로 쓴 `extract_features_v3.py`는 원본이 없고 `F:/Vision/RiskDetection/__pycache__/extract_features_v3.cpython-310.pyc`(2026-04-06)만 남았다. 역어셈블 결과: 같은 위치·해독 규칙, `use_amp = device.type == 'cuda'`, `np.random.seed` 없음, `SigLIPBackbone`(위 표), `--dataset xdviolence`이면 `extract_features_xdviolence.extract_split_v3` 호출. **다만 그 바이트코드의 원본 날짜는 2026-04-05 00:53로 두 UCF 캐시(03-18, 04-03)보다 늦다.** 캐시를 만든 판보다 나중 판을 기술한다. UCF X-CLIP 캐시가 행동으로 재현되는 것은 탐침으로 확인했다(아래).
   - XD: `F:/Vision/RiskDetection/extract_features_xdviolence.py`(`read_segments_from_video`, `extract_split_v3`: `backbone.extract(clips_gpu)`를 autocast 없이 호출). **이 파일은 2026-04-08 08:45에 고쳐졌다**(실행 경로 `scripts/run_xdviolence.py`의 날짜는 04-23). XD XCB·XCL 캐시(04-06)는 그보다 먼저 만들어졌지만 지금 파일로 비트 단위 재현된다. XD SigLIP 캐시(04-09 08:45 완료)는 비트 재현되지 않는다(아래 탐침).
   - SigLIP UCF 경로: `F:/Vision/RiskDetection/scripts/run_ucf_siglip.py`(`--gpu_batch_size 4`).
   - dtype: 2026-10-06에 학습 캐시를 읽어 확인(`features_siglip_so400m` float16, `features_xclip_base` float32, `features_xdviolence_xcb`·`_siglip_so400m` float32). XD 캐시에만 `total_frames`가 있다.

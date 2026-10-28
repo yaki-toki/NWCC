@@ -320,7 +320,7 @@ def gate_e(runs: Path, evidence: Path | None, identity: Path = E019_IDENTITY,
 
 def ucf_projection(intervals: Sequence[Sequence[int]], total_frames: int,
                    n: int = SEGMENTS) -> np.ndarray:
-    """Previous UCF extractor (sear/extract/extractor.py): segment k covers frames
+    """Previous UCF extractor (the previous project's extract/extractor.py): segment k covers frames
     [k d, (k + 1) d) with d = max(1, T // n) and is 1 if it overlaps an annotated interval
     (s < end and e > start, the annotation's numbers as given)."""
     step = max(1, int(total_frames) // n)

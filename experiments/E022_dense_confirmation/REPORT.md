@@ -182,7 +182,7 @@
     - 2026-10-13 11:43: (y0)
     - 2026-10-19 12:17: 분석 (D) 직전. 분석의 (f) 재판정이 이 기록을 썼다(최종 `e022_gate.json`).
 - 환경
-  - 학습(`env_e022_b00–b03.json`): torch 2.5.1+cu124, CUDA 12.4, NVIDIA H100 80GB HBM3, 드라이버 580.126.20. E021 학습 환경과 차이가 없고 드라이버도 같다. conda 환경은 `sear`다.
+  - 학습(`env_e022_b00–b03.json`): torch 2.5.1+cu124, CUDA 12.4, NVIDIA H100 80GB HBM3, 드라이버 580.126.20. E021 학습 환경과 차이가 없고 드라이버도 같다. conda 환경은 E021과 같다.
   - 추출(`env_extract_test.json`): Python 3.10.22, torch 2.5.1+cu121, cuDNN 9.1.0, opencv 4.13.0, transformers 5.0.0, numpy 2.2.6, 같은 GPU·드라이버
     - TF32 기본값(`cuda.matmul.allow_tf32 = False`, `cudnn.allow_tf32 = True`)
     - 모델 판 XCB `d6184e3f…`, XCL `a9dd1429…`, SigLIP `9fdffc58…`
@@ -257,7 +257,7 @@
    - 그래서 `~/wvad_runs/e022`, `e022_scores`, `e022_extract`를 `/data2` 아래 같은 이름의 폴더(사용자가 허락한 폴더)로 가는 심볼릭 링크로 두었다.
    - 경로 이름은 README·계획 그대로다. 시험 조밀 특징은 계획대로 `feature_root` 아래 `<데이터셋>_<인코더>_d16_test`에 있다.
 4. **학습 환경과 스레드**(같은 변경 기록)
-   - 학습 환경은 E021 학습 환경 `sear`다.
+   - 학습 환경은 E021 학습 환경과 같다.
    - 학습 묶음은 E021처럼 `OMP_NUM_THREADS = MKL_NUM_THREADS = 4`로 돌렸다(서버 저장소 밖 실행 스크립트, README 6단계 명령 그대로).
 5. **채점 1과 채점 2 사이의 약 6일 공백**
    - 채점 1은 2026-10-13 13:12에 했고, 관문 (v)와 채점 2는 10-19 12:03–12:14에 했다.

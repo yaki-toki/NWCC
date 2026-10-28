@@ -1,6 +1,10 @@
-# frozen-vlm-wvad
+# NWCC
 
 NWCC (normality-weighted context contrast) for weakly supervised video anomaly localisation on frozen vision-language features. NWCC is added to a published base anomaly detector, UR-DMU, without changing its trunk, objective or recipe: each snippet logit is corrected by a learned residual of the difference between the snippet embedding and a normality-weighted context drawn from the same video. Features come from frozen X-CLIP (base, large) and SigLIP-so400m encoders; no encoder is fine-tuned. NWCC adds 65,793 trainable parameters to UR-DMU (0.86% / 0.84% of the detector for the two encoder pairs).
+
+![NWCC module](figures/nwcc_module.png)
+
+*Frozen encoders give the snippet embeddings; the base anomaly detector scores them; NWCC forms a normality-weighted context of the other snippets of the same video and adds a learned residual of the difference to each snippet logit.*
 
 The evaluation was pre-registered and sealed: the configuration was selected on validation videos only, the base detector was chosen by a same-feature comparison of four published detectors, and UBnormal was tested once. The pre-registered criterion was **not met**. A post-hoc analysis of the completed models, kept apart from that verdict, is reported with it. The manuscript takes every number from the record files under `experiments/`; the repository is private at the time of writing, and source videos and derived UBnormal features are not redistributed (UBnormal is CC BY-NC-ND 4.0).
 
@@ -15,7 +19,19 @@ Within-video localisation `L` (frame AUC inside anomalous videos, mean over 3 tr
 
 Both pre-registered contrasts include zero, so the criterion (lower bound > 0 for both) was not met. On the auxiliary UCF-Crime and XD-Violence readings every `L` contrast is inconclusive and the correction at inference changes `L` by −0.06 and +0.00 points.
 
+![Contrasts](figures/ubnormal_contrasts.png)
+
+*Per-run contrasts in `L` with their intervals: (a) the confirmation on UBnormal, (b) the auxiliary readings. Values above zero favour the first arm of each contrast.*
+
 Post-hoc, exploratory (`posthoc_20261026/results.json`, `posthoc_20261027/results.json`): on the completed UBnormal models the share of anomalous frames among the top-ranked 10% of each anomalous video (Precision@10%) is 61.74 (UR-DMU), 65.15 (same checkpoints with the correction off) and 68.67 (NWCC). The NWCC gain over the correction-off scoring is +3.51 with the family-corrected interval [+1.10, +5.93] conditional on the trained models and [−0.04, +8.34] when training runs are resampled. Replacing the normality weights by uniform weights on the same checkpoints gives 64.76 (−3.90). These are observations on six trained models, not a confirmed effect of retraining.
+
+![Review budget](figures/review_budget.png)
+
+*Review-budget metrics on the completed models: Precision@10% per arm, the contrasts with both interval kinds, recall against the review budget, and the per-video change.*
+
+![Review sets](figures/review_sets.png)
+
+*The snippets each arm would put in front of a reviewer for one fixed model per benchmark (top-ranked 10% of the video); frames are from the UBnormal, UCF-Crime and XD-Violence test videos.*
 
 ## Repository layout
 | Path | Contents |
@@ -26,6 +42,7 @@ Post-hoc, exploratory (`posthoc_20261026/results.json`, `posthoc_20261027/result
 | `experiments/E023_localisation_baselines/` | the base detector comparison: plan, selection, gates, `results/e023_summary.json`, `e023_runs.csv` |
 | `experiments/E024_localisation_method/` | NWCC: plans (`stage0/`, `stage1/`, `stage3/`), development result `results/e024_stage1.json`, the sealed result `results/e024_stage3.json` + `e024_stage3_runs.csv`, the two post-hoc rounds, the data-figure cases |
 | `configs/paths.example.yaml` | copy to `configs/paths.yaml` (git-ignored) and point it at the local folders |
+| `figures/` | the four figures shown above (PNG renders of the manuscript figures) |
 
 Every experiment folder holds its `PLAN.md` (sealed by the commit that adds `PLAN.sha256` alone), its small result files and its report ([`experiments/README.md`](experiments/README.md)). The development history before these four experiments (E001–E020, P000) was removed from the tree on 2026-10-28 and remains in the commit history; nothing in the manuscript rests on it.
 
