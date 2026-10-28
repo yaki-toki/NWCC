@@ -78,32 +78,15 @@ python -m wvad.extract.testsplit derive $A
 ```
 `e022_extract_gate.json`, the access CSVs, `e022_test_access.log` and `e022_test_scores.sha256` under `experiments/E022_dense_confirmation/results/` are the record of this read; E023 and E024 check the test caches against them before every later read.
 
-### 3. UBnormal (E024 stage 2, [plan](experiments/E024_localisation_method/stage3/PLAN.md))
-UBnormal is registered as the dataset `ubn`. The archive is checked by sha256 and unpacked under `raw_video_root/UBnormal/Scene<s>/`; the six official split lists (sha256 pinned in `wvad.data.ubnormal`) and the video headers give `data/manifests/ubn_train.json` (official training then validation videos, 332), `data/splits/ubn_val_official.json` (64) and `data/manifests/ubn_test.json` (211 videos, no intervals: the tracks files are read once, at the sealed scoring).
-```bash
-S2=~/wvad_runs/e024/stage2
-sha256sum -c <raw>/ubnormal/UBnormal.zip.sha256 && unzip -q <raw>/ubnormal/UBnormal.zip -d <raw>/UBnormal
-for f in normal_training abnormal_training normal_validation abnormal_validation normal_test abnormal_test; do
-  curl -sS -o <raw>/ubnormal_meta/${f}_video_names.txt https://raw.githubusercontent.com/lilygeorgescu/UBnormal/main/scripts/${f}_video_names.txt; done
-python -m wvad.prep.ubnormal manifests --lists <raw>/ubnormal_meta --access_log $S2/access_server.csv
-python -m wvad.prep.ubnormal tracks-check --lists <raw>/ubnormal_meta --access_log $S2/access_server.csv --out $S2/tracks_check.json
-(cd data && sha256sum manifests/ubn_train.json manifests/ubn_test.json splits/ubn_val_official.json >> SHA256SUMS && sha256sum -c SHA256SUMS)
-python -m wvad.extract header --dataset ubn --access_log $S2/access_server.csv --out $S2/header_ubn.csv
-python -m wvad.extract dense --dataset ubn --phase val --access_log $S2/access_server.csv
-python -m wvad.extract dense --dataset ubn --phase trainpart --access_log $S2/access_server.csv
-python -m wvad.prep.ubnormal extract-test --access_log $S2/access_server.csv          # ubn_<encoder>_d16_test, pixels only
-```
-
-### 4. Derived training inputs of the ported detectors (E023)
-Each ported recipe trains on its official unit, derived from the snippets on the training split only (`<feature_root>/<dataset>_<encoder>_d16_e023/<variant>/`): `d16m32l2` for MIL, `d16m32` for RTFM, `d16m200` for UR-DMU and NWCC, `d16p256` for the VadCLIP visual branch.
+### 3. Derived training inputs of the ported detectors (E023)
+Each ported recipe trains on its official unit, derived from the snippets on the training split only (`<feature_root>/<dataset>_<encoder>_d16_e023/<variant>/`): `d16m32l2` for MIL, `d16m32` for RTFM, `d16m200` for UR-DMU and NWCC, `d16p256` for the VadCLIP visual branch. The UBnormal inputs are derived in stage 2 of E024 (below).
 ```bash
 for ds in ucf xdv; do
   python -m wvad.extract.derive_n --dataset $ds --variants d16m32l2 d16m32 d16m200 d16p256 --record $RUNS/e023_train_inputs.json
 done
-python -m wvad.extract.derive_n --dataset ubn --variants d16m200 --record experiments/E024_localisation_method/results/e024_stage3_train_inputs.json
 ```
 
-### 5. Base anomaly detector choice (E023, [plan](experiments/E023_localisation_baselines/PLAN.md))
+### 4. Base anomaly detector choice (E023, [plan](experiments/E023_localisation_baselines/PLAN.md))
 Four published detectors (MIL, RTFM, UR-DMU, the VadCLIP visual branch) are ported with their official network, loss, optimiser and schedule (`src/wvad/baselines/`, one file per method, porting contract in `common.py`) and compared on the same frozen features with validation-only selection. The ports were checked against the official code before the freeze (harnesses `wvad.baselines.check_<method>`, loader `wvad.baselines.official`; the official repositories are cloned outside the repository under `WVAD_OFFICIAL_ROOT` at the commits of `results/e023_licences.json`, and nothing from them is copied). UR-DMU had the highest within-video localisation on both datasets and became the base anomaly detector.
 ```bash
 E=experiments/E023_localisation_baselines/results; RUNS=~/wvad_runs/e023; S=~/wvad_runs/e023_scores
@@ -127,8 +110,8 @@ python -m wvad.diagnostics.e023 analyze --runs <local runs root>/e023 --scores <
 ```
 Outputs: `e023_selection.json`, `e023_gate.json`, `e023_summary.json`, `e023_runs.csv` (the per-run L and pooled metrics behind the base detector tables) and `e023_test_access.log` under `$E`.
 
-### 6. NWCC (E024, [plan](experiments/E024_localisation_method/PLAN.md))
-NWCC lives in `src/wvad/baselines/urdmu_k.py`: it adds `k_t = g(x_t − c_t)` to the UR-DMU snippet logit, where `c_t` is the normality-weighted context of the other snippets of the same sequence (duplicate `d16m200` rows masked) and `g` a 65,793-parameter MLP drawn from its own generator, so the trunk, batch order and dropout draws equal those of the UR-DMU run with the same seed. All stages run in deterministic mode (`--deterministic`, `CUBLAS_WORKSPACE_CONFIG=:4096:8`) and refuse test paths until the sealed stage-3 read.
+### 5. NWCC (E024, [plan](experiments/E024_localisation_method/PLAN.md))
+NWCC lives in `src/wvad/baselines/urdmu_k.py`: it adds `k_t = g(x_t − c_t)` to the UR-DMU snippet logit, where `c_t` is the normality-weighted context of the other snippets of the same sequence (duplicate `d16m200` rows masked) and `g` a 65,793-parameter MLP drawn from its own generator, so the trunk, batch order and dropout draws equal those of the UR-DMU run with the same seed. E024 ran in four stages: stage 0 (reference chains), stage 1 (candidate selection and controls), stage 2 (UBnormal preparation) and stage 3 (the sealed confirmation). All stages run in deterministic mode (`--deterministic`, `CUBLAS_WORKSPACE_CONFIG=:4096:8`) and refuse test paths until the sealed stage-3 read.
 
 **Stage 0 — reference chains** ([plan](experiments/E024_localisation_method/stage0/PLAN.md)): UR-DMU at its official recipe, development seeds 0-2, four settings.
 ```bash
@@ -163,6 +146,26 @@ python -m wvad.diagnostics.e024_stage1 analyze --u_runs <local runs root>/e024/s
 ```
 The selected configuration was `k_rg_t0.25` and the final control `ctl_trainonly_rg_t0.25` (`results/e024_stage1.json`).
 
+**Stage 2 — UBnormal preparation** ([plan](experiments/E024_localisation_method/stage3/PLAN.md), the stage-2 part): UBnormal is registered as the dataset `ubn`. The archive is checked by sha256 and unpacked under `raw_video_root/UBnormal/Scene<s>/`; the six official split lists (sha256 pinned in `wvad.data.ubnormal`) and the video headers give `data/manifests/ubn_train.json` (official training then validation videos, 332), `data/splits/ubn_val_official.json` (64) and `data/manifests/ubn_test.json` (211 videos, no intervals: the tracks files are read once, at the sealed scoring). The dense stores and the `d16m200` inputs are extracted as for UCF-Crime and XD-Violence, and the UR-DMU development chains (seeds 0-2, learning-rate multiplier 0.5, 1 or 2) fix the collapse threshold and the multiplier of stage 3 before its freeze. No test value is read.
+```bash
+S2=~/wvad_runs/e024/stage2
+sha256sum -c <raw>/ubnormal/UBnormal.zip.sha256 && unzip -q <raw>/ubnormal/UBnormal.zip -d <raw>/UBnormal
+for f in normal_training abnormal_training normal_validation abnormal_validation normal_test abnormal_test; do
+  curl -sS -o <raw>/ubnormal_meta/${f}_video_names.txt https://raw.githubusercontent.com/lilygeorgescu/UBnormal/main/scripts/${f}_video_names.txt; done
+python -m wvad.prep.ubnormal manifests --lists <raw>/ubnormal_meta --access_log $S2/access_server.csv
+python -m wvad.prep.ubnormal tracks-check --lists <raw>/ubnormal_meta --access_log $S2/access_server.csv --out $S2/tracks_check.json
+(cd data && sha256sum manifests/ubn_train.json manifests/ubn_test.json splits/ubn_val_official.json >> SHA256SUMS && sha256sum -c SHA256SUMS)
+python -m wvad.extract header --dataset ubn --access_log $S2/access_server.csv --out $S2/header_ubn.csv
+python -m wvad.extract dense --dataset ubn --phase val --access_log $S2/access_server.csv
+python -m wvad.extract dense --dataset ubn --phase trainpart --access_log $S2/access_server.csv
+python -m wvad.prep.ubnormal extract-test --access_log $S2/access_server.csv          # ubn_<encoder>_d16_test, pixels only
+python -m wvad.extract.derive_n --dataset ubn --variants d16m200 --record $E/e024_stage3_train_inputs.json
+for m in 0.5 1 2; do for pair in xcb_xcl xcb_siglip; do for seed in 0 1 2; do
+  python -m wvad.baselines.train --method urdmu --unit 200 --dataset ubn --pair $pair --seed $seed --out_dir $S2/${pair}_s${seed}/urdmu_u200_lr$m \
+      --lr_mult $m --scale_mult 1 --n_chunk 4096 --deterministic
+done; done; done
+```
+
 **Stage 3 — sealed confirmation** ([plan](experiments/E024_localisation_method/stage3/PLAN.md)): arms P (`k_rg_t0.25`), U (`urdmu_u200`) and C6 (`ctl_trainonly_rg_t0.25`) on UBnormal (primary) and UCF-Crime and XD-Violence (auxiliary, non-independent), two encoder pairs, new seeds 3-5 (54 chains). The learning-rate multiplier of the UBnormal chains comes from the stage-2 development chains; `score-test` is the one sealed test read and refuses a second run.
 ```bash
 S3=~/wvad_runs/e024/stage3; SC=~/wvad_runs/e024/stage3_scores
@@ -184,7 +187,7 @@ python -m wvad.diagnostics.e024_stage3 analyze --runs <local runs root>/e024/sta
 ```
 Outputs: `results/e024_stage3.json` (outcome row `not_met`; the two contrasts' classes and intervals; the auxiliary readings) and `results/e024_stage3_runs.csv`. No arm, seed, statistic, criterion or wording rule changed after the test was read.
 
-### 7. Post-hoc analysis (exploratory, after the verdict)
+### 6. Post-hoc analysis (exploratory, after the verdict)
 The first round (`posthoc_20261026/`, scripts beside its results) compares the arms on the review-budget metrics of the stored test scores. The second round re-scores the completed P checkpoints with uniform context weights in a separate deployed copy, after reproducing the sealed logits bit for bit, and compares every arm with four untrained temporal rules (`posthoc_20261027/`). Neither touches the sealed scores, the access log or the verdict.
 ```bash
 python -m wvad.diagnostics.e024_posthoc score-uniform --runs ~/wvad_runs/e024/stage3 --scores ~/wvad_runs/e024/stage3_scores \
